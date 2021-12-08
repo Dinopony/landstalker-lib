@@ -14,6 +14,7 @@ void fix_hud_tilemap(md::ROM& rom);
 void fix_item_checks(md::ROM& rom);
 void patch_game_init(md::ROM& rom, const World& world, bool add_ingame_tracker);
 void handle_additional_jewels(md::ROM& rom, World& world, uint8_t jewel_count);
+void handle_armor_upgrades(md::ROM& rom);
 void make_sword_of_gaia_work_in_volcano(md::ROM& rom);
 void normalize_special_enemies_hp(md::ROM& rom, bool fix_tree_cutting_glitch);
 

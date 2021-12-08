@@ -98,6 +98,7 @@ set(SOURCES
         "patches/fix_item_checks.cpp"
         "patches/game_init.cpp"
         "patches/handle_additional_jewels.cpp"
+        "patches/handle_armor_upgrades.cpp"
         "patches/make_sword_of_gaia_work_in_volcano.cpp"
         "patches/normalize_special_enemies_hp.cpp"
         "patches/quality_of_life.cpp"
