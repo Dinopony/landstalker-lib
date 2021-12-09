@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include "../tools/json.hpp"
 
 #define ORIENTATION_NE 0x08
@@ -19,30 +20,32 @@ private:
     std::string _node_id;
     uint8_t _starting_life;
 
+    static constexpr const char DEFAULT_SPAWN_ID[] = "__default";
+
 public:
-    SpawnLocation(): SpawnLocation("none", 0, 0x15, 0x15, 0, 5)
+    SpawnLocation(): SpawnLocation(DEFAULT_SPAWN_ID, 0, 0x15, 0x15, 0, 1)
     {}
 
-    SpawnLocation(const std::string& id, uint16_t map_id, uint8_t pos_x, uint8_t pos_y, 
-                    uint8_t orientation, uint8_t starting_life, const std::string& node_id = "") :
-        _id             (id),
+    SpawnLocation(std::string id, uint16_t map_id, uint8_t pos_x, uint8_t pos_y,
+                    uint8_t orientation, uint8_t starting_life, std::string node_id = "") :
+        _id             (std::move(id)),
         _map_id         (map_id),
         _pos_x          (pos_x),
         _pos_y          (pos_y),
         _orientation    (orientation),
         _starting_life  (starting_life),
-        _node_id        (node_id)
+        _node_id        (std::move(node_id))
     {}
 
-    const std::string& id() const { return _id; }
-    uint16_t map_id() const { return _map_id; }
-    uint8_t position_x() const { return _pos_x; }
-    uint8_t position_y() const { return _pos_y; }
-    uint8_t orientation() const { return _orientation; }
-    const std::string& node_id() const { return _node_id; }
-    uint8_t starting_life() const { return _starting_life; }
+    [[nodiscard]] const std::string& id() const { return _id; }
+    [[nodiscard]] uint16_t map_id() const { return _map_id; }
+    [[nodiscard]] uint8_t position_x() const { return _pos_x; }
+    [[nodiscard]] uint8_t position_y() const { return _pos_y; }
+    [[nodiscard]] uint8_t orientation() const { return _orientation; }
+    [[nodiscard]] const std::string& node_id() const { return _node_id; }
+    [[nodiscard]] uint8_t starting_life() const { return _starting_life; }
 
-    Json to_json() const
+    [[nodiscard]] Json to_json() const
     {
         return Json {
             { "mapId", _map_id },
@@ -54,6 +57,8 @@ public:
         };
     }
 
+    [[nodiscard]] bool empty() const { return _id == DEFAULT_SPAWN_ID; }
+    
     static SpawnLocation* from_json(const std::string& id, const Json& json)
     {
         uint16_t map_id = json.at("mapId");
