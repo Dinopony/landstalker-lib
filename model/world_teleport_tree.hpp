@@ -2,7 +2,9 @@
 
 #include <cstdint>
 #include <string>
+#include <utility>
 #include "../md_tools.hpp"
+#include "../tools/json.hpp"
 
 class WorldTeleportTree {
 private:
@@ -13,25 +15,25 @@ private:
     std::string _node_id;
 
 public:
-    WorldTeleportTree(const std::string& name, uint32_t left_entrance_addr, uint32_t right_entrance_addr, uint16_t tree_map_id, const std::string& node_id) :
-        _name                   (name),
+    WorldTeleportTree(std::string name, uint32_t left_entrance_addr, uint32_t right_entrance_addr, uint16_t tree_map_id, std::string node_id) :
+        _name                   (std::move(name)),
         _left_entrance_address  (left_entrance_addr),
         _right_entrance_address (right_entrance_addr),
         _tree_map_id            (tree_map_id),
-        _node_id                (node_id)
+        _node_id                (std::move(node_id))
     {}
 
-    const std::string& name() const { return _name; }
+    [[nodiscard]] const std::string& name() const { return _name; }
 
-    uint32_t left_entrance_address() const { return _left_entrance_address; }
-    uint32_t right_entrance_address() const { return _right_entrance_address; }
+    [[nodiscard]] uint32_t left_entrance_address() const { return _left_entrance_address; }
+    [[nodiscard]] uint32_t right_entrance_address() const { return _right_entrance_address; }
 
-    uint16_t tree_map_id() const{ return _tree_map_id; }
+    [[nodiscard]] uint16_t tree_map_id() const{ return _tree_map_id; }
     void tree_map_id(uint16_t map_id) { _tree_map_id = map_id; }
 
-    const std::string& node_id() const { return _node_id; }
+    [[nodiscard]] const std::string& node_id() const { return _node_id; }
 
-    Json to_json() const
+    [[nodiscard]] Json to_json() const
     {
         Json json;
         json["name"] = _name;
