@@ -9,7 +9,6 @@ Json Item::to_json() const
     json["maxQuantity"] = _max_quantity;
     json["startingQuantity"] = _starting_quantity;
     json["goldValue"] = _gold_value;
-    json["allowedOnGround"] = _allowed_on_ground;
     return json;
 }
 
@@ -34,6 +33,4 @@ void Item::apply_json(const Json& json)
         _starting_quantity = json.at("startingQuantity");
     if(json.contains("goldValue"))
         _gold_value = json.at("goldValue");
-    if(json.contains("allowedOnGround"))
-        _allowed_on_ground = json.at("allowedOnGround");
 }

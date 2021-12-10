@@ -2,6 +2,7 @@
 
 #include "../tools/json.hpp"
 #include <sstream>
+#include <utility>
 
 class Item
 {
@@ -11,7 +12,6 @@ private:
     uint8_t     _max_quantity;
     uint8_t     _starting_quantity;
     uint16_t    _gold_value;
-    bool        _allowed_on_ground;
 
 public:
     Item() :
@@ -19,17 +19,15 @@ public:
         _name(),
         _max_quantity(0),
         _starting_quantity(0),
-        _gold_value(0),
-        _allowed_on_ground(false)
+        _gold_value(0)
     {}
 
-    Item(uint8_t id, const std::string& name, uint8_t max_quantity, uint8_t starting_quantity, uint16_t gold_value, bool allowed_on_ground = true) :
+    Item(uint8_t id, std::string name, uint8_t max_quantity, uint8_t starting_quantity, uint16_t gold_value, bool allowed_on_ground = true) :
         _id                 (id),
-        _name               (name),
+        _name               (std::move(name)),
         _max_quantity       (max_quantity),
         _starting_quantity  (starting_quantity),
-        _gold_value         (gold_value),
-        _allowed_on_ground  (allowed_on_ground)
+        _gold_value         (gold_value)
     {}
     
     [[nodiscard]] uint8_t id() const { return _id; }
@@ -46,9 +44,6 @@ public:
 
     [[nodiscard]] uint16_t gold_value() const { return _gold_value; }
     virtual Item& gold_value(uint16_t value) { _gold_value = value; return *this; }
-
-    [[nodiscard]] bool allowed_on_ground() const { return _allowed_on_ground; }
-    void allowed_on_ground(bool allowed) { _allowed_on_ground = allowed; }
 
     [[nodiscard]] Json to_json() const;
     static Item* from_json(uint8_t id, const Json& json);
