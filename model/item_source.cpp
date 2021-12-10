@@ -118,19 +118,6 @@ Json ItemSourceOnGround::to_json() const
 
 ////////////////////////////////////////////////////////////////
 
-bool ItemSourceShop::is_item_compatible(Item* item) const
-{
-    if(!ItemSourceOnGround::is_item_compatible(item))
-        return false;
-
-    if (item->id() == ITEM_NONE)
-        return false;
-
-    return true;
-}
-
-////////////////////////////////////////////////////////////////
-
 Json ItemSourceReward::to_json() const
 {
     Json json = ItemSource::to_json();

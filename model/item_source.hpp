@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include "item.hpp"
 #include "entity.hpp"
 
@@ -25,29 +26,27 @@ public:
     ItemSource(const std::string& name, const std::string& node_id, const std::vector<std::string>& hints);
     virtual ~ItemSource() = default;
 
-    virtual std::string type_name() const = 0;
-    bool is_chest() { return this->type_name() == ITEM_SOURCE_TYPE_CHEST; }
-    bool is_ground_item() { return this->type_name() == ITEM_SOURCE_TYPE_GROUND; }
-    bool is_shop_item() { return this->type_name() == ITEM_SOURCE_TYPE_SHOP; }
-    bool is_npc_reward() { return this->type_name() == ITEM_SOURCE_TYPE_REWARD; }
+    [[nodiscard]] virtual std::string type_name() const = 0;
+    [[nodiscard]] bool is_chest() const { return this->type_name() == ITEM_SOURCE_TYPE_CHEST; }
+    [[nodiscard]] bool is_ground_item() const { return this->type_name() == ITEM_SOURCE_TYPE_GROUND; }
+    [[nodiscard]] bool is_shop_item() const { return this->type_name() == ITEM_SOURCE_TYPE_SHOP; }
+    [[nodiscard]] bool is_npc_reward() const { return this->type_name() == ITEM_SOURCE_TYPE_REWARD; }
 
-    const std::string& name() const { return _name; }
+    [[nodiscard]] const std::string& name() const { return _name; }
     void name(const std::string& name) { _name = name; }
 
-    Item* item() const { return _item; }
+    [[nodiscard]] Item* item() const { return _item; }
     virtual void item(Item* item) { _item = item; }
 
-    uint8_t item_id() const { return (_item) ? _item->id() : ITEM_NONE; }
+    [[nodiscard]] uint8_t item_id() const { return (_item) ? _item->id() : ITEM_NONE; }
 
-    const std::string& node_id() const { return _node_id; }
+    [[nodiscard]] const std::string& node_id() const { return _node_id; }
     void node_id(const std::string& node_id) { _node_id = node_id; }
 
-    const std::vector<std::string>& hints() const { return _hints; }
+    [[nodiscard]] const std::vector<std::string>& hints() const { return _hints; }
     void add_hint(const std::string& hint) { _hints.emplace_back(hint); }
-    
-    virtual bool is_item_compatible(Item* item) const = 0;
 
-    virtual Json to_json() const;
+    [[nodiscard]] virtual Json to_json() const;
     static ItemSource* from_json(const Json& json, const World& world);
 };
 
@@ -63,12 +62,9 @@ public:
         _chest_id  (chest_id)
     {}
 
-    uint8_t chest_id() const { return _chest_id; }
-
-    virtual std::string type_name() const { return ITEM_SOURCE_TYPE_CHEST; }
-    virtual bool is_item_compatible(Item* item) const { return true; }
-
-    virtual Json to_json() const;
+    [[nodiscard]] uint8_t chest_id() const { return _chest_id; }
+    [[nodiscard]] std::string type_name() const override { return ITEM_SOURCE_TYPE_CHEST; }
+    [[nodiscard]] Json to_json() const override;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,36 +79,23 @@ public:
     ItemSourceOnGround(const std::string& name, std::vector<Entity*> entities, const std::string& node_id = "", 
                         const std::vector<std::string>& hints = {}, bool cannot_be_taken_repeatedly = false, bool add_hint = true) :
         ItemSource                  (name, node_id, hints), 
-        _entities                   (entities),
+        _entities                   (std::move(entities)),
         _cannot_be_taken_repeatedly (cannot_be_taken_repeatedly)
     {
         if(add_hint)
             this->add_hint("lying on the ground, waiting for someone to pick it up");
     }
 
-    const std::vector<Entity*>& entities() const { return _entities; }
-
-    virtual void item(Item* item)
+    [[nodiscard]] const std::vector<Entity*>& entities() const { return _entities; }
+    void item(Item* item) override
     { 
         ItemSource::item(item);
         for (Entity* entity : _entities)
             entity->entity_type_id(this->item_id() + 0xC0);
     }
-
-    virtual std::string type_name() const { return ITEM_SOURCE_TYPE_GROUND; }
-
-    virtual bool is_item_compatible(Item* item) const
-    {
-        if(!item)
-            return true;
-        if(item->id() >= ITEM_GOLDS_START)
-            return false;
-        if(_cannot_be_taken_repeatedly)
-            return true;
-        return item->allowed_on_ground();
-    }
-
-    virtual Json to_json() const;
+    [[nodiscard]] std::string type_name() const override { return ITEM_SOURCE_TYPE_GROUND; }
+    [[nodiscard]] Json to_json() const override;
+    [[nodiscard]] bool can_be_taken_only_once() const { return _cannot_be_taken_repeatedly; }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -127,9 +110,7 @@ public:
         this->add_hint("owned by someone trying to make profit out of it");
     }
 
-    virtual std::string type_name() const { return ITEM_SOURCE_TYPE_SHOP; }
-
-    virtual bool is_item_compatible(Item* item) const;
+    [[nodiscard]] std::string type_name() const override { return ITEM_SOURCE_TYPE_SHOP; }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -147,14 +128,7 @@ public:
         this->add_hint("owned by someone willing to give it to the brave");
     }
 
-    uint32_t address_in_rom() const { return _address_in_rom; }
-
-    virtual std::string type_name() const { return ITEM_SOURCE_TYPE_REWARD; }
-
-    virtual bool is_item_compatible(Item* item) const
-    {
-        return (item->id() < ITEM_NONE);
-    }
-
-    virtual Json to_json() const;
+    [[nodiscard]] uint32_t address_in_rom() const { return _address_in_rom; }
+    [[nodiscard]] std::string type_name() const override { return ITEM_SOURCE_TYPE_REWARD; }
+    [[nodiscard]] Json to_json() const override;
 };
