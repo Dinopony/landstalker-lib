@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.1.0)
 
-include("CMakeFunctions.txt")
-
 project(landstalker-lib VERSION 1.6.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -11,22 +9,41 @@ if (CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif ()
 
-# Wrap JSON model files into automated .hxx headers
-wrap_file(SOURCE_FILE "model/data/entity_type.json" VARIABLE_NAME "ENTITIES_JSON" TEXT_FILE)
-wrap_file(SOURCE_FILE "model/data/item.json" VARIABLE_NAME "ITEMS_JSON" TEXT_FILE)
-wrap_file(SOURCE_FILE "model/data/item_source.json" VARIABLE_NAME "ITEM_SOURCES_JSON" TEXT_FILE)
-wrap_file(SOURCE_FILE "model/data/world_teleport_tree.json" VARIABLE_NAME "WORLD_TELEPORT_TREES_JSON" TEXT_FILE)
-
-# Wrap assets files into automated .hxx headers
-wrap_file(SOURCE_FILE "patches/assets/fixed_hud_tilemap.bin" VARIABLE_NAME "FIXED_HUD_TILEMAP")
-wrap_file(SOURCE_FILE "patches/assets/blue_jewel.bin" VARIABLE_NAME "BLUE_JEWEL_SPRITE" SPRITE_FILE)
-wrap_file(SOURCE_FILE "patches/assets/green_jewel.bin" VARIABLE_NAME "GREEN_JEWEL_SPRITE" SPRITE_FILE)
-wrap_file(SOURCE_FILE "patches/assets/yellow_jewel.bin" VARIABLE_NAME "YELLOW_JEWEL_SPRITE" SPRITE_FILE)
-
 add_compile_definitions(RELEASE="${PROJECT_VERSION}")
 add_compile_definitions(MAJOR_RELEASE="${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 
+macro(WRAPPED_DEPENDENCY)
+    message(STATUS "Defining wrapped dependency for ${CMAKE_CURRENT_SOURCE_DIR}/${ARGV1}")
+    add_custom_command(
+            OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/${ARGV1}.hxx"
+            COMMAND "${CMAKE_COMMAND}"
+            ARGS -DINPUT_FILE="${ARGV1}" -DVARIABLE_NAME="${ARGV2}" -DPROCESS_TYPE="${ARGV0}" -P wrap_file.cmake
+            DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${ARGV1}"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    )
+endmacro()
+
+# Wrap JSON model files and assets into automated .hxx headers
+wrapped_dependency(TEXT     model/data/entity_type.json             ENTITIES_JSON)
+wrapped_dependency(TEXT     model/data/item.json                    ITEMS_JSON)
+wrapped_dependency(TEXT     model/data/item_source.json             ITEM_SOURCES_JSON)
+wrapped_dependency(TEXT     model/data/world_teleport_tree.json     WORLD_TELEPORT_TREES_JSON)
+wrapped_dependency(RAW      patches/assets/fixed_hud_tilemap.bin    FIXED_HUD_TILEMAP)
+wrapped_dependency(SPRITE   patches/assets/blue_jewel.bin           BLUE_JEWEL_SPRITE)
+wrapped_dependency(SPRITE   patches/assets/green_jewel.bin          GREEN_JEWEL_SPRITE)
+wrapped_dependency(SPRITE   patches/assets/yellow_jewel.bin         YELLOW_JEWEL_SPRITE)
+
 set(SOURCES
+        # --- Auto-generated dependencies----------------------------------------
+        "model/data/entity_type.json.hxx"
+        "model/data/item.json.hxx"
+        "model/data/item_source.json.hxx"
+        "model/data/world_teleport_tree.json.hxx"
+        "patches/assets/fixed_hud_tilemap.bin.hxx"
+        "patches/assets/blue_jewel.bin.hxx"
+        "patches/assets/green_jewel.bin.hxx"
+        "patches/assets/yellow_jewel.bin.hxx"
+
         # --- Global includes ----------------------------------------
         "md_tools.hpp"
         "exceptions.hpp"
