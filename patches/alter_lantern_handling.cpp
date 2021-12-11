@@ -1,6 +1,8 @@
 #include "../md_tools.hpp"
 
 #include "../model/world.hpp"
+#include "../model/map.hpp"
+#include "../model/map_palette.hpp"
 #include "../constants/offsets.hpp"
 #include "../tools/byte_array.hpp"
 
@@ -95,6 +97,17 @@ static void replace_function_change_map_palette(md::ROM& rom)
     rom.set_code(0x2D64, func_change_map_palette);
 }
 
+static void remove_alternate_palette_for_knl(const World& world)
+{
+    // Replace the "dark room" palette from King Nole's Labyrinth by the lit room palette
+    MapPalette* lit_knl_palette = world.map_palettes().at(39);
+    MapPalette* dark_knl_palette = world.map_palettes().at(40);
+
+    for(auto& [map_id, map] : world.maps())
+        if(map->palette() == dark_knl_palette)
+            map->palette(lit_knl_palette);
+}
+
 /**
  * Make the lantern a flexible item, by actually being able to impact a predefined
  * table of "dark maps" and turning screen to pitch black if it's not owned.
@@ -118,8 +131,5 @@ void alter_lantern_handling(md::ROM& rom, const World& world)
     uint32_t addr = rom.inject_code(ext_init_palette);
     rom.set_code(0x19520, md::Code().jsr(addr));
 
-    // ----------------------------------------
-    // Replace the "dark room" palette from King Nole's Labyrinth by the lit room palette
-    for (uint8_t i = 0; i < 0x1A; ++i)
-        rom.set_byte(offsets::KNL_DARK_ROOM_PALETTE + i, rom.get_byte(offsets::KNL_LIT_ROOM_PALETTE + i));
+    remove_alternate_palette_for_knl(world);
 }
