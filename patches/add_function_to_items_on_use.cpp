@@ -1,5 +1,6 @@
 #include "../md_tools.hpp"
 
+#include "../model/world.hpp"
 #include "../constants/item_codes.hpp"
 
 static uint32_t make_record_book_save_on_use(md::ROM& rom, bool consumable_record_book)
@@ -56,21 +57,21 @@ static uint32_t make_record_book_save_on_use(md::ROM& rom, bool consumable_recor
     return rom.inject_code(func_use_record_book, "func_use_record_book");
 }
 
-static void make_spell_book_warp_to_start(md::ROM& rom)
+static void make_spell_book_warp_to_start(md::ROM& rom, const World& world)
 {
-    uint16_t spawnX = rom.get_byte(0x0027FD);
-    uint16_t spawnZ = rom.get_byte(0x002805);
-    uint16_t spawnPosition = (spawnX << 8) + spawnZ;
-    uint16_t spawnMapID = rom.get_word(0x0027F4);
+    uint16_t spawn_x = world.spawn_location().position_x();
+    uint16_t spawn_y = world.spawn_location().position_y();
+    uint16_t spawn_position = (spawn_x << 8) + spawn_y;
+    uint16_t spawn_map_id = world.spawn_location().map_id();
 
     // ------------- New spell book teleport function -------------
     md::Code spellBookFunction;
     spellBookFunction.movem_to_stack({ reg_D0_D7 }, { reg_A0_A6 });
-    spellBookFunction.movew(spawnPosition, addr_(0xFF5400));
+    spellBookFunction.movew(spawn_position, addr_(0xFF5400));
     spellBookFunction.movew(0x0708, addr_(0xFF5402)); // Reset subtiles position
     spellBookFunction.trap(0, { 0x00, 0x4D });
     spellBookFunction.jsr(0x44C);
-    spellBookFunction.movew(spawnMapID, reg_D0); // Set MapID to spawn map
+    spellBookFunction.movew(spawn_map_id, reg_D0); // Set MapID to spawn map
     spellBookFunction.movew(0x0000, addr_(0xFF5412)); // Reset player height
     spellBookFunction.moveb(0x00, addr_(0xFF5422)); // Reset ground height
     spellBookFunction.moveb(0x00, addr_(0xFF5439)); // ^
@@ -144,9 +145,9 @@ static void make_spell_book_warp_to_start(md::ROM& rom)
     rom.set_long(0x88C6, 0x600002EA); // bra loc_8BB2 >>> Mark used item as "has post use effect"
 }
 
-void add_functions_to_items_on_use(md::ROM& rom, bool consumable_record_book)
+void add_functions_to_items_on_use(md::ROM& rom, const World& world, bool consumable_record_book)
 {
-    make_spell_book_warp_to_start(rom);
+    make_spell_book_warp_to_start(rom, world);
     uint32_t func_use_record_book_addr = make_record_book_save_on_use(rom, consumable_record_book);
 
     // ------------- Extended item handling function -------------

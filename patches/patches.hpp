@@ -4,7 +4,7 @@
 #include <landstalker_lib/model/world.hpp>
 
 // Global patches
-void add_functions_to_items_on_use(md::ROM& rom, bool consumable_record_book);
+void add_functions_to_items_on_use(md::ROM& rom, const World& world, bool consumable_record_book);
 void add_statue_of_jypta_effect(md::ROM& rom);
 void alter_fahl_challenge(md::ROM& rom, const World& world);
 void alter_gold_rewards_handling(md::ROM& rom, World& world);
