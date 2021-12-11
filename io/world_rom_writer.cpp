@@ -247,6 +247,7 @@ void WorldRomWriter::write_maps(md::ROM& rom, const World& world)
     write_maps_fall_destination(rom, world);
     write_maps_variants(rom, world);
     write_maps_global_entity_masks(rom, world);
+    write_maps_key_door_masks(rom, world);
     write_maps_entity_masks(rom, world);
     write_maps_dialogue_table(rom, world);
     write_maps_entities(rom, world);
@@ -384,6 +385,28 @@ void WorldRomWriter::write_maps_global_entity_masks(md::ROM& rom, const World& w
     if(addr > offsets::MAP_CLEAR_FLAGS_TABLE_END)
         throw LandstalkerException("Map clear flags table must not be bigger than the one from base game");
     rom.mark_empty_chunk(addr, offsets::MAP_CLEAR_FLAGS_TABLE_END);
+}
+
+void WorldRomWriter::write_maps_key_door_masks(md::ROM& rom, const World& world)
+{
+    uint32_t addr = offsets::MAP_CLEAR_KEY_DOOR_FLAGS_TABLE;
+
+    for(auto& [map_id, map] : world.maps())
+    {
+        for(const GlobalEntityMaskFlag& global_mask_flags : map->key_door_mask_flags())
+        {
+            uint16_t flag_bytes = global_mask_flags.to_bytes();
+            rom.set_word(addr, map->id());
+            rom.set_word(addr+2, flag_bytes);
+            addr += 0x4;
+        }
+    }
+
+    rom.set_word(addr, 0xFFFF);
+    addr += 0x2;
+    if(addr > offsets::MAP_CLEAR_KEY_DOOR_FLAGS_TABLE_END)
+        throw LandstalkerException("Map key door clear flags table must not be bigger than the one from base game");
+    rom.mark_empty_chunk(addr, offsets::MAP_CLEAR_KEY_DOOR_FLAGS_TABLE_END);
 }
 
 void WorldRomWriter::write_maps_entity_masks(md::ROM& rom, const World& world)

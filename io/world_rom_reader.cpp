@@ -22,6 +22,7 @@ void WorldRomReader::read_maps(World& world, const md::ROM& rom)
     read_maps_variants(world, rom);
     read_maps_entity_masks(world, rom);
     read_maps_global_entity_masks(world, rom);
+    read_maps_key_door_masks(world, rom);
     read_maps_dialogue_table(world, rom);
     read_persistence_flags(world, rom);
 }
@@ -144,6 +145,22 @@ void WorldRomReader::read_maps_global_entity_masks(World& world, const md::ROM& 
         map->global_entity_mask_flags().emplace_back(GlobalEntityMaskFlag(flag_byte, flag_bit, first_entity_id));
     }
 }
+
+void WorldRomReader::read_maps_key_door_masks(World& world, const md::ROM& rom)
+{
+    for(uint32_t addr = offsets::MAP_CLEAR_KEY_DOOR_FLAGS_TABLE ; rom.get_word(addr) != 0xFFFF ; addr += 0x4)
+    {
+        Map* map = world.map(rom.get_word(addr));
+
+        uint8_t flag_byte = rom.get_byte(addr+2);
+
+        uint8_t lsb = rom.get_byte(addr+3);
+        uint8_t flag_bit = lsb >> 5;
+        uint8_t first_entity_id = lsb & 0x1F;
+
+        map->key_door_mask_flags().emplace_back(GlobalEntityMaskFlag(flag_byte, flag_bit, first_entity_id));
+    }
+};
 
 void WorldRomReader::read_maps_dialogue_table(World& world, const md::ROM& rom)
 {

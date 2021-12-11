@@ -18,6 +18,7 @@ private:
     static void read_maps_variants(World& world, const md::ROM& rom);
     static void read_maps_entity_masks(World& world, const md::ROM& rom);
     static void read_maps_global_entity_masks(World& world, const md::ROM& rom);
+    static void read_maps_key_door_masks(World& world, const md::ROM& rom);
     static void read_maps_dialogue_table(World& world, const md::ROM& rom);
     static void read_persistence_flags(World& world, const md::ROM& rom);
 

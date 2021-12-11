@@ -173,8 +173,15 @@ Json Map::to_json(const World& world) const
     if(!_global_entity_mask_flags.empty())
     {
         json["globalEntityMaskFlags"] = Json::array();
-        for(const GlobalEntityMaskFlag& global_mask_flag : _global_entity_mask_flags)
-            json["globalEntityMaskFlags"].emplace_back(global_mask_flag.to_json());
+        for(const GlobalEntityMaskFlag& mask_flag : _global_entity_mask_flags)
+            json["globalEntityMaskFlags"].emplace_back(mask_flag.to_json());
+    }
+
+    if(!_key_door_mask_flags.empty())
+    {
+        json["keyDoorMaskFlags"] = Json::array();
+        for(const GlobalEntityMaskFlag& mask_flag : _key_door_mask_flags)
+            json["keyDoorMaskFlags"].emplace_back(mask_flag.to_json());
     }
 
     if(!_entities.empty())
