@@ -56,8 +56,9 @@ public:
     [[nodiscard]] std::vector<Item*> starting_inventory() const;
 
     [[nodiscard]] const std::vector<ItemSource*>& item_sources() const { return _item_sources; }
-    std::vector<ItemSource*>& item_sources() { return _item_sources; }
-    std::vector<ItemSource*> item_sources_with_item(Item* item);
+    [[nodiscard]] std::vector<ItemSource*>& item_sources() { return _item_sources; }
+    [[nodiscard]] ItemSource* item_source(const std::string& name) const;
+    [[nodiscard]] std::vector<ItemSource*> item_sources_with_item(Item* item);
     
     [[nodiscard]] const std::vector<std::pair<WorldTeleportTree*, WorldTeleportTree*>>& teleport_tree_pairs() const { return _teleport_tree_pairs; }
     void teleport_tree_pairs(const std::vector<std::pair<WorldTeleportTree*, WorldTeleportTree*>>& new_pairs) { _teleport_tree_pairs = new_pairs; }

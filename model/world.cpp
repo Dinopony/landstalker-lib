@@ -111,6 +111,15 @@ std::vector<Item*> World::starting_inventory() const
     return starting_inventory;
 }
 
+ItemSource* World::item_source(const std::string& name) const
+{
+    for (ItemSource* source : _item_sources)
+        if (source->name() == name)
+            return source;
+
+    throw std::out_of_range("No source with given name");
+}
+
 std::vector<ItemSource*> World::item_sources_with_item(Item* item)
 {
     std::vector<ItemSource*> sources_with_item;

@@ -28,7 +28,7 @@ void alter_item_order_in_menu(md::ROM& rom);
 void quicken_gaia_effect(md::ROM& rom);
 
 // story_dependencies.cpp patches
-void make_massan_elder_reward_not_story_dependant(md::ROM& rom);
+void make_massan_elder_reward_not_story_dependant(md::ROM& rom, const World& world);
 void make_lumberjack_reward_not_story_dependant(md::ROM& rom);
 void change_falling_ribbon_position(md::ROM& rom);
 void make_tibor_always_open(md::ROM& rom);

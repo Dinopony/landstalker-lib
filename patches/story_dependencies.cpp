@@ -4,14 +4,16 @@
 #include "../model/map.hpp"
 #include "../model/entity.hpp"
 #include "../model/entity_type.hpp"
+#include "../model/item_source.hpp"
 #include "../constants/map_codes.hpp"
 
-void make_massan_elder_reward_not_story_dependant(md::ROM& rom)
+void make_massan_elder_reward_not_story_dependant(md::ROM& rom, const World& world)
 {
+    ItemSource* source = world.item_source("Massan: Elder reward after freeing Fara in Swamp Shrine");
+    uint8_t item_id = source->item_id();
+
     // This item source writes its contents at this specific address, as specified
     // by the model files
-    uint8_t reward_item_id = rom.get_byte(0x25F9E);
-
     md::Code elder_dialogue;
     elder_dialogue.btst(5, addr_(0xFF1002));
     elder_dialogue.bne(3);
@@ -26,7 +28,7 @@ void make_massan_elder_reward_not_story_dependant(md::ROM& rom)
                                    0x80, 0xFE, 
                                    0x80, 0xFF, 
                                    0x81, 0x00, 
-                                   0x00, reward_item_id, 
+                                   0x00, item_id,
                                    0x17, 0xE8, 
                                    0x18, 0x00, 
                                    0xE1, 0x01 });
