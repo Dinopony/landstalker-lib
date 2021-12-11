@@ -13,6 +13,7 @@ void alter_nigel_colors(md::ROM& rom, const std::pair<uint16_t, uint16_t>& nigel
 void alter_ui_color(md::ROM& rom, uint16_t ui_color);
 void fix_hud_tilemap(md::ROM& rom);
 void fix_item_checks(md::ROM& rom);
+void improve_engine(md::ROM& rom);
 void patch_game_init(md::ROM& rom, const World& world, bool add_ingame_tracker);
 void handle_additional_jewels(md::ROM& rom, World& world, uint8_t jewel_count);
 void handle_armor_upgrades(md::ROM& rom);
