@@ -13,6 +13,11 @@ namespace offsets
     constexpr uint32_t MAP_VARIANTS_TABLE = MAP_CLIMB_DESTINATION_TABLE_END;
     constexpr uint32_t MAP_VARIANTS_TABLE_END = 0x00A61C;
 
+    constexpr uint32_t NIGEL_PALETTE = 0x901C;
+    constexpr uint32_t NIGEL_PALETTE_END = 0x903C;
+    constexpr uint32_t NIGEL_PALETTE_SAVE_MENU = 0xFB32;
+    constexpr uint32_t NIGEL_PALETTE_SAVE_MENU_END = 0xFB52;
+
     constexpr uint32_t MAP_VISITED_FLAG_TABLE = 0x00C74E;
     constexpr uint32_t MAP_VISITED_FLAG_TABLE_END = 0x00CDAE;
 

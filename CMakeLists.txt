@@ -110,6 +110,7 @@ set(SOURCES
         "patches/alter_gold_rewards_handling.cpp"
         "patches/alter_items_consumability.cpp"
         "patches/alter_lantern_handling.cpp"
+        "patches/alter_nigel_colors.cpp"
         "patches/alter_ui_color.cpp"
         "patches/fix_hud_tilemap.cpp"
         "patches/fix_item_checks.cpp"
