@@ -180,6 +180,22 @@ Code& Code::bpl(uint16_t instruction_count)
     return *this;
 }
 
+Code& Code::ble(uint16_t instruction_count)
+{
+    this->add_opcode(0x6F00);
+    if (instruction_count > 0)
+        _pending_branches[static_cast<uint32_t>(_bytes.size())] = instruction_count;
+    return *this;
+}
+
+Code& Code::bge(uint16_t instruction_count)
+{
+    this->add_opcode(0x6C00);
+    if (instruction_count > 0)
+        _pending_branches[static_cast<uint32_t>(_bytes.size())] = instruction_count;
+    return *this;
+}
+
 Code& Code::bcc(uint16_t instruction_count)
 {
     this->add_opcode(0x6400);
