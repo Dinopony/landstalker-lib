@@ -115,6 +115,7 @@ set(SOURCES
         "patches/fix_hud_tilemap.cpp"
         "patches/fix_item_checks.cpp"
         "patches/game_init.cpp"
+        "patches/gameplay_tweaks.cpp"
         "patches/handle_additional_jewels.cpp"
         "patches/handle_armor_upgrades.cpp"
         "patches/improve_engine.cpp"
