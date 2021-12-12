@@ -53,9 +53,10 @@ static void handle_gold_rewards_for_npc(md::ROM& rom, uint32_t function_check_go
 
     md::Code proc_check_if_item_is_golds;
 
+    proc_check_if_item_is_golds.clrl(reg_D0);
     proc_check_if_item_is_golds.movew(addr_(0xFF1196), reg_D0);
     proc_check_if_item_is_golds.cmpiw(ITEM_GOLDS_START, reg_D0);
-    proc_check_if_item_is_golds.ble(2);
+    proc_check_if_item_is_golds.bge(2);
         // Item reward case
         proc_check_if_item_is_golds.jmp(JUMP_ADDR_ITEM_REWARD);
     proc_check_if_item_is_golds.cmpiw(ITEM_NONE, reg_D0);
