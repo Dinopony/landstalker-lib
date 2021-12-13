@@ -38,6 +38,9 @@ public:
     [[nodiscard]] Item* item() const { return _item; }
     virtual void item(Item* item) { _item = item; }
 
+    /// A source is empty if it contains no item, but not if it contains ITEM_NONE
+    [[nodiscard]] bool empty() const { return _item == nullptr; }
+
     [[nodiscard]] uint8_t item_id() const { return (_item) ? _item->id() : ITEM_NONE; }
 
     [[nodiscard]] const std::string& node_id() const { return _node_id; }
