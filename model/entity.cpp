@@ -101,14 +101,7 @@ Json Entity::to_json(const World& world) const
 
     json["entityType"] = world.entity_type(_attrs.type_id)->name();
 
-    json["posX"] = _attrs.position.x;
-    json["posY"] = _attrs.position.y;
-    json["posZ"] = _attrs.position.z;
-
-    json["halfTileX"] = _attrs.position.half_x;
-    json["halfTileY"] = _attrs.position.half_y;
-    json["halfTileZ"] = _attrs.position.half_z;
-
+    json["position"] = _attrs.position.to_json();
     json["orientation"] = _attrs.orientation;
     json["palette"] = _attrs.palette;
     json["speed"] = _attrs.speed;
@@ -151,11 +144,7 @@ Entity* Entity::from_json(const Json& json, Map* map, const World& world)
     Attributes attrs {
         .type_id = world.entity_type((std::string)json.at("entityType"))->id(),
 
-        .position = Position(
-            json.at("posX"), json.at("posY"), json.at("posZ"),
-            json.at("halfTileX"), json.at("halfTileY"), json.at("halfTileZ")
-        ),
-
+        .position = Position::from_json("position"),
         .orientation = json.at("orientation"),
         .palette = json.at("palette"),
         .speed = json.at("speed"),

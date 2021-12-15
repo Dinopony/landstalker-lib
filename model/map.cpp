@@ -124,6 +124,9 @@ void Map::move_entity(uint8_t entity_id, uint8_t entity_new_id)
 void Map::clear_entities()
 {
     _entities.clear();
+    _global_entity_mask_flags.clear();
+    if(_variants.empty())
+        _speaker_ids.clear();
 }
 
 ////////////////////////////////////////////////////////////////

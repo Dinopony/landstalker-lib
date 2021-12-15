@@ -94,6 +94,7 @@ public:
     void address(uint32_t value) { _address = value; }
 
     [[nodiscard]] bool is_variant() const { return _parent_map != nullptr; }
+    [[nodiscard]] Map* parent_map() const { return _parent_map; }
 
     [[nodiscard]] uint8_t tileset_id() const { return _tileset_id; }
     void tileset_id(uint8_t tileset_id) { _tileset_id = tileset_id; }

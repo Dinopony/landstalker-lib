@@ -56,6 +56,23 @@ struct Position {
     bool half_x = false;
     bool half_y = false;
     bool half_z = false;
+
+    [[nodiscard]] Json to_json() const
+    {
+        Json json { {"x", x}, {"y", x}, {"z", x} };
+        if(half_x)  json["halfX"] = true;
+        if(half_y)  json["halfY"] = true;
+        if(half_z)  json["halfZ"] = true;
+        return json;
+    }
+
+    static Position from_json(const Json& json)
+    {
+        return {
+            json.at("x"), json.at("y"), json.at("z"),
+            json.value("halfX", false), json.value("halfY", false), json.value("halfZ", false)
+        };
+    }
 };
 
 class Entity
