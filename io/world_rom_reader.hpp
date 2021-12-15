@@ -13,6 +13,8 @@ public:
     static void read_map_palettes(World& world, const md::ROM& rom);
 
 private:
+    static void read_entity_type_palettes(World& world, const md::ROM& rom);
+
     static void read_maps_data(World& world, const md::ROM& rom);
     static void read_maps_fall_destination(World& world, const md::ROM& rom);
     static void read_maps_climb_destination(World& world, const md::ROM& rom);

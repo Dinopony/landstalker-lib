@@ -62,6 +62,44 @@ void WorldRomReader::read_entity_types(World& world, const md::ROM& rom)
     WorldRomReader::read_entity_type_palettes(world, rom);
 }
 
+void WorldRomReader::read_entity_type_palettes(World& world, const md::ROM& rom)
+{
+    // Read entity palettes
+    for(uint32_t addr = offsets::ENTITY_PALETTES_TABLE ; rom.get_word(addr) != 0xFFFF ; addr += 0x2)
+    {
+        uint8_t entity_id = rom.get_byte(addr);
+        uint8_t palette_id = rom.get_byte(addr+1);
+
+        if(!world.entity_types().count(entity_id))
+            world.add_entity_type(new EntityType(entity_id, "No" + std::to_string(entity_id)));
+
+        EntityType* entity_type = world.entity_type(entity_id);
+        if(palette_id & 0x80)
+        {
+            // High palette
+            palette_id &= 0x7F;
+            uint32_t palette_base_addr = offsets::ENTITY_PALETTES_TABLE_HIGH + (palette_id * 7 * 2);
+
+            EntityHighPaletteColors high_palette_colors {};
+            for(size_t i=0 ; i<high_palette_colors.size() ; ++i)
+                high_palette_colors[i] = rom.get_word(palette_base_addr + (i*2));
+
+            entity_type->high_palette(high_palette_colors);
+        }
+        else
+        {
+            // Low palette
+            uint32_t palette_base_addr = offsets::ENTITY_PALETTES_TABLE_LOW + (palette_id * 6 * 2);
+
+            EntityLowPaletteColors low_palette_colors {};
+            for(size_t i=0 ; i<low_palette_colors.size() ; ++i)
+                low_palette_colors[i] = rom.get_word(palette_base_addr + (i*2));
+
+            entity_type->low_palette(low_palette_colors);
+        }
+    }
+}
+
 void WorldRomReader::read_maps(World& world, const md::ROM& rom)
 {
     read_maps_data(world, rom);

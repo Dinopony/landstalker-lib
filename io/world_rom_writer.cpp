@@ -23,6 +23,7 @@ void WorldRomWriter::write_world_to_rom(md::ROM& rom, const World& world)
     write_items(rom, world);
     write_item_sources(rom, world);
     write_entity_types(rom, world);
+    write_entity_type_palettes(rom, world);
     write_game_strings(rom, world);
     write_tibor_tree_connections(rom, world);
     write_fahl_enemies(rom, world);
@@ -163,6 +164,82 @@ void WorldRomWriter::write_entity_types(md::ROM& rom, const World& world)
     addr += 0x2;
     if(addr > offsets::ENEMY_STATS_TABLE_END)
         throw LandstalkerException("Enemy stats table is bigger than in original game");
+}
+
+void WorldRomWriter::write_entity_type_palettes(md::ROM& rom, const World& world)
+{
+    // Build arrays for low & high palettes
+    std::vector<EntityLowPaletteColors> low_palettes;
+    std::vector<EntityHighPaletteColors> high_palettes;
+
+    uint32_t addr = offsets::ENTITY_PALETTES_TABLE;
+    ByteArray entity_palette_uses;
+    for(auto& [id, entity_type] : world.entity_types())
+    {
+        if(entity_type->has_low_palette())
+        {
+            uint8_t palette_id = low_palettes.size();
+            for(size_t i=0 ; i<low_palettes.size() ; ++i)
+            {
+                if(low_palettes[i] == entity_type->low_palette())
+                {
+                    palette_id = i;
+                    break;
+                }
+            }
+            if(palette_id == low_palettes.size())
+                low_palettes.emplace_back(entity_type->low_palette());
+
+            entity_palette_uses.add_byte(id);
+            entity_palette_uses.add_byte(palette_id & 0x7F);
+        }
+
+        if(entity_type->has_high_palette())
+        {
+            uint8_t palette_id = high_palettes.size();
+            for(size_t i=0 ; i<high_palettes.size() ; ++i)
+            {
+                if(high_palettes[i] == entity_type->high_palette())
+                {
+                    palette_id = i;
+                    break;
+                }
+            }
+            if(palette_id == high_palettes.size())
+                high_palettes.emplace_back(entity_type->high_palette());
+
+            entity_palette_uses.add_byte(id);
+            entity_palette_uses.add_byte(0x80 + (palette_id & 0x7F));
+        }
+    }
+    entity_palette_uses.add_word(0xFFFF);
+
+    // Write the palette uses table, referencing which entity uses which palette(s)
+    if(entity_palette_uses.size() > offsets::ENTITY_PALETTES_TABLE_END - offsets::ENTITY_PALETTES_TABLE)
+        throw LandstalkerException("Entity palette uses table must not be bigger than the one from base game");
+    rom.set_bytes(offsets::ENTITY_PALETTES_TABLE, entity_palette_uses);
+
+    // Write the low palettes contents
+    ByteArray low_palettes_bytes;
+    for(const EntityLowPaletteColors& colors : low_palettes)
+    {
+        for(uint16_t color : colors)
+            low_palettes_bytes.add_word(color);
+    }
+    if(low_palettes_bytes.size() > offsets::ENTITY_PALETTES_TABLE_LOW_END - offsets::ENTITY_PALETTES_TABLE_LOW)
+        throw LandstalkerException("Entity low palettes table must not be bigger than the one from base game");
+    rom.set_bytes(offsets::ENTITY_PALETTES_TABLE_LOW, low_palettes_bytes);
+
+    // Write the high palettes contents
+    ByteArray high_palettes_bytes;
+    for(const EntityHighPaletteColors& colors : high_palettes)
+    {
+        for(uint16_t color : colors)
+            high_palettes_bytes.add_word(color);
+    }
+    if(high_palettes_bytes.size() > offsets::ENTITY_PALETTES_TABLE_HIGH_END - offsets::ENTITY_PALETTES_TABLE_HIGH)
+        throw LandstalkerException("Entity high palettes table must not be bigger than the one from base game");
+    rom.set_bytes(offsets::ENTITY_PALETTES_TABLE_HIGH, high_palettes_bytes);
 }
 
 void WorldRomWriter::write_game_strings(md::ROM& rom, const World& world)
@@ -447,7 +524,7 @@ void WorldRomWriter::write_maps_entity_masks(md::ROM& rom, const World& world)
 
 void WorldRomWriter::write_maps_dialogue_table(md::ROM& rom, const World& world)
 {
-    uint32_t addr = offsets::DIALOGUE_TABLE;
+    ByteArray bytes;
 
     for(auto& [map_id, map] : world.maps())
     {
@@ -476,8 +553,7 @@ void WorldRomWriter::write_maps_dialogue_table(md::ROM& rom, const World& world)
         {
             // Write map header announcing how many dialogue words follow
             uint16_t header_word = map_id + ((uint16_t)consecutive_packs.size() << 11);
-            rom.set_word(addr, header_word);
-            addr += 0x2;
+            bytes.add_word(header_word);
 
             // Write speaker IDs in map
             for(auto& pair : consecutive_packs)
@@ -486,17 +562,22 @@ void WorldRomWriter::write_maps_dialogue_table(md::ROM& rom, const World& world)
                 uint8_t consecutive_speakers = pair.second;
 
                 uint16_t pack_word = (speaker_id & 0x7FF) + (consecutive_speakers << 11);
-                rom.set_word(addr, pack_word);
-                addr += 0x2;
+                bytes.add_word(pack_word);
             }
         }
     }
+    bytes.add_word(0xFFFF);
 
-    rom.set_word(addr, 0xFFFF);
-    addr += 0x2;
-    if(addr > offsets::DIALOGUE_TABLE_END)
-        throw LandstalkerException("Dialogue table is bigger than in original game");
-    rom.mark_empty_chunk(addr, offsets::DIALOGUE_TABLE_END);
+    rom.mark_empty_chunk(offsets::DIALOGUE_TABLE, offsets::DIALOGUE_TABLE_END);
+    uint32_t room_dialogue_table_addr = rom.inject_bytes(bytes);
+
+    // Inject a small function in order to load dialogue table address in A0 wherever it is in the ROM
+    md::Code code;
+    code.movew(addr_(0xFF1206), reg_D0);
+    code.lea(room_dialogue_table_addr, reg_A0);
+    code.rts();
+    uint32_t injected_func = rom.inject_code(code);
+    rom.set_code(0x25276, md::Code().jsr(injected_func).nop(2));
 }
 
 void WorldRomWriter::write_maps_entities(md::ROM& rom, const World& world)

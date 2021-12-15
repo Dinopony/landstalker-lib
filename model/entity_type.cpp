@@ -6,9 +6,10 @@ EntityType* EntityType::from_json(uint8_t id, const Json& json, const World& wor
     const std::string& name = json.at("name");
     const std::string& type = json.at("type");
 
+    EntityType* entity_type = nullptr;
     if(type == "entity")
     {
-        return new EntityType(id, name);
+        entity_type = new EntityType(id, name);
     }
     else if(type == "enemy")
     {
@@ -24,15 +25,26 @@ EntityType* EntityType::from_json(uint8_t id, const Json& json, const World& wor
 
         uint16_t drop_probability = json.value("dropProbability", 0);
 
-        return new EntityEnemy(id, name, health, attack, defence, dropped_golds, dropped_item, drop_probability);
+        entity_type = new EntityEnemy(id, name, health, attack, defence,
+                                      dropped_golds, dropped_item, drop_probability);
+    }
+    else
+    {
+        return nullptr;
     }
 
-    return nullptr;
+    if(json.contains("paletteLow"))
+        entity_type->low_palette(json.at("paletteLow"));
+    if(json.contains("paletteHigh"))
+        entity_type->high_palette(json.at("paletteHigh"));
+
+    return entity_type;
 }
 
-EntityEnemy::EntityEnemy(uint8_t id, const std::string& name, uint8_t health, uint8_t attack, uint8_t defence, 
-        uint8_t dropped_golds, Item* dropped_item, uint16_t drop_probability) :
-    EntityType              (id, name),
+EntityEnemy::EntityEnemy(uint8_t id, const std::string& name,
+                         uint8_t health, uint8_t attack, uint8_t defence,
+                         uint8_t dropped_golds, Item* dropped_item, uint16_t drop_probability) :
+    EntityType          (id, name),
     _health             (health),
     _attack             (attack),
     _defence            (defence),
