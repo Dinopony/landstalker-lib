@@ -1,18 +1,21 @@
 #include "game_text.hpp"
-#include <sstream>
+
+constexpr uint16_t LINE_SIZE_PIXELS = 0x105;
 
 GameText::GameText(const std::string& text, uint8_t lines_in_textbox) :
-        _lines_in_textbox      (lines_in_textbox)
+    _lines_in_textbox(lines_in_textbox)
 {
     this->text(text);
 }
 
 GameText::GameText(const std::string& text, const std::string& name, uint8_t lines_in_textbox) :
-        GameText(text, lines_in_textbox)
+    _lines_in_textbox(lines_in_textbox)
 {
     std::string full_name = name + ": ";
     for(char c : full_name)
         _current_line_length += chararcter_width(c);
+
+    this->text(text);
 }
 
 void GameText::text(const std::string& text)
@@ -42,7 +45,7 @@ void GameText::add_character(const std::string& text, size_t i)
         }
 
         // Word is too big to fit on the line, skip a line
-        if (_current_line_length + wordWidth >= 0x105)
+        if (_current_line_length + wordWidth >= LINE_SIZE_PIXELS)
             this->add_character('\n');
     }
 
@@ -67,7 +70,7 @@ void GameText::add_character(char character)
         return;
     } 
     
-    if (_current_line_length >= 0x105)
+    if (_current_line_length >= LINE_SIZE_PIXELS)
     {
         this->add_character('\n');
 
