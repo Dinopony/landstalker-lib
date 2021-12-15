@@ -13,8 +13,8 @@ class EntityType
 private:
     uint8_t _id;
     std::string _name;
-    EntityLowPaletteColors _low_palette { 0, 0, 0, 0, 0, 0 };
-    EntityHighPaletteColors _high_palette { 0, 0, 0, 0, 0, 0, 0 };
+    EntityLowPaletteColors _low_palette { 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF };
+    EntityHighPaletteColors _high_palette { 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF };
 
 public:
     EntityType(uint8_t id, std::string name) :
@@ -29,15 +29,15 @@ public:
     [[nodiscard]] std::string name() const { return _name; }
     void name(const std::string& name) { _name = name; }
 
-    [[nodiscard]] bool has_low_palette() const { return _low_palette[0] != 0 && _low_palette[_low_palette.size()-1] != 0; }
+    [[nodiscard]] bool has_low_palette() const { return !(_low_palette[0] == 0xFFFF && _low_palette[_low_palette.size()-1] == 0xFFFF); }
     [[nodiscard]] EntityLowPaletteColors low_palette() const { return _low_palette; }
     void low_palette(EntityLowPaletteColors colors) { _low_palette = colors; }
-    void clear_low_palette() { _low_palette.fill(0); }
+    void clear_low_palette() { _low_palette.fill(0xFFFF); }
 
-    [[nodiscard]] bool has_high_palette() const { return _high_palette[0] != 0 && _high_palette[_high_palette.size()-1] != 0; }
+    [[nodiscard]] bool has_high_palette() const { return !(_high_palette[0] == 0xFFFF && _high_palette[_high_palette.size()-1] == 0xFFFF); }
     [[nodiscard]] EntityHighPaletteColors high_palette() const { return _high_palette; }
     void high_palette(EntityHighPaletteColors colors) { _high_palette = colors; }
-    void clear_high_palette() { _high_palette.fill(0); }
+    void clear_high_palette() { _high_palette.fill(0xFFFF); }
 
     [[nodiscard]] virtual Json to_json() const
     {
