@@ -70,8 +70,8 @@ public:
     [[nodiscard]] const std::vector<uint16_t>& dark_maps() const { return _dark_maps; }
     void dark_maps(const std::vector<uint16_t>& dark_maps) { _dark_maps = dark_maps; }
 
-    [[nodiscard]] const SpawnLocation& spawn_location() const { return _spawn_location; }
-    void spawn_location(const SpawnLocation& spawn) { _spawn_location = spawn; }
+    [[nodiscard]] virtual const SpawnLocation& spawn_location() const { return _spawn_location; }
+    virtual void spawn_location(const SpawnLocation& spawn) { _spawn_location = spawn; }
 
     [[nodiscard]] const std::vector<Flag>& starting_flags() const { return _starting_flags; }
     std::vector<Flag>& starting_flags() { return _starting_flags; }
