@@ -6,24 +6,25 @@
 
 class GameText
 {
-public:
-    GameText(uint8_t lines_in_textbox = 3);
-    GameText(const std::string& text, uint8_t lines_in_textbox = 3);
-
-    const std::string& getText() const { return _initialText; }
-    void setText(const std::string& text);
-
-    void addCharacter(const std::string& text, size_t i);
-    void addCharacter(char character);
-
-    const std::string& getOutput() const { return _outputText; }
-
-    static uint8_t getCharacterWidth(char character);
-
 private:
-    std::string _initialText;
-    std::string _outputText;
-    uint16_t _currentLineLength;
-    uint8_t _currentLineCount;
-    uint8_t _linesInTextbox;
+    std::string _initial_text;
+    std::string _output_text;
+    uint16_t _current_line_length = 0;
+    uint8_t _current_line_count = 0;
+    uint8_t _lines_in_textbox = 3;
+
+public:
+    GameText() = default;
+    explicit GameText(const std::string& text, uint8_t lines_in_textbox = 3);
+    GameText(const std::string& text, const std::string& name, uint8_t lines_in_textbox = 3);
+
+    [[nodiscard]] const std::string& text() const { return _initial_text; }
+    void text(const std::string& text);
+
+    void add_character(const std::string& text, size_t i);
+    void add_character(char character);
+
+    [[nodiscard]] const std::string& getOutput() const { return _output_text; }
+
+    static uint8_t chararcter_width(char character);
 };

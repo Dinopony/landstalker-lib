@@ -1,87 +1,87 @@
 #include "game_text.hpp"
 #include <sstream>
 
-GameText::GameText(uint8_t lines_in_textbox) : 
-    _currentLineLength   (0), 
-    _currentLineCount    (0), 
-    _linesInTextbox      (lines_in_textbox)
-{}
-
-GameText::GameText(const std::string& text, uint8_t lines_in_textbox) : 
-    _currentLineLength   (0), 
-    _currentLineCount    (0), 
-    _linesInTextbox      (lines_in_textbox)
+GameText::GameText(const std::string& text, uint8_t lines_in_textbox) :
+        _lines_in_textbox      (lines_in_textbox)
 {
-    this->setText(text);
+    this->text(text);
 }
 
-void GameText::setText(const std::string& text)
+GameText::GameText(const std::string& text, const std::string& name, uint8_t lines_in_textbox) :
+        GameText(text, lines_in_textbox)
 {
-    _initialText = text;
-    _outputText = "";
+    std::string full_name = name + ": ";
+    for(char c : full_name)
+        _current_line_length += chararcter_width(c);
+}
+
+void GameText::text(const std::string& text)
+{
+    _initial_text = text;
+    _output_text = "";
 
     for (size_t i = 0; i < text.size(); ++i)
-        this->addCharacter(text, i);
+        this->add_character(text, i);
 
-    _outputText += "\x03"; // EOL
+    _output_text += "\x03"; // EOL
 }
 
-void GameText::addCharacter(const std::string& text, size_t i)
+void GameText::add_character(const std::string& text, size_t i)
 {
     char character = text[i];
 
     // If we start a new word, check if we can finish it on the same line
-    if (!_outputText.empty() && character != ' ' && (*_outputText.rbegin()) == ' ')
+    if (!_output_text.empty() && character != ' ' && (*_output_text.rbegin()) == ' ')
     {
         uint16_t wordWidth = 0;
         char currentWordChar = character;
         while (currentWordChar != '\n' && currentWordChar != ' ' && currentWordChar != '\0')
         {
-            wordWidth += getCharacterWidth(currentWordChar);
+            wordWidth += chararcter_width(currentWordChar);
             currentWordChar = text[++i];
         }
 
         // Word is too big to fit on the line, skip a line
-        if (_currentLineLength + wordWidth >= 0x105)
-            this->addCharacter('\n');
+        if (_current_line_length + wordWidth >= 0x105)
+            this->add_character('\n');
     }
 
-    this->addCharacter(character);
+    this->add_character(character);
 }
 
-void GameText::addCharacter(char character)
+void GameText::add_character(char character)
 {
     if (character == '\n')
     {
-        _currentLineLength = 0;
-        if (*_outputText.rbegin() == ' ')
-            _outputText = _outputText.substr(0, _outputText.size() - 1);
+        _current_line_length = 0;
+        if (*_output_text.rbegin() == ' ')
+            _output_text = _output_text.substr(0, _output_text.size() - 1);
 
-        if (++_currentLineCount == _linesInTextbox)
+        if (++_current_line_count == _lines_in_textbox)
         {
-            _outputText += "\x1E";
-            _currentLineCount = 0;
-        } 
-        _outputText += "\xA";
+            _output_text += "\x1E";
+            _current_line_count = 0;
+        }
+        _output_text += "\x0A";
 
         return;
     } 
     
-    if (_currentLineLength >= 0x105)
+    if (_current_line_length >= 0x105)
     {
-        this->addCharacter('\n');
+        this->add_character('\n');
 
-        uint8_t previousByte = *_outputText.rbegin();
+        uint8_t previousByte = *_output_text.rbegin();
         bool needsHyphen = (previousByte >= 'A' && previousByte <= 'z');
         if (needsHyphen)
-            this->addCharacter('-');
+            this->add_character('-');
     }
 
-    _outputText += character;
-    _currentLineLength += getCharacterWidth(character);
+    _output_text += character;
+    _current_line_length += chararcter_width(character);
 }
 
-uint8_t GameText::getCharacterWidth(char character)
+uint8_t GameText::chararcter_width(char character)
 {
     switch (character)
     {
