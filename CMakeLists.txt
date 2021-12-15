@@ -79,6 +79,8 @@ set(SOURCES
         "tools/textbanks_decoder.cpp"
         "tools/textbanks_encoder.hpp"
         "tools/textbanks_encoder.cpp"
+        "tools/sprite.hpp"
+        "tools/sprite.cpp"
 
         "tools/huffman/tree.hpp"
         "tools/huffman/tree_node.hpp"
