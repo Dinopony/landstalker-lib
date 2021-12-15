@@ -6,6 +6,8 @@ class World;
 
 class WorldRomReader {
 public:
+    static void read_game_strings(World& world, const md::ROM& rom);
+    static void read_entity_types(World& world, const md::ROM& rom);
     static void read_maps(World& world, const md::ROM& rom);
     static void read_map_connections(World& world, const md::ROM& rom);
     static void read_map_palettes(World& world, const md::ROM& rom);

@@ -42,7 +42,7 @@ namespace offsets
     constexpr uint32_t SACRED_TREES_PERSISTENCE_FLAGS_TABLE_END = 0x1ABF2;
     
     constexpr uint32_t MAP_ENTITIES_OFFSETS_TABLE = 0x01B090;
-    
+
     constexpr uint32_t ENEMY_STATS_TABLE = 0x01B6F0;
     constexpr uint32_t ENEMY_STATS_TABLE_END = 0x01B932;
     
@@ -51,6 +51,9 @@ namespace offsets
 
     constexpr uint32_t DIALOGUE_TABLE = 0x0256D6;
     constexpr uint32_t DIALOGUE_TABLE_END = 0x025B0C;
+
+    constexpr uint32_t ENTITY_DIALOGUE_SCRIPT_TABLE = 0x25B0E;
+    constexpr uint32_t ENTITY_DIALOGUE_SCRIPT_TABLE_END = 0x25D96;
 
     constexpr uint32_t ITEM_DATA_TABLE = 0x029304;
     constexpr uint32_t ITEM_NAMES_TABLE = 0x029732;
@@ -78,4 +81,11 @@ namespace offsets
     constexpr uint32_t MAP_CONNECTIONS_TABLE_END = 0x11EA64;
 
     constexpr uint32_t ITEM_SPRITES_TABLE = 0x121578;
+
+    constexpr uint32_t ENTITY_PALETTES_TABLE = 0x1A453A;
+    constexpr uint32_t ENTITY_PALETTES_TABLE_END = 0x1A47E0;
+    constexpr uint32_t ENTITY_PALETTES_TABLE_LOW = ENTITY_PALETTES_TABLE_END;
+    constexpr uint32_t ENTITY_PALETTES_TABLE_LOW_END = 0x1A4BA0;
+    constexpr uint32_t ENTITY_PALETTES_TABLE_HIGH = ENTITY_PALETTES_TABLE_LOW_END;
+    constexpr uint32_t ENTITY_PALETTES_TABLE_HIGH_END = 0x1A4C8E;
 }

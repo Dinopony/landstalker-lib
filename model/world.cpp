@@ -11,7 +11,7 @@
 #include "../constants/offsets.hpp"
 #include "../io/world_rom_reader.hpp"
 #include "../io/world_rom_writer.hpp"
-#include "../tools/textbanks_decoder.hpp"
+
 #include "../tools/textbanks_encoder.hpp"
 #include "../exceptions.hpp"
 
@@ -28,8 +28,10 @@ World::World(const md::ROM& rom)
 {
     // No requirements
     this->load_items();
-    this->load_game_strings(rom);
-    this->load_entity_types(rom);
+    WorldRomReader::read_game_strings(*this, rom);
+
+    WorldRomReader::read_entity_types(*this, rom);
+    this->load_entity_types();
     this->load_teleport_trees();
 
     // Reading map entities might actually require items
@@ -131,115 +133,6 @@ std::vector<ItemSource*> World::item_sources_with_item(Item* item)
     return sources_with_item;
 }
 
-void World::load_items()
-{
-    // Load base model
-    Json items_json = Json::parse(ITEMS_JSON);
-    for(auto& [id_string, item_json] : items_json.items())
-    {
-        uint8_t id = std::stoi(id_string);
-        this->add_item(Item::from_json(id, item_json));
-    }
-    std::cout << _items.size() << " items loaded." << std::endl;
-}
-
-void World::load_item_sources()
-{
-    Json item_sources_json = Json::parse(ITEM_SOURCES_JSON);
-    for(const Json& source_json : item_sources_json)
-    {
-        _item_sources.emplace_back(ItemSource::from_json(source_json, *this));
-    }
-    std::cout << _item_sources.size() << " item sources loaded." << std::endl;
-
-    // The following chests are absent from the game on release or modded out of the game for the rando, and their IDs are therefore free:
-    // 0x0E (14): Mercator Kitchen (variant?)
-    // 0x1E (30): King Nole's Cave spiral staircase (variant with enemies?) ---> 29 is the one used in rando
-    // 0x20 (32): Boulder chase hallway (variant with enemies?) ---> 31 is the one used in rando
-    // 0x25 (37): Thieves Hideout entrance (variant with water)
-    // 0x27 (39): Thieves Hideout entrance (waterless variant)
-    // 0x28 (40): Thieves Hideout entrance (waterless variant)
-    // 0x33 (51): Thieves Hideout second room (waterless variant)
-    // 0x3D (61): Thieves Hideout reward room (Kayla cutscene variant) 
-    // 0x3E (62): Thieves Hideout reward room (Kayla cutscene variant)
-    // 0x3F (63): Thieves Hideout reward room (Kayla cutscene variant)
-    // 0x40 (64): Thieves Hideout reward room (Kayla cutscene variant)
-    // 0x41 (65): Thieves Hideout reward room (Kayla cutscene variant)
-    // 0xBB (187): Crypt (Larson. E room)
-    // 0xBC (188): Crypt (Larson. E room)
-    // 0xBD (189): Crypt (Larson. E room)
-    // 0xBE (190): Crypt (Larson. E room)
-    // 0xC3 (195): Map 712 / 0x2C8 ???
-}
-
-void World::load_teleport_trees()
-{
-    Json trees_json = Json::parse(WORLD_TELEPORT_TREES_JSON);
-    for(const Json& tree_pair_json : trees_json)
-    {
-        WorldTeleportTree* tree_1 = WorldTeleportTree::from_json(tree_pair_json[0]);
-        WorldTeleportTree* tree_2 = WorldTeleportTree::from_json(tree_pair_json[1]);
-        _teleport_tree_pairs.emplace_back(std::make_pair(tree_1, tree_2));
-    }
-
-    std::cout << _teleport_tree_pairs.size()  << " teleport tree pairs loaded." << std::endl;
-}
-
-void World::load_game_strings(const md::ROM& rom)
-{
-    TextbanksDecoder decoder(rom);
-    _game_strings = decoder.strings();
-}
-
-void World::load_entity_types(const md::ROM& rom)
-{
-    // Read item drop probabilities from a table in the ROM
-    std::vector<uint16_t> probability_table;
-    for(uint32_t addr = offsets::PROBABILITY_TABLE ; addr < offsets::PROBABILITY_TABLE_END ; addr += 0x2)
-        probability_table.emplace_back(rom.get_word(addr));
-
-    // Read enemy info from a table in the ROM
-    for(uint32_t addr = offsets::ENEMY_STATS_TABLE ; rom.get_word(addr) != 0xFFFF ; addr += 0x6)
-    {
-        uint8_t id = rom.get_byte(addr);
-        std::string name = "enemy_" + std::to_string(id);
-        
-        uint8_t health = rom.get_byte(addr+1);
-        uint8_t defence = rom.get_byte(addr+2);
-        uint8_t dropped_golds = rom.get_byte(addr+3);
-        uint8_t attack = rom.get_byte(addr+4) & 0x7F;
-        Item* dropped_item = _items.at(rom.get_byte(addr+5) & 0x3F);
-
-        // Use previously built probability table to know the real drop chances
-        uint8_t probability_id = ((rom.get_byte(addr+4) & 0x80) >> 5) | (rom.get_byte(addr+5) >> 6);
-        uint16_t drop_probability = probability_table.at(probability_id);
-
-        _entity_types[id] = new EntityEnemy(id, name, health, attack, defence, dropped_golds, dropped_item, drop_probability);  
-    }
-
-    // Init ground item entity types
-    for(auto& [item_id, item] : _items)
-    {
-        if(item_id > 0x3F)
-            continue;
-        uint8_t entity_id = item_id + 0xC0;
-        _entity_types[entity_id] = new EntityItemOnGround(entity_id, "ground_item (" + item->name() + ")", item);
-    }
-
-    // Apply the randomizer model changes to the model loaded from ROM
-    Json entities_json = Json::parse(ENTITIES_JSON);
-    for(auto& [id_string, entity_json] : entities_json.items())
-    {
-        uint8_t id = std::stoi(id_string);
-        if(!_entity_types.count(id))
-            _entity_types[id] = EntityType::from_json(id, entity_json, *this);
-        else
-            _entity_types[id]->apply_json(entity_json, *this);
-    }
-
-    std::cout << _entity_types.size()  << " entities loaded." << std::endl;
-}
-
 uint8_t World::starting_life() const
 {
     if(_custom_starting_life)
@@ -325,6 +218,14 @@ uint8_t World::map_palette_id(MapPalette* palette) const
     throw LandstalkerException("Could not find id of MapPalette as it doesn't seem to be in world's map palette list");
 }
 
+uint16_t World::first_empty_game_string_id(uint16_t initial_index) const
+{
+    for(size_t i=initial_index ; i<_game_strings.size() ; ++i)
+        if(_game_strings[i].empty())
+            return (uint16_t) i;
+    return _game_strings.size();
+}
+
 void World::clean_unused_palettes()
 {
    std::set<MapPalette*> used_palettes;
@@ -348,4 +249,85 @@ void World::add_map_palette(MapPalette* palette)
     if(_map_palettes.size() == 0x3F)
         throw LandstalkerException("Cannot add palette because maximum number of palettes (" + std::to_string(0x3F) + ") was reached");
     _map_palettes.emplace_back(palette);
+}
+
+void World::load_items()
+{
+    // Load base model
+    Json items_json = Json::parse(ITEMS_JSON);
+    for(auto& [id_string, item_json] : items_json.items())
+    {
+        uint8_t id = std::stoi(id_string);
+        this->add_item(Item::from_json(id, item_json));
+    }
+    std::cout << _items.size() << " items loaded." << std::endl;
+}
+
+void World::load_item_sources()
+{
+    Json item_sources_json = Json::parse(ITEM_SOURCES_JSON);
+    for(const Json& source_json : item_sources_json)
+    {
+        _item_sources.emplace_back(ItemSource::from_json(source_json, *this));
+    }
+    std::cout << _item_sources.size() << " item sources loaded." << std::endl;
+
+    // The following chests are absent from the game on release or modded out of the game for the rando, and their IDs are therefore free:
+    // 0x0E (14): Mercator Kitchen (variant?)
+    // 0x1E (30): King Nole's Cave spiral staircase (variant with enemies?) ---> 29 is the one used in rando
+    // 0x20 (32): Boulder chase hallway (variant with enemies?) ---> 31 is the one used in rando
+    // 0x25 (37): Thieves Hideout entrance (variant with water)
+    // 0x27 (39): Thieves Hideout entrance (waterless variant)
+    // 0x28 (40): Thieves Hideout entrance (waterless variant)
+    // 0x33 (51): Thieves Hideout second room (waterless variant)
+    // 0x3D (61): Thieves Hideout reward room (Kayla cutscene variant)
+    // 0x3E (62): Thieves Hideout reward room (Kayla cutscene variant)
+    // 0x3F (63): Thieves Hideout reward room (Kayla cutscene variant)
+    // 0x40 (64): Thieves Hideout reward room (Kayla cutscene variant)
+    // 0x41 (65): Thieves Hideout reward room (Kayla cutscene variant)
+    // 0xBB (187): Crypt (Larson. E room)
+    // 0xBC (188): Crypt (Larson. E room)
+    // 0xBD (189): Crypt (Larson. E room)
+    // 0xBE (190): Crypt (Larson. E room)
+    // 0xC3 (195): Map 712 / 0x2C8 ???
+}
+
+void World::load_teleport_trees()
+{
+    Json trees_json = Json::parse(WORLD_TELEPORT_TREES_JSON);
+    for(const Json& tree_pair_json : trees_json)
+    {
+        WorldTeleportTree* tree_1 = WorldTeleportTree::from_json(tree_pair_json[0]);
+        WorldTeleportTree* tree_2 = WorldTeleportTree::from_json(tree_pair_json[1]);
+        _teleport_tree_pairs.emplace_back(std::make_pair(tree_1, tree_2));
+    }
+
+    std::cout << _teleport_tree_pairs.size()  << " teleport tree pairs loaded." << std::endl;
+}
+
+void World::load_entity_types()
+{
+    // Apply the randomizer model changes to the model loaded from ROM
+    Json entities_json = Json::parse(ENTITIES_JSON);
+    for(auto& [id_string, entity_json] : entities_json.items())
+    {
+        uint8_t id = std::stoi(id_string);
+        if(!_entity_types.count(id))
+            _entity_types[id] = EntityType::from_json(id, entity_json, *this);
+        else
+            _entity_types[id]->apply_json(entity_json, *this);
+    }
+
+    std::cout << _entity_types.size()  << " entities loaded." << std::endl;
+}
+
+void World::add_entity_type(EntityType* entity_type)
+{
+    if(_entity_types.count(entity_type->id()))
+    {
+        throw LandstalkerException("Trying to add an entity type with ID #" + std::to_string(entity_type->id())
+                                   + " whereas there already is one.");
+    }
+
+    _entity_types[entity_type->id()] = entity_type;
 }

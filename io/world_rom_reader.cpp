@@ -11,7 +11,56 @@
 #include "../constants/offsets.hpp"
 #include "../constants/entity_type_codes.hpp"
 
+#include "../tools/textbanks_decoder.hpp"
+#include "../tools/byte_array.hpp"
+
 #include "../exceptions.hpp"
+
+void WorldRomReader::read_game_strings(World& world, const md::ROM& rom)
+{
+    TextbanksDecoder decoder(rom);
+    world.game_strings() = decoder.strings();
+}
+
+void WorldRomReader::read_entity_types(World& world, const md::ROM& rom)
+{
+    // Init ground item pseudo entity types
+    for(auto& [item_id, item] : world.items())
+    {
+        if(item_id > 0x3F)
+            continue;
+        uint8_t entity_id = item_id + 0xC0;
+        world.add_entity_type(new EntityItemOnGround(entity_id, "ground_item (" + item->name() + ")", item));
+    }
+
+    // Read item drop probabilities from a table in the ROM
+    std::vector<uint16_t> probability_table;
+    for(uint32_t addr = offsets::PROBABILITY_TABLE ; addr < offsets::PROBABILITY_TABLE_END ; addr += 0x2)
+        probability_table.emplace_back(rom.get_word(addr));
+
+    // Read enemy info from a table in the ROM
+    for(uint32_t addr = offsets::ENEMY_STATS_TABLE ; rom.get_word(addr) != 0xFFFF ; addr += 0x6)
+    {
+        uint8_t id = rom.get_byte(addr);
+        std::string name = "enemy_" + std::to_string(id);
+
+        uint8_t health = rom.get_byte(addr+1);
+        uint8_t defence = rom.get_byte(addr+2);
+        uint8_t dropped_golds = rom.get_byte(addr+3);
+        uint8_t attack = rom.get_byte(addr+4) & 0x7F;
+        Item* dropped_item = world.item(rom.get_byte(addr+5) & 0x3F);
+
+        // Use previously built probability table to know the real drop chances
+        uint8_t probability_id = ((rom.get_byte(addr+4) & 0x80) >> 5) | (rom.get_byte(addr+5) >> 6);
+        uint16_t drop_probability = probability_table.at(probability_id);
+
+        world.add_entity_type(new EntityEnemy(id, name,
+                                              health, attack, defence,
+                                              dropped_golds, dropped_item, drop_probability));
+    }
+
+    WorldRomReader::read_entity_type_palettes(world, rom);
+}
 
 void WorldRomReader::read_maps(World& world, const md::ROM& rom)
 {
@@ -284,3 +333,5 @@ void WorldRomReader::read_map_palettes(World& world, const md::ROM& rom)
         world.add_map_palette(new MapPalette(palette_data));
     }    
 }
+
+// TODO: Improve sprite encoding

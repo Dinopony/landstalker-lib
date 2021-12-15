@@ -65,6 +65,7 @@ public:
 
     [[nodiscard]] const std::vector<std::string>& game_strings() const { return _game_strings; }
     std::vector<std::string>& game_strings() { return _game_strings; }
+    [[nodiscard]] uint16_t first_empty_game_string_id(uint16_t initial_index = 0) const;
 
     [[nodiscard]] const std::vector<uint16_t>& dark_maps() const { return _dark_maps; }
     void dark_maps(const std::vector<uint16_t>& dark_maps) { _dark_maps = dark_maps; }
@@ -85,6 +86,7 @@ public:
     [[nodiscard]] const std::map<uint8_t, EntityType*>& entity_types() const { return _entity_types; }
     [[nodiscard]] EntityType* entity_type(uint8_t id) const { return _entity_types.at(id); }
     [[nodiscard]] EntityType* entity_type(const std::string& name) const;
+    void add_entity_type(EntityType* entity_type);
 
     [[nodiscard]] const std::map<uint16_t, Map*>& maps() const { return _maps; }
     [[nodiscard]] Map* map(uint16_t map_id) const { return _maps.at(map_id); }
@@ -107,8 +109,7 @@ private:
     void load_items();
     void load_item_sources();
     void load_teleport_trees();
-    void load_game_strings(const md::ROM& rom);
-    void load_entity_types(const md::ROM& rom);
+    void load_entity_types();
 
     void clean_unused_palettes();
 };
