@@ -56,19 +56,20 @@ static void handle_gold_rewards_for_npc(md::ROM& rom, uint32_t function_check_go
     proc_check_if_item_is_golds.clrl(reg_D0);
     proc_check_if_item_is_golds.movew(addr_(0xFF1196), reg_D0);
     proc_check_if_item_is_golds.cmpiw(ITEM_GOLDS_START, reg_D0);
-    proc_check_if_item_is_golds.bge(2);
-        // Item reward case
-        proc_check_if_item_is_golds.jmp(JUMP_ADDR_ITEM_REWARD);
+    proc_check_if_item_is_golds.blt(5);
+        // Gold reward case
+        proc_check_if_item_is_golds.subiw(ITEM_GOLDS_START, reg_D0);
+        proc_check_if_item_is_golds.jsr(function_check_gold_reward);
+        proc_check_if_item_is_golds.movel(reg_D0, addr_(0xFF1878));
+        proc_check_if_item_is_golds.jmp(JUMP_ADDR_GOLD_REWARD);
     proc_check_if_item_is_golds.cmpiw(ITEM_NONE, reg_D0);
     proc_check_if_item_is_golds.bne(3);
         // No item case
         proc_check_if_item_is_golds.movew(0x1D, reg_D0);
         proc_check_if_item_is_golds.jmp(JUMP_ADDR_NO_REWARD);
-    // Gold reward case
-    proc_check_if_item_is_golds.subiw(ITEM_GOLDS_START, reg_D0);
-    proc_check_if_item_is_golds.jsr(function_check_gold_reward);
-    proc_check_if_item_is_golds.movel(reg_D0, addr_(0xFF1878));
-    proc_check_if_item_is_golds.jmp(JUMP_ADDR_GOLD_REWARD);
+    // Item reward case
+    proc_check_if_item_is_golds.jmp(JUMP_ADDR_ITEM_REWARD);
+
 
     uint32_t addr = rom.inject_code(proc_check_if_item_is_golds);
     rom.set_code(0x28EC4, md::Code().jmp(addr));
