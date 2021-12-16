@@ -7,6 +7,7 @@
 #include "../constants/offsets.hpp"
 #include "../constants/values.hpp"
 #include "../exceptions.hpp"
+#include "../tools/sprite.hpp"
 
 #include "assets/blue_jewel.bin.hxx"
 #include "assets/yellow_jewel.bin.hxx"
@@ -193,23 +194,28 @@ static void add_additional_jewel_sprites(md::ROM& rom, uint8_t jewel_count)
     // If we are in "Kazalt jewel" mode, don't do anything
     if(jewel_count > MAX_INDIVIDUAL_JEWELS)
         return;
-    
+
+    SubSpriteMetadata subsprite(0x77FB);
+
     if(jewel_count >= 3)
     {
         // Add a sprite for green jewel and make the item use it
-        uint32_t green_jewel_sprite_addr = rom.inject_bytes(GREEN_JEWEL_SPRITE, GREEN_JEWEL_SPRITE_SIZE);
+        Sprite green_jewel_sprite(GREEN_JEWEL_SPRITE, GREEN_JEWEL_SPRITE_SIZE, { subsprite });
+        uint32_t green_jewel_sprite_addr = rom.inject_bytes(green_jewel_sprite.encode());
         rom.set_long(offsets::ITEM_SPRITES_TABLE + (ITEM_GREEN_JEWEL * 0x4), green_jewel_sprite_addr); // 0x121648
     }
     if(jewel_count >= 4)
     {
         // Add a sprite for blue jewel and make the item use it
-        uint32_t blue_jewel_sprite_addr = rom.inject_bytes(BLUE_JEWEL_SPRITE, BLUE_JEWEL_SPRITE_SIZE);
+        Sprite blue_jewel_sprite(BLUE_JEWEL_SPRITE, BLUE_JEWEL_SPRITE_SIZE, { subsprite });
+        uint32_t blue_jewel_sprite_addr = rom.inject_bytes(blue_jewel_sprite.encode());
         rom.set_long(offsets::ITEM_SPRITES_TABLE + (ITEM_BLUE_JEWEL * 0x4), blue_jewel_sprite_addr);
     }
     if(jewel_count >= 5)
     {
         // Add a sprite for green jewel and make the item use it
-        uint32_t yellow_jewel_sprite_addr = rom.inject_bytes(YELLOW_JEWEL_SPRITE, YELLOW_JEWEL_SPRITE_SIZE);
+        Sprite yellow_jewel_sprite(YELLOW_JEWEL_SPRITE, YELLOW_JEWEL_SPRITE_SIZE, { subsprite });
+        uint32_t yellow_jewel_sprite_addr = rom.inject_bytes(yellow_jewel_sprite.encode());
         rom.set_long(offsets::ITEM_SPRITES_TABLE + (ITEM_YELLOW_JEWEL * 0x4), yellow_jewel_sprite_addr);
     }
 }

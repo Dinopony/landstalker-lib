@@ -29,9 +29,9 @@ wrapped_dependency(TEXT     model/data/item.json                    ITEMS_JSON)
 wrapped_dependency(TEXT     model/data/item_source.json             ITEM_SOURCES_JSON)
 wrapped_dependency(TEXT     model/data/world_teleport_tree.json     WORLD_TELEPORT_TREES_JSON)
 wrapped_dependency(RAW      patches/assets/fixed_hud_tilemap.bin    FIXED_HUD_TILEMAP)
-wrapped_dependency(SPRITE   patches/assets/blue_jewel.bin           BLUE_JEWEL_SPRITE)
-wrapped_dependency(SPRITE   patches/assets/green_jewel.bin          GREEN_JEWEL_SPRITE)
-wrapped_dependency(SPRITE   patches/assets/yellow_jewel.bin         YELLOW_JEWEL_SPRITE)
+wrapped_dependency(RAW      patches/assets/blue_jewel.bin           BLUE_JEWEL_SPRITE)
+wrapped_dependency(RAW      patches/assets/green_jewel.bin          GREEN_JEWEL_SPRITE)
+wrapped_dependency(RAW      patches/assets/yellow_jewel.bin         YELLOW_JEWEL_SPRITE)
 
 set(SOURCES
         # --- Auto-generated dependencies----------------------------------------
@@ -50,11 +50,10 @@ set(SOURCES
 
         # --- Megadrive tools ----------------------------------------
         "md_tools/code.hpp"
-        "md_tools/rom.hpp"
-        "md_tools/types.hpp"
-
         "md_tools/code.cpp"
+        "md_tools/rom.hpp"
         "md_tools/rom.cpp"
+        "md_tools/types.hpp"
 
         # --- Constants ----------------------------------------
         "constants/entity_type_codes.hpp"

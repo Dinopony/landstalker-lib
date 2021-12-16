@@ -1,12 +1,24 @@
 #include <vector>
 #include <cstdint>
-#include <iostream>
 #include "sprite.hpp"
 #include "../exceptions.hpp"
 
 constexpr uint8_t TILE_SIZE_IN_BYTES = 32;
 
-std::vector<uint8_t> decode_lz77(const md::ROM& rom, uint32_t& addr)
+static uint8_t read_byte_from(const uint8_t* it)
+{
+    return *it;
+}
+
+static uint16_t read_word_from(const uint8_t* it)
+{
+    uint8_t msb = read_byte_from(it);
+    it += 1;
+    uint8_t lsb = read_byte_from(it);
+    return (msb << 8) | lsb;
+}
+
+static std::vector<uint8_t> decode_lz77(const uint8_t*& it)
 {
     std::vector<uint8_t> decompressed_bytes;
     uint8_t cmd;
@@ -16,9 +28,9 @@ std::vector<uint8_t> decode_lz77(const md::ROM& rom, uint32_t& addr)
     {
         if(!cmd_remaining_bits)
         {
-            cmd = rom.get_byte(addr);
+            cmd = read_byte_from(it);
             cmd_remaining_bits = 8;
-            addr += 1;
+            it += 1;
         }
 
         uint8_t next_cmd_bit = (cmd & 0x80);
@@ -27,14 +39,15 @@ std::vector<uint8_t> decode_lz77(const md::ROM& rom, uint32_t& addr)
 
         if(next_cmd_bit)
         {
-            decompressed_bytes.emplace_back(rom.get_byte(addr));
-            addr += 1;
+            decompressed_bytes.emplace_back(read_byte_from(it));
+            it += 1;
         }
         else
         {
-            uint8_t byte_1 = rom.get_byte(addr);
-            uint8_t byte_2 = rom.get_byte(addr+1);
-            addr +=2;
+            uint8_t byte_1 = read_byte_from(it);
+            it += 1;
+            uint8_t byte_2 = read_byte_from(it);
+            it += 1;
 
             uint16_t offset = (byte_1 & 0xF0) << 4 | byte_2;
             uint8_t length = 18 - (byte_1 & 0x0F);
@@ -63,21 +76,21 @@ ByteArray Sprite::encode()
     for(const SubSpriteMetadata& subsprite : _subsprites)
         encoded_bytes.add_word(subsprite.to_word());
 
-    uint16_t control = 0x4000 | _data.size();
+    uint16_t control = 0x4000 | (_data.size() / 2);
     encoded_bytes.add_word(control);
     encoded_bytes.add_bytes(_data);
 
     return encoded_bytes;
 }
 
-Sprite Sprite::decode_from(md::ROM& rom, uint32_t addr)
+Sprite Sprite::decode_from(const uint8_t* it)
 {
     size_t bytes_prediction = 0;
     std::vector<SubSpriteMetadata> subsprites;
     while(true)
     {
-        SubSpriteMetadata subsprite(rom.get_word(addr));
-        addr += 2;
+        SubSpriteMetadata subsprite(read_word_from(it));
+        it += 2;
         subsprites.emplace_back(subsprite);
 
         bytes_prediction += (subsprite.tile_count_w * subsprite.tile_count_h * TILE_SIZE_IN_BYTES);
@@ -91,8 +104,8 @@ Sprite Sprite::decode_from(md::ROM& rom, uint32_t addr)
     uint8_t ctrl = 0;
     while((ctrl & 0x04) == 0)
     {
-        uint16_t command = rom.get_word(addr);
-        addr += 2;
+        uint16_t command = read_word_from(it);
+        it += 2;
 
         ctrl = command >> 12;
         uint16_t count = command & 0x0FFF;
@@ -106,15 +119,17 @@ Sprite Sprite::decode_from(md::ROM& rom, uint32_t addr)
         else if (ctrl & 0x02)
         {
             // Read X compressed bytes
-            std::vector<uint8_t> decompressed = decode_lz77(rom, addr);
+            std::vector<uint8_t> decompressed = decode_lz77(it);
             result_bytes.insert(result_bytes.end(), decompressed.begin(), decompressed.end());
         }
         else
         {
             // Copy X raw words
             for(size_t i=0 ; i<count*2 ; ++i)
-                result_bytes.emplace_back(rom.get_byte(addr + i));
-            addr += count*2;
+            {
+                result_bytes.emplace_back(read_byte_from(it));
+                it += 1;
+            }
         }
     }
 

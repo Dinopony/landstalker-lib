@@ -46,6 +46,11 @@ public:
             _subsprites (std::move(subsprites))
     {}
 
+    Sprite(const uint8_t* data, size_t data_size, std::vector<SubSpriteMetadata> subsprites) :
+            _data       (data, data + data_size),
+            _subsprites (std::move(subsprites))
+    {}
+
     void replace_color(uint8_t color_index, uint8_t new_color_index)
     {
         for(uint8_t& byte : _data)
@@ -64,6 +69,6 @@ public:
 
     ByteArray encode();
 
-    static Sprite decode_from(md::ROM& rom, uint32_t addr);
+    static Sprite decode_from(const uint8_t* it);
 };
 
