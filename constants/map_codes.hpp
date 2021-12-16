@@ -441,7 +441,7 @@ constexpr uint16_t MAP_KN_LABYRINTH_423 = 423;
 
 constexpr uint16_t MAP_424 = 424;
 constexpr uint16_t MAP_425 = 425;
-constexpr uint16_t MAP_426 = 426;
+constexpr uint16_t MAP_ROUTE_MASSAN_GUMI_WATERFALL_SHRINE_ENTRANCE = 426;
 constexpr uint16_t MAP_427 = 427;
 constexpr uint16_t MAP_428 = 428;
 constexpr uint16_t MAP_429 = 429;
@@ -778,7 +778,7 @@ constexpr uint16_t MAP_MIR_TOWER_757 = 757;
 constexpr uint16_t MAP_MIR_TOWER_758 = 758;
 constexpr uint16_t MAP_MIR_TOWER_759 = 759;
 constexpr uint16_t MAP_MIR_TOWER_760 = 760;
-constexpr uint16_t MAP_MIR_TOWER_761 = 761;
+constexpr uint16_t MAP_MIR_TOWER_FALLING_SPIKEBALLS_ROOM = 761;
 constexpr uint16_t MAP_MIR_TOWER_762 = 762;
 constexpr uint16_t MAP_MIR_TOWER_763 = 763;
 constexpr uint16_t MAP_MIR_TOWER_764 = 764;
