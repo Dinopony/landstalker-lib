@@ -62,6 +62,39 @@ void ROM::set_long(uint32_t address, uint32_t longWord)
     this->set_word(address + 2, (longWord & 0xFFFF));
 }
 
+std::vector<uint8_t> ROM::get_bytes(uint32_t begin, uint32_t end) const
+{
+    std::vector<uint8_t> output;
+    output.reserve(end - begin);
+
+    for (uint32_t addr = begin; addr < end; addr += 0x1)
+        output.emplace_back(this->get_byte(addr));
+
+    return output;
+}
+
+std::vector<uint16_t> ROM::get_words(uint32_t begin, uint32_t end) const
+{
+    std::vector<uint16_t> output;
+    output.reserve(((end - begin) / 0x2) + 1);
+
+    for (uint32_t addr = begin; addr < end; addr += 0x2)
+        output.emplace_back(this->get_word(addr));
+
+    return output;
+}
+
+std::vector<uint32_t> ROM::get_longs(uint32_t begin, uint32_t end) const
+{
+    std::vector<uint32_t> output;
+    output.reserve(((end - begin) / 0x4) + 1);
+
+    for (uint32_t addr = begin; addr < end; addr += 0x4)
+        output.emplace_back(this->get_long(addr));
+
+    return output;
+}
+
 void ROM::set_bytes(uint32_t address, std::vector<uint8_t> bytes)
 {
     for (uint32_t i = 0; i < bytes.size(); ++i)
@@ -141,32 +174,6 @@ uint32_t ROM::reserve_data_block(uint32_t byte_count, const std::string& label)
         return injection_addr;
     }
     else throw std::out_of_range("Not enough empty room inside the ROM to inject data");
-}
-
-void ROM::data_chunk(uint32_t begin, uint32_t end, std::vector<uint8_t>& output) const
-{
-    for (uint32_t addr = begin; addr < end; ++addr)
-        output.emplace_back(this->get_byte(addr));
-}
-
-void ROM::data_chunk(uint32_t begin, uint32_t end, std::vector<uint16_t>& output) const
-{
-    for (uint32_t addr = begin; addr < end; addr += 0x2)
-        output.emplace_back(this->get_word(addr));
-}
-
-void ROM::data_chunk(uint32_t begin, uint32_t end, std::vector<uint32_t>& output) const
-{
-    for (uint32_t addr = begin; addr < end; addr += 0x4)
-        output.emplace_back(this->get_long(addr));
-}
-
-std::vector<uint8_t> ROM::data_chunk(uint32_t begin, uint32_t end) const
-{
-    std::vector<uint8_t> output;
-    for (uint32_t addr = begin; addr < end; ++addr)
-        output.emplace_back(this->get_byte(addr));
-    return output;
 }
 
 void ROM::mark_empty_chunk(uint32_t begin, uint32_t end)

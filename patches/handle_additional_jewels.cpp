@@ -89,8 +89,7 @@ static void add_jewel_check_for_kazalt_teleporter(md::ROM& rom, uint8_t jewel_co
 
 static void rename_jewels(md::ROM& rom, World& world, uint8_t jewel_count)
 {
-    std::vector<uint8_t> item_name_bytes;
-    rom.data_chunk(0x29732, 0x29A0A, item_name_bytes);
+    std::vector<uint8_t> item_name_bytes = rom.get_bytes(0x29732, 0x29A0A);
     std::vector<std::vector<uint8_t>> item_names;
 
     // "Kazalt Jewel" mode is a specific mode when user asked for more jewels than we can provide individual items for.

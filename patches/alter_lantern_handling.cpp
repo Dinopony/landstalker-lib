@@ -125,7 +125,7 @@ void alter_lantern_handling(md::ROM& rom, const World& world)
     md::Code ext_init_palette;
 
     ext_init_palette.movew(0x0CCC, addr_(0xFF00A2));
-    ext_init_palette.add_bytes(rom.data_chunk(0x19520, 0x19526)); // Add the jsr that was removed for injection
+    ext_init_palette.add_bytes(rom.get_bytes(0x19520, 0x19526)); // Add the jsr that was removed for injection
     ext_init_palette.jsr(0x87BE);
     ext_init_palette.rts();
     uint32_t addr = rom.inject_code(ext_init_palette);

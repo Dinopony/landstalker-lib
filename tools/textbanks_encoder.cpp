@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <map>
-#include <set>
 #include <algorithm>
 
 TextbanksEncoder::TextbanksEncoder(md::ROM& rom, const std::vector<std::string>& strings)
@@ -14,7 +13,7 @@ TextbanksEncoder::TextbanksEncoder(md::ROM& rom, const std::vector<std::string>&
 void TextbanksEncoder::build_trees(const std::vector<std::string>& strings)
 {
     std::map<uint8_t, std::vector<SymbolCount>> sorted_symbol_counts;
-    this->count_symbols(strings, sorted_symbol_counts);
+    TextbanksEncoder::count_symbols(strings, sorted_symbol_counts);
 
     for (uint8_t symbol_id = 0; symbol_id < SYMBOL_COUNT; symbol_id++)
     {
@@ -33,8 +32,8 @@ void TextbanksEncoder::count_symbols(const std::vector<std::string>& strings, st
 {
     uint32_t symbol_counts[SYMBOL_COUNT][SYMBOL_COUNT];
 
-    for (uint8_t i = 0; i < SYMBOL_COUNT; ++i)
-        for (uint8_t j = 0; j < SYMBOL_COUNT; ++j)
+    for(uint8_t i = 0; i < SYMBOL_COUNT; ++i)
+        for(uint8_t j = 0; j < SYMBOL_COUNT; ++j)
             symbol_counts[i][j] = 0;
 
     for (const std::string& string : strings)

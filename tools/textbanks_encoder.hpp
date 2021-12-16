@@ -21,7 +21,7 @@ public:
 
 private:
     void build_trees(const std::vector<std::string>& strings);
-    void count_symbols(const std::vector<std::string>& strings, std::map<uint8_t, std::vector<SymbolCount>>& sortedSymbolCounts);
-    std::vector<uint8_t> string_to_symbols(const std::string& strings);
+    static void count_symbols(const std::vector<std::string>& strings, std::map<uint8_t, std::vector<SymbolCount>>& sortedSymbolCounts);
+    static std::vector<uint8_t> string_to_symbols(const std::string& strings);
     void produce_textbanks(const std::vector<std::string>& strings);
 };

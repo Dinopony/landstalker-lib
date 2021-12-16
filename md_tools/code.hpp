@@ -125,8 +125,8 @@ namespace md
         Code& trap(uint8_t trap_id, std::vector<uint8_t> additionnal_bytes = {});
 
         void label(const std::string& label) { _labels[label] = static_cast<uint32_t>(_bytes.size()); }
-        const std::vector<uint8_t>& get_bytes() const { return _bytes; }
-        uint32_t size() const { return (uint32_t)_bytes.size(); }
+        [[nodiscard]] const std::vector<uint8_t>& get_bytes() const { return _bytes; }
+        [[nodiscard]] uint32_t size() const { return (uint32_t)_bytes.size(); }
 
     private:
         void resolve_branches();

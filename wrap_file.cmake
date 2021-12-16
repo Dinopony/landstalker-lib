@@ -36,26 +36,21 @@ endfunction()
 #   VARIABLE_NAME   - The name of the variable for the byte array. The string "_SIZE" will be append
 #                     to this name and will be used a variable name for size variable.
 #   TEXT_FILE       - If specified a null byte(zero) will be append to the byte array.
-#   SPRITE_FILE     - If specified, 0x77fb4100 will be prepended to the byte array.
 # Usage:
 #   wrap_file(SOURCE_FILE "Logo.png" VARIABLE_NAME "LOGO_PNG")
 function(WRAP_FILE)
-    set(options APPEND TEXT_FILE SPRITE_FILE)
+    set(options APPEND TEXT_FILE)
     set(oneValueArgs SOURCE_FILE VARIABLE_NAME)
     cmake_parse_arguments(WRAP_FILE "${options}" "${oneValueArgs}" "" ${ARGN})
 
         # reads source file contents as hex string
         file(READ ${WRAP_FILE_SOURCE_FILE} hexString HEX)
-        string(LENGTH ${hexString} hexStringLength)
 
         if(WRAP_FILE_TEXT_FILE)
             set(hexString "${hexString}00")
         endif()
 
-        if(WRAP_FILE_SPRITE_FILE)
-            set(hexString "77fb4100${hexString}")
-            math(EXPR hexStringLength "${hexStringLength} + 8")
-        endif()
+        string(LENGTH ${hexString} hexStringLength)
 
         # wraps the hex string into multiple lines at column 32(i.e. 16 bytes per line)
         wrap_string(VARIABLE hexString AT_COLUMN 32)
@@ -77,8 +72,6 @@ endfunction()
 
 if("${PROCESS_TYPE}" STREQUAL "TEXT")
     wrap_file(SOURCE_FILE "${INPUT_FILE}" VARIABLE_NAME "${VARIABLE_NAME}" TEXT_FILE)
-elseif("${PROCESS_TYPE}" STREQUAL "SPRITE")
-    wrap_file(SOURCE_FILE "${INPUT_FILE}" VARIABLE_NAME "${VARIABLE_NAME}" SPRITE_FILE)
 elseif("${PROCESS_TYPE}" STREQUAL "RAW")
     wrap_file(SOURCE_FILE "${INPUT_FILE}" VARIABLE_NAME "${VARIABLE_NAME}")
 else()

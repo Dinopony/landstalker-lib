@@ -11,15 +11,11 @@ void TextbanksDecoder::parse_huffman_trees(const md::ROM& rom)
     const std::pair<uint32_t, uint32_t> HUFFMAN_TREE_OFFSETS(0x23D60, 0x23E38);
     const std::pair<uint32_t, uint32_t> HUFFMAN_TREES(0x23E38,0x2469C);
     
-    std::vector<uint16_t> trees_offsets;
-    rom.data_chunk(HUFFMAN_TREE_OFFSETS.first, HUFFMAN_TREE_OFFSETS.second, trees_offsets);
+    std::vector<uint16_t> trees_offsets = rom.get_words(HUFFMAN_TREE_OFFSETS.first, HUFFMAN_TREE_OFFSETS.second);
+    std::vector<uint8_t> trees_data = rom.get_bytes(HUFFMAN_TREES.first, HUFFMAN_TREES.second);
 
-    std::vector<uint8_t> trees_data;
-    rom.data_chunk(HUFFMAN_TREES.first, HUFFMAN_TREES.second, trees_data);
-
-    for (uint32_t i = 0; i < trees_offsets.size() ; ++i)
+    for(uint16_t tree_offset : trees_offsets)
     {
-        uint16_t tree_offset = trees_offsets[i];
         if (tree_offset == 0xFFFF)
             _trees.emplace_back(nullptr);
         else
@@ -37,8 +33,7 @@ void TextbanksDecoder::parse_textbanks(const md::ROM& rom)
 
     for (uint32_t i = 0; i < TEXTBANKS_OFFSETS.size()-1 ; i++)
     {
-        std::vector<uint8_t> data;
-        rom.data_chunk(TEXTBANKS_OFFSETS[i], TEXTBANKS_OFFSETS[i + 1], data);
+        std::vector<uint8_t> data = rom.get_bytes(TEXTBANKS_OFFSETS[i], TEXTBANKS_OFFSETS[i + 1]);
 
         uint32_t current_string_offset = 0;
         for (uint32_t j = 0; j < STRINGS_PER_TEXTBANK; j++)
@@ -54,7 +49,7 @@ void TextbanksDecoder::parse_textbanks(const md::ROM& rom)
     }
 }
 
-std::string TextbanksDecoder::parse_string(const std::vector<uint8_t>& data, short offset)
+std::string TextbanksDecoder::parse_string(const std::vector<uint8_t>& data, uint32_t offset)
 {
     std::string string;
     uint8_t previous_symbol = 0x55;
@@ -73,7 +68,7 @@ std::string TextbanksDecoder::parse_string(const std::vector<uint8_t>& data, sho
     return string;
 }
 
-uint8_t TextbanksDecoder::parse_next_symbol(HuffmanTree* huffman_tree, const std::vector<uint8_t>& data, short offset, uint32_t& string_bit_index)
+uint8_t TextbanksDecoder::parse_next_symbol(HuffmanTree* huffman_tree, const std::vector<uint8_t>& data, uint32_t offset, uint32_t& string_bit_index)
 {
     Bitfield bits;
 

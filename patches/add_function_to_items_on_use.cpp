@@ -83,7 +83,7 @@ static void make_spell_book_warp_to_start(md::ROM& rom, const World& world)
     spellBookFunction.jsr(0x8EB4);
     spellBookFunction.movem_from_stack({ reg_D0_D7 }, { reg_A0_A6 });
     spellBookFunction.rts();
-    rom.inject_code(spellBookFunction, "func_spell_book");
+    uint32_t func_spell_book_addr = rom.inject_code(spellBookFunction);
 
     // ------------- Extended item post use table -------------
     uint32_t newPostUseTableAddr = rom.reserve_data_block(0x2A+6, "new_post_use_table");
@@ -112,7 +112,7 @@ static void make_spell_book_warp_to_start(md::ROM& rom, const World& world)
     rom.set_word(newPostUseTableAddr+4, 0xB6FF);
     newPostUseTableAddr += 6;
     // PostUseSpellbook
-    rom.set_long(newPostUseTableAddr, rom.stored_address("func_spell_book")); 
+    rom.set_long(newPostUseTableAddr, func_spell_book_addr);
     rom.set_word(newPostUseTableAddr+4, 0xA4FF);
     newPostUseTableAddr += 6;
     // End
