@@ -582,33 +582,32 @@ void WorldRomWriter::write_maps_dialogue_table(md::ROM& rom, const World& world)
 
 void WorldRomWriter::write_maps_entities(md::ROM& rom, const World& world)
 {
-    uint16_t cumulated_offset = 0x0;
+    ByteArray entities_offsets_table, entities_table;
+
     for(auto& [map_id, map] : world.maps())
     {
         // Write map entities
-        if(!map->entities().empty())
+        if(map->entities().empty())
         {
-            rom.set_word(offsets::MAP_ENTITIES_OFFSETS_TABLE + (map_id*2), cumulated_offset + 1);
-
-            for(Entity* entity : map->entities())
-            {
-                std::vector<uint8_t> entity_bytes = entity->to_bytes();
-                rom.set_bytes(offsets::MAP_ENTITIES_TABLE + cumulated_offset, entity_bytes);
-                cumulated_offset += (uint16_t)entity_bytes.size();
-            }
-
-            rom.set_word(offsets::MAP_ENTITIES_TABLE + cumulated_offset, 0xFFFF);
-            cumulated_offset += 0x2;
+            entities_offsets_table.add_word(0x0000);
+            continue;
         }
-        else
-        {
-            rom.set_word(offsets::MAP_ENTITIES_OFFSETS_TABLE + (map_id*2), 0x0000);
-        }
+
+        entities_offsets_table.add_word(entities_table.size() + 1);
+
+        for(Entity* entity : map->entities())
+            entities_table.add_bytes(entity->to_bytes());
+        entities_table.add_word(0xFFFF);
     }
 
-    if(offsets::MAP_ENTITIES_TABLE + cumulated_offset > offsets::MAP_ENTITIES_TABLE_END)
-        throw LandstalkerException("Entities table must not be bigger than the one from base game");
-    rom.mark_empty_chunk(offsets::MAP_ENTITIES_TABLE + cumulated_offset, offsets::MAP_ENTITIES_TABLE_END);
+    rom.mark_empty_chunk(offsets::MAP_ENTITIES_OFFSETS_TABLE, offsets::MAP_ENTITIES_OFFSETS_TABLE_END);
+    rom.mark_empty_chunk(offsets::MAP_ENTITIES_TABLE, offsets::MAP_ENTITIES_TABLE_END);
+
+    uint32_t entities_offsets_table_addr = rom.inject_bytes(entities_offsets_table);
+    rom.set_code(0x1953A, md::Code().lea(entities_offsets_table_addr, reg_A0));
+
+    uint32_t entities_table_addr = rom.inject_bytes(entities_table);
+    rom.set_long(0x19566, entities_table_addr);
 }
 
 void WorldRomWriter::write_maps_entity_persistence_flags(md::ROM& rom, const World& world)
