@@ -51,21 +51,12 @@ public:
             _subsprites (std::move(subsprites))
     {}
 
-    void replace_color(uint8_t color_index, uint8_t new_color_index)
-    {
-        for(uint8_t& byte : _data)
-        {
-            uint8_t msc = byte >> 4;
-            uint8_t lsc = byte & 0x0F;
+    void replace_color(uint8_t color_index, uint8_t new_color_index) { this->replace_color(color_index, new_color_index, 0, _data.size()); }
+    void replace_color(uint8_t color_index, uint8_t new_color_index, size_t start_index, size_t end_index);
+    void replace_color_in_tile(uint8_t color_index, uint8_t new_color_index, uint8_t tile_index);
 
-            if(msc == color_index)
-                msc = new_color_index;
-            if(lsc == color_index)
-                lsc = new_color_index;
-
-            byte = (msc << 4) | lsc;
-        }
-    }
+    void set_pixel(uint8_t tile_id, uint8_t x, uint8_t y, uint8_t color);
+    [[nodiscard]] const std::vector<uint8_t>& data() const { return _data; }
 
     ByteArray encode();
 
