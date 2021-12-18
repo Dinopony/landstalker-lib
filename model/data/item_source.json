@@ -760,6 +760,9 @@
         "name": "King Nole's Labyrinth (-3F): chest before Miro",
         "type": "chest",
         "nodeId": "king_nole_labyrinth_path_to_palace",
+        "hints": [
+            "close to a waterfall"
+        ],
         "chestId": 131
     },
     {
