@@ -21,21 +21,23 @@ static void improve_checks_before_kill(md::ROM& rom, bool fix_tree_cutting_glitc
     if(fix_tree_cutting_glitch)
     {
         func_check_before_kill.beq(4);
-        // Only allow the "killable because holding money" check if the enemy is not a tree
-        func_check_before_kill.cmpiw(0x126, addr_(reg_A5, 0xA));
-        func_check_before_kill.beq(2);
-        func_check_before_kill.jmp(ADDR_JMP_KILL);
+            // Only allow the "killable because holding money" check if the enemy is not a tree
+            func_check_before_kill.cmpiw(0x126, addr_(reg_A5, 0xA));
+            func_check_before_kill.beq(2);
+            func_check_before_kill.jmp(ADDR_JMP_KILL);
     }
     else
     {
         func_check_before_kill.beq(2);
-        func_check_before_kill.jmp(ADDR_JMP_KILL);
+            func_check_before_kill.jmp(ADDR_JMP_KILL);
     }
     // If enemy has "empty item" as a drop, make it unkillable
     func_check_before_kill.cmpib(0x3F, addr_(reg_A5, 0x77));
-    func_check_before_kill.bne(3);
-    func_check_before_kill.movew(0x0001, addr_(reg_A5, 0x3E));
-    func_check_before_kill.rts();
+    func_check_before_kill.bne(5);
+        func_check_before_kill.movew(0x0001, addr_(reg_A5, 0x3E)); // Set life back to 0x0001 to prevent death
+        func_check_before_kill.movew(0x0000, addr_(reg_A5, 0x3C)); // Set damage to 0 to prevent the enemy from dealing damage during a potential cutscene
+        func_check_before_kill.moveb(0x21, addr_(reg_A5, 0x37)); // Interrupt Duke's pattern
+        func_check_before_kill.rts();
     func_check_before_kill.jmp(ADDR_JMP_NO_KILL_YET);
 
     uint32_t func_addr = rom.inject_code(func_check_before_kill);
