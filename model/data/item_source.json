@@ -402,6 +402,9 @@
         "name": "Verla Mines: chest in hidden room accessed by walking on lava",
         "type": "chest",
         "nodeId": "verla_mines_behind_lava",
+        "hints": [
+            "in a very hot place"
+        ],
         "chestId": 76
     },
     {
@@ -687,12 +690,18 @@
         "name": "King Nole's Labyrinth (-3F): first chest before Firedemon",
         "type": "chest",
         "nodeId": "king_nole_labyrinth_post_door",
+        "hints": [
+            "in a very hot place"
+        ],
         "chestId": 122
     },
     {
         "name": "King Nole's Labyrinth (-3F): second chest before Firedemon",
         "type": "chest",
         "nodeId": "king_nole_labyrinth_post_door",
+        "hints": [
+            "in a very hot place"
+        ],
         "chestId": 123
     },
     {
@@ -700,7 +709,8 @@
         "type": "chest",
         "nodeId": "king_nole_labyrinth_post_door",
         "hints": [
-            "kept by a threatening guardian"
+            "kept by a threatening guardian",
+            "in a very hot place"
         ],
         "chestId": 124
     },
@@ -1152,7 +1162,7 @@
     {
         "name": "Verla: chest in well after beating Marley",
         "type": "chest",
-        "nodeId": "verla",
+        "nodeId": "verla_after_mines",
         "hints": [
             "in a well-hidden chest"
         ],
@@ -1345,6 +1355,9 @@
         "name": "Verla Mines: item in the corner of lava filled room",
         "type": "ground",
         "nodeId": "verla_mines",
+        "hints": [
+            "in a very hot place"
+        ],
         "entity": { "mapId": 263, "entityId": 7 }
     },
     {
@@ -1430,6 +1443,9 @@
         "name": "King Nole's Labyrinth (-3F): item on ground climbing back from Firedemon",
         "type": "ground",
         "nodeId": "king_nole_labyrinth_post_door",
+        "hints": [
+            "in a very hot place"
+        ],
         "entity": { "mapId": 399, "entityId": 0 }
     },
     {
@@ -1515,6 +1531,9 @@
         "name": "King Nole's Labyrinth (-3F): First item on ground before Firedemon",
         "type": "ground",
         "nodeId": "king_nole_labyrinth_post_door",
+        "hints": [
+            "in a very hot place"
+        ],
         "entity": { "mapId": 400, "entityId": 0 }
     },
     {
@@ -1709,7 +1728,7 @@
     {
         "name": "Verla: Shop item #5 (extra item after saving town)",
         "type": "shop",
-        "nodeId": "verla",
+        "nodeId": "verla_after_mines",
         "entity": { "mapId": 720, "entityId": 5 }
     },
     {
