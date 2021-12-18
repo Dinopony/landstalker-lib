@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include "../md_tools.hpp"
 #include "../tools/flag.hpp"
 #include "../tools/json.hpp"
@@ -18,11 +20,11 @@ struct GlobalEntityMaskFlag : public Flag
     {}
 
     GlobalEntityMaskFlag(Flag flag, uint8_t first_entity_id) :
-        Flag(flag),
+        Flag(std::move(flag)),
         first_entity_id(first_entity_id)
     {}
 
-    uint16_t to_bytes() const
+    [[nodiscard]] uint16_t to_bytes() const
     {
         uint8_t msb = byte & 0xFF;
         uint8_t lsb = first_entity_id & 0x1F;
@@ -31,7 +33,7 @@ struct GlobalEntityMaskFlag : public Flag
         return (((uint16_t)msb) << 8) + lsb;
     }
 
-    virtual Json to_json() const override
+    [[nodiscard]] Json to_json() const override
     {
         Json json = Flag::to_json();
         json["firstEntityId"] = first_entity_id;
@@ -139,6 +141,8 @@ public:
 
     [[nodiscard]] const std::vector<GlobalEntityMaskFlag>& global_entity_mask_flags() const { return _global_entity_mask_flags; }
     [[nodiscard]] std::vector<GlobalEntityMaskFlag>& global_entity_mask_flags() { return _global_entity_mask_flags; }
+    void convert_global_masks_into_individual();
+
     [[nodiscard]] const std::vector<GlobalEntityMaskFlag>& key_door_mask_flags() const { return _key_door_mask_flags; }
     [[nodiscard]] std::vector<GlobalEntityMaskFlag>& key_door_mask_flags() { return _key_door_mask_flags; }
 

@@ -129,6 +129,17 @@ void Map::clear_entities()
         _speaker_ids.clear();
 }
 
+void Map::convert_global_masks_into_individual()
+{
+    for(const GlobalEntityMaskFlag& flag : _global_entity_mask_flags)
+    {
+        for(size_t i=flag.first_entity_id ; i<_entities.size() ; ++i)
+            _entities[i]->mask_flags().emplace_back(EntityMaskFlag(false, flag.byte, flag.bit));
+    }
+
+    _global_entity_mask_flags.clear();
+}
+
 ////////////////////////////////////////////////////////////////
 
 void Map::add_variant(Map* variant_map, uint8_t flag_byte, uint8_t flag_bit)

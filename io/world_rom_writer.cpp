@@ -488,7 +488,7 @@ void WorldRomWriter::write_maps_key_door_masks(md::ROM& rom, const World& world)
 
 void WorldRomWriter::write_maps_entity_masks(md::ROM& rom, const World& world)
 {
-    uint32_t addr = offsets::MAP_ENTITY_MASKS_TABLE;
+    ByteArray entity_masks_table;
 
     for(auto& [map_id, map] : world.maps())
     {
@@ -506,20 +506,26 @@ void WorldRomWriter::write_maps_entity_masks(md::ROM& rom, const World& world)
                 uint8_t flag_lsb = entity_id & 0x0F;
                 flag_lsb |= (mask_flag.bit & 0x7) << 5;
 
-                rom.set_word(addr, map_id);
-                rom.set_byte(addr+2, flag_msb);
-                rom.set_byte(addr+3, flag_lsb);
-                addr += 0x4;
+                entity_masks_table.add_word(map_id);
+                entity_masks_table.add_byte(flag_msb);
+                entity_masks_table.add_byte(flag_lsb);
             }
             entity_id++;
         }
     }
 
-    rom.set_word(addr, 0xFFFF);
-    addr += 0x2;
-    if(addr > offsets::MAP_ENTITY_MASKS_TABLE_END)
-        throw LandstalkerException("Map entity masks table must not be bigger than the one from base game");
-    rom.mark_empty_chunk(addr, offsets::MAP_ENTITY_MASKS_TABLE_END);
+    entity_masks_table.add_word(0xFFFF);
+
+    rom.mark_empty_chunk(offsets::MAP_ENTITY_MASKS_TABLE, offsets::MAP_ENTITY_MASKS_TABLE_END);
+    uint32_t entity_masks_table_addr = rom.inject_bytes(entity_masks_table);
+
+    // Modify pointer leading to this table, since its address has changed
+    md::Code func_setup_entity_masks_pointer;
+    func_setup_entity_masks_pointer.lea(entity_masks_table_addr, reg_A0);
+    func_setup_entity_masks_pointer.lea(0xFF1000, reg_A1);
+    func_setup_entity_masks_pointer.rts();
+    uint32_t setup_addr = rom.inject_code(func_setup_entity_masks_pointer);
+    rom.set_code(0x1A382, md::Code().jsr(setup_addr).nop(2));
 }
 
 void WorldRomWriter::write_maps_dialogue_table(md::ROM& rom, const World& world)
