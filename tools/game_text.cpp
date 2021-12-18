@@ -13,9 +13,12 @@ GameText::GameText(const std::string& text, const std::string& name, uint8_t lin
 {
     std::string full_name = name + ": ";
     for(char c : full_name)
-        _current_line_length += chararcter_width(c);
+        _current_line_length += character_width(c);
 
-    this->text(text);
+    if(!name.empty())
+        this->text("\u001c" + text);
+    else
+        this->text(text);
 }
 
 void GameText::text(const std::string& text)
@@ -36,16 +39,16 @@ void GameText::add_character(const std::string& text, size_t i)
     // If we start a new word, check if we can finish it on the same line
     if (!_output_text.empty() && character != ' ' && (*_output_text.rbegin()) == ' ')
     {
-        uint16_t wordWidth = 0;
-        char currentWordChar = character;
-        while (currentWordChar != '\n' && currentWordChar != ' ' && currentWordChar != '\0')
+        uint16_t word_width = 0;
+        char current_word_char = character;
+        while (current_word_char != '\n' && current_word_char != ' ' && current_word_char != '\0')
         {
-            wordWidth += chararcter_width(currentWordChar);
-            currentWordChar = text[++i];
+            word_width += character_width(current_word_char);
+            current_word_char = text[++i];
         }
 
         // Word is too big to fit on the line, skip a line
-        if (_current_line_length + wordWidth >= LINE_SIZE_PIXELS)
+        if (_current_line_length + word_width >= LINE_SIZE_PIXELS)
             this->add_character('\n');
     }
 
@@ -74,17 +77,17 @@ void GameText::add_character(char character)
     {
         this->add_character('\n');
 
-        uint8_t previousByte = *_output_text.rbegin();
-        bool needsHyphen = (previousByte >= 'A' && previousByte <= 'z');
-        if (needsHyphen)
+        uint8_t previous_byte = *_output_text.rbegin();
+        bool needs_hyphen = (previous_byte >= 'A' && previous_byte <= 'z');
+        if (needs_hyphen)
             this->add_character('-');
     }
 
     _output_text += character;
-    _current_line_length += chararcter_width(character);
+    _current_line_length += character_width(character);
 }
 
-uint8_t GameText::chararcter_width(char character)
+uint8_t GameText::character_width(char character)
 {
     switch (character)
     {

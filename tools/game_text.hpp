@@ -26,5 +26,5 @@ public:
 
     [[nodiscard]] const std::string& getOutput() const { return _output_text; }
 
-    static uint8_t chararcter_width(char character);
+    static uint8_t character_width(char character);
 };
