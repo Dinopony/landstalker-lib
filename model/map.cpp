@@ -1,6 +1,6 @@
 #include "map.hpp"
 #include "entity.hpp"
-#include "map_palette.hpp"
+#include "../tools/color_palette.hpp"
 #include "world.hpp"
 
 #include "../constants/offsets.hpp"

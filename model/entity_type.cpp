@@ -34,9 +34,17 @@ EntityType* EntityType::from_json(uint8_t id, const Json& json, const World& wor
     }
 
     if(json.contains("paletteLow"))
-        entity_type->low_palette(json.at("paletteLow"));
+    {
+        EntityLowPalette& palette = entity_type->low_palette();
+        for(size_t i=0 ; i<palette.size() ; ++i)
+            palette[i] = Color::from_json(json.at("paletteLow")[i]);
+    }
     if(json.contains("paletteHigh"))
-        entity_type->high_palette(json.at("paletteHigh"));
+    {
+        EntityHighPalette& palette = entity_type->high_palette();
+        for(size_t i=0 ; i<palette.size() ; ++i)
+            palette[i] = Color::from_json(json.at("paletteHigh")[i]);
+    }
 
     return entity_type;
 }

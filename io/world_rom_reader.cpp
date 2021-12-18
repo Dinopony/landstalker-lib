@@ -4,7 +4,7 @@
 #include "../model/item.hpp"
 #include "../model/item_source.hpp"
 #include "../model/map.hpp"
-#include "../model/map_palette.hpp"
+#include "../tools/color_palette.hpp"
 #include "../model/world_teleport_tree.hpp"
 #include "../model/world.hpp"
 
@@ -80,9 +80,9 @@ void WorldRomReader::read_entity_type_palettes(World& world, const md::ROM& rom)
             palette_id &= 0x7F;
             uint32_t palette_base_addr = offsets::ENTITY_PALETTES_TABLE_HIGH + (palette_id * 7 * 2);
 
-            EntityHighPaletteColors high_palette_colors {};
+            EntityHighPalette high_palette_colors {};
             for(size_t i=0 ; i<high_palette_colors.size() ; ++i)
-                high_palette_colors[i] = rom.get_word(palette_base_addr + (i*2));
+                high_palette_colors[i] = Color::from_bgr_word(rom.get_word(palette_base_addr + (i*2)));
 
             entity_type->high_palette(high_palette_colors);
         }
@@ -91,9 +91,9 @@ void WorldRomReader::read_entity_type_palettes(World& world, const md::ROM& rom)
             // Low palette
             uint32_t palette_base_addr = offsets::ENTITY_PALETTES_TABLE_LOW + (palette_id * 6 * 2);
 
-            EntityLowPaletteColors low_palette_colors {};
+            EntityLowPalette low_palette_colors {};
             for(size_t i=0 ; i<low_palette_colors.size() ; ++i)
-                low_palette_colors[i] = rom.get_word(palette_base_addr + (i*2));
+                low_palette_colors[i] = Color::from_bgr_word(rom.get_word(palette_base_addr + (i*2)));
 
             entity_type->low_palette(low_palette_colors);
         }
@@ -361,15 +361,13 @@ void WorldRomReader::read_map_palettes(World& world, const md::ROM& rom)
 
     while(addr < offsets::MAP_PALETTES_TABLE_END)
     {
-        std::array<uint16_t, 13> palette_data {};
+        MapPalette palette_data {};
         for(uint8_t i=0 ; i<13 ; ++i)
         {
-            palette_data[i] = rom.get_word(addr);
+            palette_data[i] = Color::from_bgr_word(rom.get_word(addr));
             addr += 0x2;
         }
 
         world.add_map_palette(new MapPalette(palette_data));
     }    
 }
-
-// TODO: Improve sprite encoding

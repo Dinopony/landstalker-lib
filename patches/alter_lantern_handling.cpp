@@ -2,7 +2,7 @@
 
 #include "../model/world.hpp"
 #include "../model/map.hpp"
-#include "../model/map_palette.hpp"
+#include "../tools/color_palette.hpp"
 #include "../constants/offsets.hpp"
 #include "../tools/byte_array.hpp"
 

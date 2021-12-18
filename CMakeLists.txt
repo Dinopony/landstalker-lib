@@ -72,6 +72,9 @@ set(SOURCES
         "tools/tools.hpp"
         "tools/json.hpp"
 
+        "tools/color.hpp"
+        "tools/color.cpp"
+        "tools/color_palette.hpp"
         "tools/game_text.hpp"
         "tools/game_text.cpp"
         "tools/textbanks_decoder.hpp"
@@ -95,8 +98,6 @@ set(SOURCES
         "model/item.hpp"
         "model/item.cpp"
         "model/map_connection.hpp"
-        "model/map_palette.hpp"
-        "model/map_palette.cpp"
         "model/map.hpp"
         "model/map.cpp"
         "model/spawn_location.hpp"

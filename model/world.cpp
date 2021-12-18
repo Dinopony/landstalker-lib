@@ -4,7 +4,7 @@
 #include "map.hpp"
 #include "item.hpp"
 #include "item_source.hpp"
-#include "map_palette.hpp"
+#include "../tools/color_palette.hpp"
 #include "spawn_location.hpp"
 #include "world_teleport_tree.hpp"
 

@@ -2,19 +2,17 @@
 
 #include <utility>
 #include "item.hpp"
+#include "../tools/color_palette.hpp"
 
 class World;
-
-using EntityLowPaletteColors = std::array<uint16_t, 6>;
-using EntityHighPaletteColors = std::array<uint16_t, 7>;
 
 class EntityType
 {
 private:
     uint8_t _id;
     std::string _name;
-    EntityLowPaletteColors _low_palette { 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF };
-    EntityHighPaletteColors _high_palette { 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF };
+    EntityLowPalette _low_palette {};
+    EntityHighPalette _high_palette {};
 
 public:
     EntityType(uint8_t id, std::string name) :
@@ -29,15 +27,17 @@ public:
     [[nodiscard]] std::string name() const { return _name; }
     void name(const std::string& name) { _name = name; }
 
-    [[nodiscard]] bool has_low_palette() const { return !(_low_palette[0] == 0xFFFF && _low_palette[_low_palette.size()-1] == 0xFFFF); }
-    [[nodiscard]] EntityLowPaletteColors low_palette() const { return _low_palette; }
-    void low_palette(EntityLowPaletteColors colors) { _low_palette = colors; }
-    void clear_low_palette() { _low_palette.fill(0xFFFF); }
+    [[nodiscard]] bool has_low_palette() const { return _low_palette.is_valid(); }
+    [[nodiscard]] const EntityLowPalette& low_palette() const { return _low_palette; }
+    [[nodiscard]] EntityLowPalette& low_palette() { return _low_palette; }
+    void low_palette(EntityLowPalette palette) { _low_palette = palette; }
+    void clear_low_palette() { _low_palette.clear(); }
 
-    [[nodiscard]] bool has_high_palette() const { return !(_high_palette[0] == 0xFFFF && _high_palette[_high_palette.size()-1] == 0xFFFF); }
-    [[nodiscard]] EntityHighPaletteColors high_palette() const { return _high_palette; }
-    void high_palette(EntityHighPaletteColors colors) { _high_palette = colors; }
-    void clear_high_palette() { _high_palette.fill(0xFFFF); }
+    [[nodiscard]] bool has_high_palette() const { return _high_palette.is_valid(); }
+    [[nodiscard]] const EntityHighPalette& high_palette() const { return _high_palette; }
+    [[nodiscard]] EntityHighPalette& high_palette() { return _high_palette; }
+    void high_palette(EntityHighPalette colors) { _high_palette = colors; }
+    void clear_high_palette() { _high_palette.clear(); }
 
     [[nodiscard]] virtual Json to_json() const
     {
@@ -46,9 +46,9 @@ public:
         json["name"] = _name;
         json["type"] = this->type_name();
         if(this->has_low_palette())
-            json["paletteLow"] = _low_palette;
+            json["paletteLow"] = _low_palette.to_json();
         if(this->has_high_palette())
-            json["paletteHigh"] = _high_palette;
+            json["paletteHigh"] = _high_palette.to_json();
 
         return json;
     }

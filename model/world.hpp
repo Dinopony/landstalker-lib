@@ -5,6 +5,7 @@
 #include "../md_tools.hpp"
 #include "../tools/flag.hpp"
 #include "../tools/json.hpp"
+#include "../tools/color_palette.hpp"
 
 #include <map>
 #include <vector>
@@ -19,7 +20,6 @@ class Item;
 class WorldTeleportTree;
 class EntityType;
 class Map;
-class MapPalette;
 
 class World
 {
