@@ -11,7 +11,7 @@ static void improve_checks_before_kill(md::ROM& rom, bool fix_tree_cutting_glitc
 {
     constexpr uint32_t ADDR_JMP_KILL = 0x16284;
     constexpr uint32_t ADDR_JMP_NO_KILL_YET = 0x16262;
-    constexpr uint32_t ADDR_JMP_NO_KILL = 0x1627C;
+    constexpr uint8_t DUKE_SPRITE_ID = 0x0C;
 
     // Inject a new function which fixes the money value check on an enemy when it is killed, causing the tree glitch to be possible
     md::Code func_check_before_kill;
@@ -33,8 +33,10 @@ static void improve_checks_before_kill(md::ROM& rom, bool fix_tree_cutting_glitc
     func_check_before_kill.cmpib(0x3F, addr_(reg_A5, 0x77));
     func_check_before_kill.bne("no_kill_yet");
         func_check_before_kill.movew(0x0001, addr_(reg_A5, 0x3E)); // Set life back to 0x0001 to prevent death
-        func_check_before_kill.movew(0x0000, addr_(reg_A5, 0x3C)); // Set damage to 0 to prevent the enemy from dealing damage during a potential cutscene
+        func_check_before_kill.cmpib(DUKE_SPRITE_ID, addr_(reg_A5, 0x0B));
+        func_check_before_kill.bne("not_duke");
         func_check_before_kill.moveb(0x21, addr_(reg_A5, 0x37)); // Interrupt Duke's pattern
+        func_check_before_kill.label("not_duke");
         func_check_before_kill.rts();
     func_check_before_kill.label("no_kill_yet");
     func_check_before_kill.jmp(ADDR_JMP_NO_KILL_YET);
