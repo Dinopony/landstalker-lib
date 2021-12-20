@@ -47,3 +47,10 @@ void quicken_gaia_effect(md::ROM& rom)
     rom.set_word(0x16878, rom.get_word(0x16878) * SPEEDUP_FACTOR);
     rom.set_word(0x16884, rom.get_word(0x16884) * SPEEDUP_FACTOR);
 }
+
+void quicken_pawn_ticket_effect(md::ROM& rom)
+{
+    constexpr uint8_t SPEEDUP_FACTOR = 3;
+
+    rom.set_word(0x8920, rom.get_word(0x8920) / SPEEDUP_FACTOR);
+}

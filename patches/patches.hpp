@@ -28,6 +28,7 @@ void make_key_not_consumed_on_use(md::ROM& rom);
 // quality_of_life.cpp patches
 void alter_item_order_in_menu(md::ROM& rom);
 void quicken_gaia_effect(md::ROM& rom);
+void quicken_pawn_ticket_effect(md::ROM& rom);
 
 // story_dependencies.cpp patches
 void make_massan_elder_reward_not_story_dependant(md::ROM& rom, const World& world);
