@@ -68,11 +68,16 @@ void Map::insert_entity(uint8_t entity_id, Entity* entity)
     _entities.insert(_entities.begin() + entity_id, entity);
 
     // Shift entity indexes in clear flags
-    for(uint8_t i=0 ; i<_global_entity_mask_flags.size() ; ++i)
+    for(GlobalEntityMaskFlag& global_mask_flag : _global_entity_mask_flags)
     {
-        GlobalEntityMaskFlag& global_mask_flag = _global_entity_mask_flags[i];
         if(entity_id <= global_mask_flag.first_entity_id)
-            global_mask_flag.first_entity_id++;
+            global_mask_flag.first_entity_id += 1;
+    }
+
+    for(GlobalEntityMaskFlag& global_mask_flag : _key_door_mask_flags)
+    {
+        if(entity_id <= global_mask_flag.first_entity_id)
+            global_mask_flag.first_entity_id += 1;
     }
 }
 
@@ -125,6 +130,7 @@ void Map::clear_entities()
 {
     _entities.clear();
     _global_entity_mask_flags.clear();
+    _key_door_mask_flags.clear();
     if(_variants.empty())
         _speaker_ids.clear();
 }
@@ -137,7 +143,14 @@ void Map::convert_global_masks_into_individual()
             _entities[i]->mask_flags().emplace_back(EntityMaskFlag(false, flag.byte, flag.bit));
     }
 
+    for(const GlobalEntityMaskFlag& flag : _key_door_mask_flags)
+    {
+        for(size_t i=flag.first_entity_id ; i<_entities.size() ; ++i)
+            _entities[i]->mask_flags().emplace_back(EntityMaskFlag(false, flag.byte, flag.bit));
+    }
+
     _global_entity_mask_flags.clear();
+    _key_door_mask_flags.clear();
 }
 
 ////////////////////////////////////////////////////////////////
