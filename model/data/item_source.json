@@ -834,7 +834,7 @@
     {
         "name": "Route to Mir Tower: chest behind first sacred tree",
         "type": "chest",
-        "nodeId": "mir_tower_sector_trees",
+        "nodeId": "mir_tower_sector_tree_ledge",
         "chestId": 142
     },
     {
@@ -861,7 +861,7 @@
     {
         "name": "Route to Mir Tower: chest behind second sacred tree",
         "type": "chest",
-        "nodeId": "mir_tower_sector_trees",
+        "nodeId": "mir_tower_sector_tree_coast",
         "chestId": 146
     },
     {
