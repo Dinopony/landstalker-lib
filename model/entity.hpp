@@ -59,7 +59,7 @@ struct Position {
 
     [[nodiscard]] Json to_json() const
     {
-        Json json { {"x", x}, {"y", x}, {"z", x} };
+        Json json { {"x", x}, {"y", y}, {"z", z} };
         if(half_x)  json["halfX"] = true;
         if(half_y)  json["halfY"] = true;
         if(half_z)  json["halfZ"] = true;
