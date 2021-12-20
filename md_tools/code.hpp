@@ -10,11 +10,11 @@ namespace md
     class Code {
     private:
         std::vector<uint8_t> _bytes;
-        std::map<uint32_t, uint16_t> _pending_branches;  // key = address of branch instruction, value = remaining instructions
+        std::map<uint32_t, std::string> _pending_branches;  // key = address of branch instruction, value = label name
         std::map<std::string, uint32_t> _labels;
 
     public:
-        Code() {}
+        Code() = default;
 
         void add_byte(uint8_t byte);
         void add_word(uint16_t word);
@@ -44,17 +44,16 @@ namespace md
         Code& tstw(const Param& target) { return this->tst(target, Size::WORD); }
         Code& tstl(const Param& target) { return this->tst(target, Size::LONG); }
 
-        Code& bra(uint16_t instruction_count = 0);
-        Code& beq(uint16_t instruction_count = 0);
-        Code& bne(uint16_t instruction_count = 0);
-        Code& blt(uint16_t instruction_count = 0);
-        Code& bgt(uint16_t instruction_count = 0);
-        Code& bmi(uint16_t instruction_count = 0);
-        Code& bpl(uint16_t instruction_count = 0);
-        Code& ble(uint16_t instruction_count = 0);
-        Code& bge(uint16_t instruction_count = 0);
-        Code& bcc(uint16_t instruction_count = 0);
         Code& bra(const std::string& label);
+        Code& beq(const std::string& label);
+        Code& bne(const std::string& label);
+        Code& blt(const std::string& label);
+        Code& bgt(const std::string& label);
+        Code& bmi(const std::string& label);
+        Code& bpl(const std::string& label);
+        Code& ble(const std::string& label);
+        Code& bge(const std::string& label);
+        Code& bcc(const std::string& label);
         Code& dbra(const DataRegister& dx, const std::string& label);
 
         Code& clr(const Param& param, Size size);
@@ -122,11 +121,11 @@ namespace md
 
         Code& rts();
         Code& nop(uint16_t amount = 1);
-        Code& trap(uint8_t trap_id, std::vector<uint8_t> additionnal_bytes = {});
+        Code& trap(uint8_t trap_id, const std::vector<uint8_t>& additionnal_bytes = {});
 
-        void label(const std::string& label) { _labels[label] = static_cast<uint32_t>(_bytes.size()); }
-        [[nodiscard]] const std::vector<uint8_t>& get_bytes() const { return _bytes; }
+        void label(const std::string& label);
         [[nodiscard]] uint32_t size() const { return (uint32_t)_bytes.size(); }
+        [[nodiscard]] const std::vector<uint8_t>& get_bytes() const;
 
     private:
         void resolve_branches();

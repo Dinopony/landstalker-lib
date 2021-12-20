@@ -126,13 +126,15 @@ static void make_spell_book_warp_to_start(md::ROM& rom, const World& world)
     newPostUseTableLookupProc.label("newPostUseTableLookupProc_loop");
     newPostUseTableLookupProc.moveb(addr_(reg_A0, 0x04), reg_D2);
     newPostUseTableLookupProc.cmpib(0xFF, reg_D2);
-    newPostUseTableLookupProc.beq(7);
-    newPostUseTableLookupProc.cmpb(reg_D0, reg_D2);
-    newPostUseTableLookupProc.beq(3);
-    newPostUseTableLookupProc.addql(0x06, reg_A0);
-    newPostUseTableLookupProc.bra("newPostUseTableLookupProc_loop");
-    newPostUseTableLookupProc.movel(addr_(reg_A0), reg_A0);
-    newPostUseTableLookupProc.jmp(addr_(reg_A0));
+    newPostUseTableLookupProc.beq("return");
+        newPostUseTableLookupProc.cmpb(reg_D0, reg_D2);
+        newPostUseTableLookupProc.beq("found_item");
+            newPostUseTableLookupProc.addql(0x06, reg_A0);
+            newPostUseTableLookupProc.bra("newPostUseTableLookupProc_loop");
+        newPostUseTableLookupProc.label("found_item");
+        newPostUseTableLookupProc.movel(addr_(reg_A0), reg_A0);
+        newPostUseTableLookupProc.jmp(addr_(reg_A0));
+    newPostUseTableLookupProc.label("return");
     newPostUseTableLookupProc.rts();
     uint32_t newPostUseTableLookupProcAddr = rom.inject_code(newPostUseTableLookupProc);
 
@@ -155,17 +157,20 @@ void add_functions_to_items_on_use(md::ROM& rom, const World& world, bool consum
     md::Code funcExtendedItemHandling;
 
     funcExtendedItemHandling.cmpib(ITEM_RECORD_BOOK, reg_D0);
-    funcExtendedItemHandling.bne(3);
+    funcExtendedItemHandling.bne("spell_book");
         funcExtendedItemHandling.jsr(func_use_record_book_addr);
         funcExtendedItemHandling.rts();
+    funcExtendedItemHandling.label("spell_book");
     funcExtendedItemHandling.cmpib(ITEM_SPELL_BOOK, reg_D0);
-    funcExtendedItemHandling.bne(3);
+    funcExtendedItemHandling.bne("lithograph");
         funcExtendedItemHandling.jsr(0xDC1C); // "func_abracadabra"
         funcExtendedItemHandling.rts();
+    funcExtendedItemHandling.label("lithograph");
     funcExtendedItemHandling.cmpib(ITEM_LITHOGRAPH, reg_D0);
-    funcExtendedItemHandling.bne(3);
+    funcExtendedItemHandling.bne("return");
         funcExtendedItemHandling.movew(0x21, reg_D0); // Read game string 0x21
         funcExtendedItemHandling.jsr(0x22E90);
+    funcExtendedItemHandling.label("return");
     funcExtendedItemHandling.rts();
     
     uint32_t funcExtendedItemHandlingAddr = rom.inject_code(funcExtendedItemHandling);

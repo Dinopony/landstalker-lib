@@ -36,51 +36,46 @@ static void add_jewel_check_for_kazalt_teleporter(md::ROM& rom, uint8_t jewel_co
         proc_handle_jewels_check.andib(0x0F, reg_D1);
         proc_handle_jewels_check.cmpib(jewel_count, reg_D1); // Test if red jewel is owned
         proc_handle_jewels_check.movem_from_stack({reg_D1},{});
-        proc_handle_jewels_check.bgt(3);
-            proc_handle_jewels_check.jsr(func_reject_kazalt_tp_addr);
-            proc_handle_jewels_check.rts();
+        proc_handle_jewels_check.ble("no_teleport");
     }
     else
     {
-        if(jewel_count >= 1)
+        if(jewel_count >= 5)
         {
-            proc_handle_jewels_check.btst(0x1, addr_(0xFF1054)); // Test if red jewel is owned
-            proc_handle_jewels_check.bne(3);
-                proc_handle_jewels_check.jsr(func_reject_kazalt_tp_addr);
-                proc_handle_jewels_check.rts();
-        }
-        if(jewel_count >= 2)
-        {
-            proc_handle_jewels_check.btst(0x1, addr_(0xFF1055)); // Test if purple jewel is owned
-            proc_handle_jewels_check.bne(3);
-                proc_handle_jewels_check.jsr(func_reject_kazalt_tp_addr);
-                proc_handle_jewels_check.rts();
-        }
-        if(jewel_count >= 3)
-        {
-            proc_handle_jewels_check.btst(0x1, addr_(0xFF105A)); // Test if green jewel is owned
-            proc_handle_jewels_check.bne(3);
-                proc_handle_jewels_check.jsr(func_reject_kazalt_tp_addr);
-                proc_handle_jewels_check.rts();
+            proc_handle_jewels_check.btst(0x1, addr_(0xFF1051)); // Test if yellow jewel is owned
+            proc_handle_jewels_check.beq("no_teleport");
         }
         if(jewel_count >= 4)
         {
             proc_handle_jewels_check.btst(0x5, addr_(0xFF1050)); // Test if blue jewel is owned
-            proc_handle_jewels_check.bne(3);
-                proc_handle_jewels_check.jsr(func_reject_kazalt_tp_addr);
-                proc_handle_jewels_check.rts();
+            proc_handle_jewels_check.beq("no_teleport");
         }
-        if(jewel_count >= 5)
+        if(jewel_count >= 3)
         {
-            proc_handle_jewels_check.btst(0x1, addr_(0xFF1051)); // Test if yellow jewel is owned
-            proc_handle_jewels_check.bne(3);
-                proc_handle_jewels_check.jsr(func_reject_kazalt_tp_addr);
-                proc_handle_jewels_check.rts();
+            proc_handle_jewels_check.btst(0x1, addr_(0xFF105A)); // Test if green jewel is owned
+            proc_handle_jewels_check.beq("no_teleport");
+        }
+        if(jewel_count >= 2)
+        {
+            proc_handle_jewels_check.btst(0x1, addr_(0xFF1055)); // Test if purple jewel is owned
+            proc_handle_jewels_check.beq("no_teleport");
+        }
+        if(jewel_count >= 1)
+        {
+            proc_handle_jewels_check.btst(0x1, addr_(0xFF1054)); // Test if red jewel is owned
+            proc_handle_jewels_check.beq("no_teleport");
         }
     }
+
+    // Teleport to Kazalt
     proc_handle_jewels_check.moveq(0x7, reg_D0);
     proc_handle_jewels_check.jsr(0xE110);  // "func_teleport_kazalt"
     proc_handle_jewels_check.jmp(0x62FA);
+
+    // Rejection message
+    proc_handle_jewels_check.label("no_teleport");
+    proc_handle_jewels_check.jsr(func_reject_kazalt_tp_addr);
+    proc_handle_jewels_check.rts();
 
     uint32_t handle_jewels_addr = rom.inject_code(proc_handle_jewels_check);
 

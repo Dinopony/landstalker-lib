@@ -16,12 +16,13 @@ void make_massan_elder_reward_not_story_dependant(md::ROM& rom, const World& wor
     // by the model files
     md::Code elder_dialogue;
     elder_dialogue.btst(5, addr_(0xFF1002));
-    elder_dialogue.bne(3);
+    elder_dialogue.bne("fara_was_freed");
         elder_dialogue.trap(0x01, { 0x00, 0x05 });
         elder_dialogue.rts();
         elder_dialogue.add_bytes({ 0xE0, 0xFD });
+    elder_dialogue.label("fara_was_freed");
     elder_dialogue.btst(2, addr_(0xFF1004));
-    elder_dialogue.bne(3);
+    elder_dialogue.bne("jewel_already_obtained");
         elder_dialogue.trap(0x01, { 0x00, 0x05 });
         elder_dialogue.rts();
         elder_dialogue.add_bytes({ 0x14, 0x22, 
@@ -32,6 +33,7 @@ void make_massan_elder_reward_not_story_dependant(md::ROM& rom, const World& wor
                                    0x17, 0xE8, 
                                    0x18, 0x00, 
                                    0xE1, 0x01 });
+    elder_dialogue.label("jewel_already_obtained");
     elder_dialogue.trap(0x01, { 0x00, 0x05 });
     elder_dialogue.rts();
     elder_dialogue.add_bytes({ 0xE1, 0x01 });

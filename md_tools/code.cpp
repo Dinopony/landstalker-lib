@@ -1,6 +1,5 @@
 #include "code.hpp"
-
-#include <set>
+#include "../exceptions.hpp"
 
 namespace md {
 
@@ -29,7 +28,6 @@ void Code::add_bytes(const std::vector<uint8_t>& bytes)
 
 void Code::add_opcode(uint16_t opcode)
 {
-    this->resolve_branches();
     this->add_word(opcode);
 }
 
@@ -121,98 +119,83 @@ Code& Code::tst(const Param& target, Size size)
     return *this;
 }
 
-Code& Code::bra(uint16_t instruction_count)
-{
-    this->add_opcode(0x6000);
-    if (instruction_count > 0)
-        _pending_branches[static_cast<uint32_t>(_bytes.size())] = instruction_count;
-
-    return *this;
-}
-
-Code& Code::beq(uint16_t instruction_count)
-{
-    this->add_opcode(0x6700);
-    if (instruction_count > 0)
-        _pending_branches[static_cast<uint32_t>(_bytes.size())] = instruction_count;
-
-    return *this;
-}
-
-Code& Code::bne(uint16_t instruction_count)
-{
-    this->add_opcode(0x6600);
-    if (instruction_count > 0)
-        _pending_branches[static_cast<uint32_t>(_bytes.size())] = instruction_count;
-
-    return *this;
-}
-
-Code& Code::blt(uint16_t instruction_count)
-{
-    this->add_opcode(0x6D00);
-    if (instruction_count > 0)
-        _pending_branches[static_cast<uint32_t>(_bytes.size())] = instruction_count;
-    return *this;
-}
-
-Code& Code::bgt(uint16_t instruction_count)
-{
-    this->add_opcode(0x6E00);
-    if (instruction_count > 0)
-        _pending_branches[static_cast<uint32_t>(_bytes.size())] = instruction_count;
-    return *this;
-}
-
-Code& Code::bmi(uint16_t instruction_count)
-{
-    this->add_opcode(0x6B00);
-    if (instruction_count > 0)
-        _pending_branches[static_cast<uint32_t>(_bytes.size())] = instruction_count;
-    return *this;
-}
-
-Code& Code::bpl(uint16_t instruction_count)
-{
-    this->add_opcode(0x6A00);
-    if (instruction_count > 0)
-        _pending_branches[static_cast<uint32_t>(_bytes.size())] = instruction_count;
-    return *this;
-}
-
-Code& Code::ble(uint16_t instruction_count)
-{
-    this->add_opcode(0x6F00);
-    if (instruction_count > 0)
-        _pending_branches[static_cast<uint32_t>(_bytes.size())] = instruction_count;
-    return *this;
-}
-
-Code& Code::bge(uint16_t instruction_count)
-{
-    this->add_opcode(0x6C00);
-    if (instruction_count > 0)
-        _pending_branches[static_cast<uint32_t>(_bytes.size())] = instruction_count;
-    return *this;
-}
-
-Code& Code::bcc(uint16_t instruction_count)
-{
-    this->add_opcode(0x6400);
-    if (instruction_count > 0)
-        _pending_branches[static_cast<uint32_t>(_bytes.size())] = instruction_count;
-    return *this;
-}
-
 Code& Code::bra(const std::string& label)
 {
     this->add_opcode(0x6000);
+    _pending_branches[static_cast<uint32_t>(_bytes.size())] = label;
+    this->resolve_branches();
+    return *this;
+}
 
-    uint32_t thisAddress = static_cast<uint32_t>(_bytes.size());
-    uint32_t labelAddress = _labels.at(label);
-    uint16_t offset = static_cast<uint16_t>(labelAddress - thisAddress);
-    this->add_word(offset);
+Code& Code::beq(const std::string& label)
+{
+    this->add_opcode(0x6700);
+    _pending_branches[static_cast<uint32_t>(_bytes.size())] = label;
+    this->resolve_branches();
+    return *this;
+}
 
+Code& Code::bne(const std::string& label)
+{
+    this->add_opcode(0x6600);
+    _pending_branches[static_cast<uint32_t>(_bytes.size())] = label;
+    this->resolve_branches();
+    return *this;
+}
+
+Code& Code::blt(const std::string& label)
+{
+    this->add_opcode(0x6D00);
+    _pending_branches[static_cast<uint32_t>(_bytes.size())] = label;
+    this->resolve_branches();
+    return *this;
+}
+
+Code& Code::bgt(const std::string& label)
+{
+    this->add_opcode(0x6E00);
+    _pending_branches[static_cast<uint32_t>(_bytes.size())] = label;
+    this->resolve_branches();
+    return *this;
+}
+
+Code& Code::bmi(const std::string& label)
+{
+    this->add_opcode(0x6B00);
+    _pending_branches[static_cast<uint32_t>(_bytes.size())] = label;
+    this->resolve_branches();
+    return *this;
+}
+
+Code& Code::bpl(const std::string& label)
+{
+    this->add_opcode(0x6A00);
+    _pending_branches[static_cast<uint32_t>(_bytes.size())] = label;
+    this->resolve_branches();
+    return *this;
+}
+
+Code& Code::ble(const std::string& label)
+{
+    this->add_opcode(0x6F00);
+    _pending_branches[static_cast<uint32_t>(_bytes.size())] = label;
+    this->resolve_branches();
+    return *this;
+}
+
+Code& Code::bge(const std::string& label)
+{
+    this->add_opcode(0x6C00);
+    _pending_branches[static_cast<uint32_t>(_bytes.size())] = label;
+    this->resolve_branches();
+    return *this;
+}
+
+Code& Code::bcc(const std::string& label)
+{
+    this->add_opcode(0x6400);
+    _pending_branches[static_cast<uint32_t>(_bytes.size())] = label;
+    this->resolve_branches();
     return *this;
 }
 
@@ -460,21 +443,19 @@ Code& Code::ori_to_ccr(uint8_t value)
 
 Code& Code::rts()
 {
-    this->resolve_branches();
     this->add_word(0x4E75);
     return *this;
 }
 
 Code& Code::nop(uint16_t amount)
 {
-    this->resolve_branches();
     this->add_word(0x4E71);
     if (--amount > 0)
         this->nop(amount);
     return *this;
 }
 
-Code& Code::trap(uint8_t trap_id, std::vector<uint8_t> additionnal_bytes)
+Code& Code::trap(uint8_t trap_id, const std::vector<uint8_t>& additionnal_bytes)
 {
     uint16_t opcode = 0x4E40 + static_cast<uint16_t>(trap_id);
     this->add_opcode(opcode);
@@ -482,28 +463,50 @@ Code& Code::trap(uint8_t trap_id, std::vector<uint8_t> additionnal_bytes)
     return *this;
 }
 
+void Code::label(const std::string& label)
+{
+    _labels[label] = static_cast<uint32_t>(_bytes.size());
+    this->resolve_branches();
+}
+
+const std::vector<uint8_t>& Code::get_bytes() const
+{
+    if (!_pending_branches.empty())
+        throw LandstalkerException("Pending branches are remaining on injected code");
+    return _bytes;
+}
+
 void Code::resolve_branches()
 {
-    std::set<uint32_t> branches_to_clean;
+    std::vector<uint32_t> branches_to_clean;
 
-    for (auto& [branch_address, remaining_instructions] : _pending_branches)
+    for (auto& [branch_address, label] : _pending_branches)
     {
-        if (--remaining_instructions == 0)
+        if (_labels.count(label))
         {
-            uint16_t address_offset = static_cast<uint16_t>(_bytes.size()) - static_cast<uint16_t>(branch_address);
-            if (address_offset > 0xFF)
+            uint32_t label_address = _labels[label];
+            int32_t address_offset = static_cast<int32_t>(label_address - branch_address);
+            int16_t truncated_offset = static_cast<int16_t>(address_offset);
+            if ((int32_t)truncated_offset != address_offset)
+            {
+                throw LandstalkerException("Offset for branch at byte " + std::to_string(branch_address) +
+                                           " is too big (cannot be expressed as word)");
+            }
+
+            uint16_t truncated_offset_as_word = static_cast<uint16_t>(truncated_offset);
+            if (truncated_offset_as_word > 0xFF)
             {
                 // Branch offset is more than one byte long, we need to add an optional displacement
-                _bytes.insert(_bytes.begin() + branch_address, static_cast<uint8_t>(address_offset >> 8));
-                _bytes.insert(_bytes.begin() + branch_address + 1, static_cast<uint8_t>(address_offset & 0xFF));
+                _bytes.insert(_bytes.begin() + branch_address, static_cast<uint8_t>(truncated_offset_as_word >> 8));
+                _bytes.insert(_bytes.begin() + branch_address + 1, static_cast<uint8_t>(truncated_offset_as_word & 0x00FF));
             }
             else
             {
                 // Branch offset is less than one byte long, we only need to increment opcode by the offset value
-                _bytes[static_cast<size_t>(branch_address) - 1] += address_offset;
+                _bytes[static_cast<size_t>(branch_address) - 1] += truncated_offset_as_word;
             }
 
-            branches_to_clean.insert(branch_address);
+            branches_to_clean.emplace_back(branch_address);
         }
     }
 

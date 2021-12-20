@@ -47,26 +47,34 @@ static void replace_function_check_lantern(md::ROM& rom, uint32_t darken_palette
     md::Code func_check_lantern;
 
     func_check_lantern.lea(dark_rooms_table, reg_A0);
+
     func_check_lantern.label("loop_start");
     func_check_lantern.movew(addr_(reg_A0), reg_D0);
-    func_check_lantern.bmi(14);
-        func_check_lantern.cmpw(addr_(0xFF1204), reg_D0);
-        func_check_lantern.bne(10);
-            // We are in a dark room
-            func_check_lantern.movem_to_stack({ reg_D0 }, {});
-            func_check_lantern.btst(0x1, addr_(0xFF104D));
-            func_check_lantern.bne(3);
-                // Dark room with no lantern ===> darken the palette
-                func_check_lantern.movew(0x0000, reg_D0);
-                func_check_lantern.bra(2);
+    func_check_lantern.bmi("return");
+    func_check_lantern.cmpw(addr_(0xFF1204), reg_D0);
+    func_check_lantern.bne("not_a_dark_room");
+    // We are in a dark room
+    func_check_lantern.movem_to_stack({ reg_D0 }, {});
+    func_check_lantern.btst(0x1, addr_(0xFF104D));
+    func_check_lantern.bne("owns_lantern");
+    // Dark room with no lantern ===> darken the palette
+    func_check_lantern.movew(0x0000, reg_D0);
+    func_check_lantern.bra("apply_factor");
 
-                // Dark room with lantern ===> use lantern palette
-                func_check_lantern.movew(0x0CCC, reg_D0);
-            func_check_lantern.jsr(darken_palette);
-            func_check_lantern.movem_from_stack({ reg_D0 }, {});
-            func_check_lantern.rts();
-        func_check_lantern.addql(0x2, reg_A0);
-        func_check_lantern.bra("loop_start");
+    // Dark room with lantern ===> use lantern palette
+    func_check_lantern.label("owns_lantern");
+    func_check_lantern.movew(0x0CCC, reg_D0);
+
+    func_check_lantern.label("apply_factor");
+    func_check_lantern.jsr(darken_palette);
+    func_check_lantern.movem_from_stack({ reg_D0 }, {});
+    func_check_lantern.rts();
+
+    func_check_lantern.label("not_a_dark_room");
+    func_check_lantern.addql(0x2, reg_A0);
+    func_check_lantern.bra("loop_start");
+
+    func_check_lantern.label("return");
     func_check_lantern.clrb(reg_D7);
     func_check_lantern.rts();
 
@@ -80,7 +88,7 @@ static void replace_function_change_map_palette(md::ROM& rom)
     md::Code func_change_map_palette;
 
     func_change_map_palette.cmpb(addr_(0xFF112F), reg_D4);
-    func_change_map_palette.beq(12);
+    func_change_map_palette.beq("return");
         func_change_map_palette.moveb(reg_D4, addr_(0xFF112F));
         func_change_map_palette.movel(addr_(offsets::MAP_PALETTES_TABLE_POINTER), reg_A0);
         func_change_map_palette.mulu(bval_(0x1A), reg_D4);
@@ -92,6 +100,7 @@ static void replace_function_change_map_palette(md::ROM& rom)
         func_change_map_palette.movew(0x0CCC, addr_(0xFF0082));
         func_change_map_palette.clrw(addr_(0xFF009E));
         func_change_map_palette.jsr(0x87BE);
+    func_change_map_palette.label("return");
     func_change_map_palette.rts();
 
     rom.set_code(0x2D64, func_change_map_palette);

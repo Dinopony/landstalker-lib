@@ -13,17 +13,19 @@ void add_statue_of_jypta_effect(md::ROM& rom)
 
     // If Statue of Jypta is owned, gain gold over time
     func_handle_walk_abilities.btst(0x5, addr_(0xFF104E));
-    func_handle_walk_abilities.beq(3);
+    func_handle_walk_abilities.beq("healing_boots");
     func_handle_walk_abilities.movew(GOLDS_PER_CYCLE, reg_D0);
     func_handle_walk_abilities.jsr(0x177DC);   // rom.stored_address("func_earn_gold");
 
     // If Healing boots are equipped, gain life over time
+    func_handle_walk_abilities.label("healing_boots");
     func_handle_walk_abilities.cmpib(0x7, addr_(0xFF1150));
-    func_handle_walk_abilities.bne(4);
+    func_handle_walk_abilities.bne("return");
     func_handle_walk_abilities.movew(0x100, reg_D0);
     func_handle_walk_abilities.lea(0xFF5400, reg_A5);
     func_handle_walk_abilities.jsr(0x1780E);   // rom.stored_address("func_heal_hp");
 
+    func_handle_walk_abilities.label("return");
     func_handle_walk_abilities.rts();
 
     uint32_t func_addr = rom.inject_code(func_handle_walk_abilities);

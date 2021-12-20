@@ -8,8 +8,9 @@ static void improve_gfx_tile_swap_flag_check(md::ROM& rom)
 
     proc_extended_flag_check.moveb(addr_(reg_A0, 0x2), reg_D0);     // 1028 0002
     proc_extended_flag_check.cmpib(0xFF, reg_D0);
-    proc_extended_flag_check.bne(2);
+    proc_extended_flag_check.bne("jump_2");
     proc_extended_flag_check.jmp(0x4E2E);
+    proc_extended_flag_check.label("jump_2");
     proc_extended_flag_check.jmp(0x4E20);
 
     uint32_t addr = rom.inject_code(proc_extended_flag_check);
