@@ -24,6 +24,11 @@ struct EntityMaskFlag : public Flag
         visibility_if_flag_set  (p_visibility_if_flag_set)
     {}
 
+    EntityMaskFlag(bool p_visibility_if_flag_set, const Flag& flag) :
+            Flag                    (flag),
+            visibility_if_flag_set  (p_visibility_if_flag_set)
+    {}
+
     [[nodiscard]] Json to_json() const override
     {
         Json json = Flag::to_json();
