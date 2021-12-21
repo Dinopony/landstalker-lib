@@ -56,7 +56,9 @@ public:
     void replace_color_in_tile(uint8_t color_index, uint8_t new_color_index, uint8_t tile_index);
 
     void set_pixel(uint8_t tile_id, uint8_t x, uint8_t y, uint8_t color);
+
     [[nodiscard]] const std::vector<uint8_t>& data() const { return _data; }
+    [[nodiscard]] const std::vector<SubSpriteMetadata>& subsprites() const { return _subsprites; }
 
     ByteArray encode();
 

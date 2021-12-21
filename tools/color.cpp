@@ -59,13 +59,13 @@ void Color::rgb(uint8_t r, uint8_t g, uint8_t b)
 
 Color Color::multiply(double factor) const
 {
-    double r = _r * factor;
+    double r = std::min(_r * factor, 255.0);
     uint8_t rounded_r = (uint8_t)std::round(r);
 
-    double g = _g * factor;
+    double g = std::min(_g * factor, 255.0);
     uint8_t rounded_g = (uint8_t)std::round(g);
 
-    double b = _b * factor;
+    double b = std::min(_b * factor, 255.0);
     uint8_t rounded_b = (uint8_t)std::round(b);
 
     return { rounded_r, rounded_g, rounded_b };
