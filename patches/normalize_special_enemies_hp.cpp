@@ -7,7 +7,7 @@
  * If specified in the options, this function also adds the check to prevent sacred trees from being
  * killed by feeding them money.
  */
-static void improve_checks_before_kill(md::ROM& rom, bool fix_tree_cutting_glitch)
+static void improve_checks_before_kill(md::ROM& rom)
 {
     constexpr uint32_t ADDR_JMP_KILL = 0x16284;
     constexpr uint32_t ADDR_JMP_NO_KILL_YET = 0x16262;
@@ -19,14 +19,6 @@ static void improve_checks_before_kill(md::ROM& rom, bool fix_tree_cutting_glitc
     // If enemy doesn't hold money, no kill yet
     func_check_before_kill.tstb(addr_(reg_A5, 0x36));
     func_check_before_kill.beq("no_money");
-
-    if(fix_tree_cutting_glitch)
-    {
-        // If enemy is a sacred tree, consider it doesn't have money anyway
-        func_check_before_kill.cmpiw(0x126, addr_(reg_A5, 0xA));
-        func_check_before_kill.beq("no_money");
-    }
-
     func_check_before_kill.jmp(ADDR_JMP_KILL);
     // If enemy has "empty item" as a drop, make it unkillable
     func_check_before_kill.label("no_money");
@@ -71,8 +63,8 @@ static void alter_bosses_hp_checks(md::ROM& rom)
  * and allow us to make them have bigger HP pools, we lower all of those checks to verify that health
  * goes below 0x002 while putting a special procedure to ensure they are unkillable by the player
  */
-void normalize_special_enemies_hp(md::ROM& rom, bool fix_tree_cutting_glitch)
+void normalize_special_enemies_hp(md::ROM& rom)
 {
-    improve_checks_before_kill(rom, fix_tree_cutting_glitch);
+    improve_checks_before_kill(rom);
     alter_bosses_hp_checks(rom);
 }

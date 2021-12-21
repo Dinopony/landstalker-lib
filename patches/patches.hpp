@@ -19,7 +19,7 @@ void patch_game_init(md::ROM& rom, const World& world, bool add_ingame_tracker);
 void handle_additional_jewels(md::ROM& rom, World& world, uint8_t jewel_count);
 void handle_armor_upgrades(md::ROM& rom);
 void make_sword_of_gaia_work_in_volcano(md::ROM& rom);
-void normalize_special_enemies_hp(md::ROM& rom, bool fix_tree_cutting_glitch);
+void normalize_special_enemies_hp(md::ROM& rom);
 
 // alter_items_consumability.cpp patches
 void make_pawn_ticket_consumable(md::ROM& rom);
@@ -40,3 +40,4 @@ void make_falling_ribbon_not_story_dependant(World& world);
 
 // gameplay_tweaks.cpp patches
 void make_lifestocks_give_specific_health(md::ROM& rom, uint8_t health_per_lifestock);
+void remove_tree_cutting_glitch_drops(md::ROM& rom);
