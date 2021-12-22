@@ -48,31 +48,39 @@ public:
         _extra_byte_2    (extra_byte_2)
     {}
 
-    uint16_t map_id_1() const { return _map_id_1; }
+    [[nodiscard]] uint16_t map_id_1() const { return _map_id_1; }
     void map_id_1(uint16_t value) { _map_id_1 = value; }
 
-    uint8_t pos_x_1() const { return _pos_x_1; }
+    [[nodiscard]] uint8_t pos_x_1() const { return _pos_x_1; }
     void pos_x_1(uint8_t value) { _pos_x_1 = value; }
 
-    uint8_t pos_y_1() const { return _pos_y_1; }
+    [[nodiscard]] uint8_t pos_y_1() const { return _pos_y_1; }
     void pos_y_1(uint8_t value) { _pos_y_1 = value; }
 
-    uint8_t extra_byte_1() const { return _extra_byte_1; }
+    [[nodiscard]] uint8_t extra_byte_1() const { return _extra_byte_1; }
     void extra_byte_1(uint8_t value) { _extra_byte_1 = value; }
 
-    uint16_t map_id_2() const { return _map_id_2; }
+    [[nodiscard]] uint16_t map_id_2() const { return _map_id_2; }
     void map_id_2(uint16_t value) { _map_id_2 = value; }
 
-    uint8_t pos_x_2() const { return _pos_x_2; }
+    [[nodiscard]] uint8_t pos_x_2() const { return _pos_x_2; }
     void pos_x_2(uint8_t value) { _pos_x_2 = value; }
 
-    uint8_t pos_y_2() const { return _pos_y_2; }
+    [[nodiscard]] uint8_t pos_y_2() const { return _pos_y_2; }
     void pos_y_2(uint8_t value) { _pos_y_2 = value; }
 
-    uint8_t extra_byte_2() const { return _extra_byte_2; }
+    [[nodiscard]] uint8_t extra_byte_2() const { return _extra_byte_2; }
     void extra_byte_2(uint8_t value) { _extra_byte_2 = value; }
-    
-    bool check_maps(uint16_t map_id_1, uint16_t map_id_2) const
+
+    void replace_map(uint16_t map_id, uint16_t replacement)
+    {
+        if(_map_id_1 == map_id)
+            _map_id_1 = replacement;
+        else if(_map_id_2 == map_id)
+            _map_id_2 = replacement;
+    }
+
+    [[nodiscard]] bool check_maps(uint16_t map_id_1, uint16_t map_id_2) const
     {
         if(_map_id_1 == map_id_1 && _map_id_2 == map_id_2)
             return true;
@@ -81,7 +89,7 @@ public:
         return false;
     }
 
-    Json to_json() const
+    [[nodiscard]] Json to_json() const
     {
         Json json;
 
