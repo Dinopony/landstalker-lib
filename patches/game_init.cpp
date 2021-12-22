@@ -1,9 +1,6 @@
 #include "../md_tools.hpp"
-
 #include "../model/world.hpp"
-#include "../model/spawn_location.hpp"
 #include "../model/item.hpp"
-
 #include "../constants/item_codes.hpp"
 
 static void handle_spawn_position(md::ROM& rom, const World& world)
@@ -83,6 +80,8 @@ static void inject_func_init_game(md::ROM& rom, const World& world, bool add_ing
             func_init_game.movew(value, addr_(0xFF1000+i));
     }
 
+    // Set the "parent map" value to the same value as "current map" so that dialogues work on spawn map
+    func_init_game.movew(world.spawn_location().map_id(), addr_(0xFF1206));
     // Set the orientation byte of Nigel depending on spawn location on game start
     func_init_game.moveb(world.spawn_location().orientation(), addr_(0xFF5404));
     // Set the appropriate starting golds
