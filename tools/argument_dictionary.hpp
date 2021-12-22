@@ -40,6 +40,7 @@ public:
             return default_value;
         }
     }
+    void set_string(const std::string& key, const std::string& value) { _args_map[key] = value; }
 
     [[nodiscard]] int get_integer(const std::string& name, int default_value = 0) const
     {
