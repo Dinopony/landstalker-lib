@@ -22,6 +22,7 @@ constexpr Flag FLAG_ALLOWED_TO_GO_IN_THIEVES_HIDEOUT         (0x04, 0);
 
 constexpr Flag FLAG_TALKED_WITH_MADAME_YARD_GIRL_HINTING_FORTUNE_TELLER (0x05, 6);
 constexpr Flag FLAG_SAW_ARTHUR_AT_CASTLE_BACKDOOR                       (0x05, 5);
+constexpr Flag FLAG_SAW_KID_LEAVING_MONSTER_ZOO                         (0x05, 1);
 
 constexpr Flag FLAG_ASSISTED_TO_MERCATOR_BANQUET             (0x12, 4);
 constexpr Flag FLAG_TALKED_WITH_KITCHEN_WOMAN_BEFORE_BANQUET (0x12, 3);
