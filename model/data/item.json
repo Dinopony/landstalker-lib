@@ -249,7 +249,7 @@
         "name": "Pawn Ticket",
         "maxQuantity": 9,
         "startingQuantity": 0,
-        "goldValue": 100
+        "goldValue": 200
     },
     "42": {
         "name": "Purple Jewel",
