@@ -222,10 +222,8 @@ void WorldRomWriter::write_entity_type_palettes(md::ROM& rom, const World& world
     // Write the low palettes contents
     ByteArray low_palettes_bytes;
     for(const EntityLowPalette& palette : low_palettes)
-    {
-        for(const Color& color : palette)
-            low_palettes_bytes.add_word(color.to_bgr_word());
-    }
+        low_palettes_bytes.add_bytes(palette.to_bytes());
+
     if(low_palettes_bytes.size() > offsets::ENTITY_PALETTES_TABLE_LOW_END - offsets::ENTITY_PALETTES_TABLE_LOW)
         throw LandstalkerException("Entity low palettes table must not be bigger than the one from base game");
     rom.set_bytes(offsets::ENTITY_PALETTES_TABLE_LOW, low_palettes_bytes);
@@ -233,10 +231,7 @@ void WorldRomWriter::write_entity_type_palettes(md::ROM& rom, const World& world
     // Write the high palettes contents
     ByteArray high_palettes_bytes;
     for(const EntityHighPalette& palette : high_palettes)
-    {
-        for(const Color& color : palette)
-            high_palettes_bytes.add_word(color.to_bgr_word());
-    }
+        high_palettes_bytes.add_bytes(palette.to_bytes());
     if(high_palettes_bytes.size() > offsets::ENTITY_PALETTES_TABLE_HIGH_END - offsets::ENTITY_PALETTES_TABLE_HIGH)
         throw LandstalkerException("Entity high palettes table must not be bigger than the one from base game");
     rom.set_bytes(offsets::ENTITY_PALETTES_TABLE_HIGH, high_palettes_bytes);

@@ -79,22 +79,14 @@ void WorldRomReader::read_entity_type_palettes(World& world, const md::ROM& rom)
             // High palette
             palette_id &= 0x7F;
             uint32_t palette_base_addr = offsets::ENTITY_PALETTES_TABLE_HIGH + (palette_id * 7 * 2);
-
-            EntityHighPalette high_palette_colors {};
-            for(size_t i=0 ; i<high_palette_colors.size() ; ++i)
-                high_palette_colors[i] = Color::from_bgr_word(rom.get_word(palette_base_addr + (i*2)));
-
+            EntityHighPalette high_palette_colors = EntityHighPalette::from_rom(rom, palette_base_addr);
             entity_type->high_palette(high_palette_colors);
         }
         else
         {
             // Low palette
             uint32_t palette_base_addr = offsets::ENTITY_PALETTES_TABLE_LOW + (palette_id * 6 * 2);
-
-            EntityLowPalette low_palette_colors {};
-            for(size_t i=0 ; i<low_palette_colors.size() ; ++i)
-                low_palette_colors[i] = Color::from_bgr_word(rom.get_word(palette_base_addr + (i*2)));
-
+            EntityLowPalette low_palette_colors = EntityLowPalette::from_rom(rom, palette_base_addr);
             entity_type->low_palette(low_palette_colors);
         }
     }
