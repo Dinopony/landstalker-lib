@@ -2,30 +2,84 @@
 
 #include "../model/world.hpp"
 #include "../model/map.hpp"
-#include "../tools/color_palette.hpp"
 #include "../constants/offsets.hpp"
-#include "../tools/byte_array.hpp"
+#include "../exceptions.hpp"
 
-static uint32_t inject_function_darken_palette(md::ROM& rom)
+static void remove_alternate_palette_for_knl(const World& world)
 {
-    // ----------------------------------------
-    // Function to darken the color palette currently used to draw the map
-    // Input :  D0 = AND mask to apply to palette
-    md::Code func_darken_palette;
+    // Replace the "dark room" palette from King Nole's Labyrinth by the lit room palette
+    MapPalette* lit_knl_palette = world.map_palettes().at(39);
+    MapPalette* dark_knl_palette = world.map_palettes().at(40);
 
-    func_darken_palette.movem_to_stack({ reg_D1, reg_D2 }, { reg_A0 });
-    func_darken_palette.lea(0xFF0080, reg_A0);
-    func_darken_palette.movew(0x20, reg_D1);
-    func_darken_palette.label("loop");
-        func_darken_palette.movew(addr_(reg_A0), reg_D2);
-        func_darken_palette.andw(reg_D0, reg_D2);
-        func_darken_palette.movew(reg_D2, addr_(reg_A0));
-        func_darken_palette.adda(0x2, reg_A0);
-        func_darken_palette.dbra(reg_D1, "loop");
-    func_darken_palette.movem_from_stack({ reg_D1, reg_D2 }, { reg_A0 });
-    func_darken_palette.rts();
+    for(auto& [map_id, map] : world.maps())
+        if(map->palette() == dark_knl_palette)
+            map->palette(lit_knl_palette);
+}
 
-    return rom.inject_code(func_darken_palette);
+static void neutralize_lantern_effect_on_use(md::ROM& rom)
+{
+    rom.set_code(0x87AA, md::Code().nop());
+    rom.set_byte(0x87AC, 0x60); // Always jump to "return failure"
+
+    // Remove the "CheckIfRoomIsLit" function and the "LightableRooms" table
+    rom.mark_empty_chunk(0x87B0, 0x8832);
+}
+
+static uint32_t inject_func_and_words(md::ROM& rom)
+{
+    // Apply an AND mask (stored in D0) on D1 words starting from A0
+    md::Code func_and_words;
+    func_and_words.movem_to_stack({ reg_D2 }, {});
+    func_and_words.label("loop");
+    func_and_words.movew(addr_(reg_A0), reg_D2);
+    func_and_words.andw(reg_D0, reg_D2);
+    func_and_words.movew(reg_D2, addr_(reg_A0));
+    func_and_words.adda(0x2, reg_A0);
+    func_and_words.dbra(reg_D1, "loop");
+    func_and_words.movem_from_stack({ reg_D2 }, {});
+    func_and_words.rts();
+    return rom.inject_code(func_and_words);
+}
+
+static uint32_t inject_func_darken_palettes(md::ROM& rom, uint32_t func_and_words)
+{
+    // Darken palettes with AND filter contained in D0
+    md::Code func_darken_palettes;
+    func_darken_palettes.movem_to_stack({ reg_D1 }, { reg_A0 });
+
+    // Turn palette 0, 1, and lower half of 3 pitch black
+    func_darken_palettes.movew(0x0000, reg_D0);
+    func_darken_palettes.lea(0xFF0080, reg_A0);
+    func_darken_palettes.movew(32, reg_D1);
+    func_darken_palettes.jsr(func_and_words);
+    func_darken_palettes.lea(0xFF00E0, reg_A0);
+    func_darken_palettes.movew(8, reg_D1);
+    func_darken_palettes.jsr(func_and_words);
+
+    // Darken palette 2 (Nigel, chests, platforms...)
+//    func_darken_palettes.lea(0xFF00C0, reg_A0);
+//    func_darken_palettes.movew(16, reg_D1);
+//    func_darken_palettes.movew(0x0444, reg_D0);
+//    func_darken_palettes.jsr(func_and_words);
+
+    func_darken_palettes.movem_from_stack({ reg_D1 }, { reg_A0 });
+    func_darken_palettes.rts();
+    return rom.inject_code(func_darken_palettes);
+}
+
+static uint32_t inject_func_dim_palettes(md::ROM& rom, uint32_t func_and_words)
+{
+    // Darken palettes with AND filter contained in D0
+    md::Code func_dim_palettes;
+    func_dim_palettes.movem_to_stack({ reg_D1 }, { reg_A0 });
+    // Slightly dim palette 0
+    func_dim_palettes.movew(0x0CCC, reg_D0);
+    func_dim_palettes.lea(0xFF0080, reg_A0);
+    func_dim_palettes.movew(16, reg_D1);
+    func_dim_palettes.jsr(func_and_words);
+    func_dim_palettes.movem_from_stack({ reg_D1 }, { reg_A0 });
+    func_dim_palettes.rts();
+    return rom.inject_code(func_dim_palettes);
 }
 
 static uint32_t inject_dark_rooms_table(md::ROM& rom, const World& world)
@@ -39,82 +93,71 @@ static uint32_t inject_dark_rooms_table(md::ROM& rom, const World& world)
     return rom.inject_bytes(bytes);
 }
 
-static void replace_function_check_lantern(md::ROM& rom, uint32_t darken_palette, uint32_t dark_rooms_table)
+static uint32_t inject_func_darken_if_missing_lantern(md::ROM& rom, uint32_t dark_rooms_table, uint32_t func_darken_palettes, uint32_t func_dim_palettes)
 {
-    // ----------------------------------------
-    // Function to check if the current room is supposed to be dark, and process differently 
-    // depending on whether or not we own the lantern
-    md::Code func_check_lantern;
+    md::Code func_darken_if_missing_lantern;
+    func_darken_if_missing_lantern.movem_to_stack({ reg_D0 }, { reg_A0 });
 
-    func_check_lantern.lea(dark_rooms_table, reg_A0);
+    // Put back white color where appropriate in all palettes to ensure it's there before an eventual darkening
+    func_darken_if_missing_lantern.movew(0x0CCC, reg_D0);
+    func_darken_if_missing_lantern.movew(reg_D0, addr_(0xFF0082));
+    func_darken_if_missing_lantern.movew(reg_D0, addr_(0xFF00A2));
+    func_darken_if_missing_lantern.movew(reg_D0, addr_(0xFF00E2));
 
-    func_check_lantern.label("loop_start");
-    func_check_lantern.movew(addr_(reg_A0), reg_D0);
-    func_check_lantern.bmi("return");
-    func_check_lantern.cmpw(addr_(0xFF1204), reg_D0);
-    func_check_lantern.bne("not_a_dark_room");
+    func_darken_if_missing_lantern.lea(dark_rooms_table, reg_A0);
+
+    // Try to find current room in dark rooms list
+    func_darken_if_missing_lantern.label("loop_start");
+    func_darken_if_missing_lantern.movew(addr_(reg_A0), reg_D0);
+    func_darken_if_missing_lantern.bmi("return");
+    func_darken_if_missing_lantern.cmpw(addr_(0xFF1204), reg_D0);
+    func_darken_if_missing_lantern.beq("current_room_is_dark");
+    func_darken_if_missing_lantern.addql(0x2, reg_A0);
+    func_darken_if_missing_lantern.bra("loop_start");
+
     // We are in a dark room
-    func_check_lantern.movem_to_stack({ reg_D0 }, {});
-    func_check_lantern.btst(0x1, addr_(0xFF104D));
-    func_check_lantern.bne("owns_lantern");
-    // Dark room with no lantern ===> darken the palette
-    func_check_lantern.movew(0x0000, reg_D0);
-    func_check_lantern.bra("apply_factor");
+    func_darken_if_missing_lantern.label("current_room_is_dark");
+    func_darken_if_missing_lantern.moveb(0xFE, addr_(0xFF112F));
+    func_darken_if_missing_lantern.btst(0x1, addr_(0xFF104D));
+    func_darken_if_missing_lantern.bne("owns_lantern");
 
-    // Dark room with lantern ===> use lantern palette
-    func_check_lantern.label("owns_lantern");
-    func_check_lantern.movew(0x0CCC, reg_D0);
+    // Dark room with no lantern ===> make palettes fully black
+    func_darken_if_missing_lantern.jsr(func_darken_palettes);
+    func_darken_if_missing_lantern.bra("return");
 
-    func_check_lantern.label("apply_factor");
-    func_check_lantern.jsr(darken_palette);
-    func_check_lantern.movem_from_stack({ reg_D0 }, {});
-    func_check_lantern.rts();
+    // Dark room with lantern ===> very slightly dim the palettes
+    func_darken_if_missing_lantern.label("owns_lantern");
+    func_darken_if_missing_lantern.jsr(func_dim_palettes);
 
-    func_check_lantern.label("not_a_dark_room");
-    func_check_lantern.addql(0x2, reg_A0);
-    func_check_lantern.bra("loop_start");
+    func_darken_if_missing_lantern.label("return");
+    func_darken_if_missing_lantern.movem_from_stack({ reg_D0 }, { reg_A0 });
+    func_darken_if_missing_lantern.rts();
 
-    func_check_lantern.label("return");
-    func_check_lantern.clrb(reg_D7);
-    func_check_lantern.rts();
-
-    rom.set_code(0x87BE, func_check_lantern);
+    return rom.inject_code(func_darken_if_missing_lantern);
 }
 
-static void replace_function_change_map_palette(md::ROM& rom)
+static void simplify_function_change_map_palette(md::ROM& rom, uint32_t func_darken_if_missing_lantern)
 {
-    // ----------------------------------------
-    // Function to change the palette used on map transition (already exist in OG, slightly modified)
     md::Code func_change_map_palette;
 
     func_change_map_palette.cmpb(addr_(0xFF112F), reg_D4);
     func_change_map_palette.beq("return");
-        func_change_map_palette.moveb(reg_D4, addr_(0xFF112F));
-        func_change_map_palette.movel(addr_(offsets::MAP_PALETTES_TABLE_POINTER), reg_A0);
-        func_change_map_palette.mulu(bval_(0x1A), reg_D4);
-        func_change_map_palette.adda(reg_D4, reg_A0);
-        func_change_map_palette.lea(0xFF0084, reg_A1);
-        func_change_map_palette.movew(0x000C, reg_D0);
-        func_change_map_palette.jsr(0x96A);
-        func_change_map_palette.clrw(addr_(0xFF0080));
-        func_change_map_palette.movew(0x0CCC, addr_(0xFF0082));
-        func_change_map_palette.clrw(addr_(0xFF009E));
-        func_change_map_palette.jsr(0x87BE);
+    func_change_map_palette.moveb(reg_D4, addr_(0xFF112F));
+    func_change_map_palette.movel(addr_(offsets::MAP_PALETTES_TABLE_POINTER), reg_A0);
+    func_change_map_palette.mulu(bval_(26), reg_D4);
+    func_change_map_palette.adda(reg_D4, reg_A0);
+    func_change_map_palette.lea(0xFF0084, reg_A1);
+    func_change_map_palette.movew(0x000C, reg_D0);
+    func_change_map_palette.jsr(0x96A);
+    func_change_map_palette.clrw(addr_(0xFF009E));
+    func_change_map_palette.clrw(addr_(0xFF0080));
+    func_change_map_palette.jsr(func_darken_if_missing_lantern);
     func_change_map_palette.label("return");
     func_change_map_palette.rts();
 
     rom.set_code(0x2D64, func_change_map_palette);
-}
-
-static void remove_alternate_palette_for_knl(const World& world)
-{
-    // Replace the "dark room" palette from King Nole's Labyrinth by the lit room palette
-    MapPalette* lit_knl_palette = world.map_palettes().at(39);
-    MapPalette* dark_knl_palette = world.map_palettes().at(40);
-
-    for(auto& [map_id, map] : world.maps())
-        if(map->palette() == dark_knl_palette)
-            map->palette(lit_knl_palette);
+    if(func_change_map_palette.size() > 106)
+        throw LandstalkerException("func_change_map_palette is bigger than the original one");
 }
 
 /**
@@ -123,22 +166,28 @@ static void remove_alternate_palette_for_knl(const World& world)
  */
 void alter_lantern_handling(md::ROM& rom, const World& world)
 {
+    remove_alternate_palette_for_knl(world);
+    neutralize_lantern_effect_on_use(rom);
+
     uint32_t dark_rooms_table = inject_dark_rooms_table(rom, world);
-    uint32_t darken_palette = inject_function_darken_palette(rom);
-    replace_function_check_lantern(rom, darken_palette, dark_rooms_table);
-    replace_function_change_map_palette(rom);
+    uint32_t and_words = inject_func_and_words(rom);
+    uint32_t darken_palettes = inject_func_darken_palettes(rom, and_words);
+    uint32_t dim_palettes = inject_func_dim_palettes(rom, and_words);
+    uint32_t darken_if_missing_lantern = inject_func_darken_if_missing_lantern(rom, dark_rooms_table, darken_palettes, dim_palettes);
+
+    simplify_function_change_map_palette(rom, darken_if_missing_lantern);
+
+    // Remove the fixed addition of white in the InitPalettes function to prevent parasitic whites to appear when
+    // leaving menu or loading a saved game
+    rom.set_code(0x8FFA, md::Code().nop(4));
+    rom.set_code(0x9006, md::Code().nop(2));
 
     // ----------------------------------------
-    // Pseudo-function used to extend the patches palette init function, used to call the lantern check
-    // after initing all palettes (both map & entities)
-    md::Code ext_init_palette;
-
-    ext_init_palette.movew(0x0CCC, addr_(0xFF00A2));
-    ext_init_palette.add_bytes(rom.get_bytes(0x19520, 0x19526)); // Add the jsr that was removed for injection
-    ext_init_palette.jsr(0x87BE);
-    ext_init_palette.rts();
-    uint32_t addr = rom.inject_code(ext_init_palette);
+    // Hook procedure used to call the lantern check after initing all palettes (both map & entities)
+    md::Code proc_init_palettes;
+    proc_init_palettes.add_bytes(rom.get_bytes(0x19520, 0x19526)); // Add the jsr that was removed for injection
+    proc_init_palettes.jsr(darken_if_missing_lantern);
+    proc_init_palettes.rts();
+    uint32_t addr = rom.inject_code(proc_init_palettes);
     rom.set_code(0x19520, md::Code().jsr(addr));
-
-    remove_alternate_palette_for_knl(world);
 }
