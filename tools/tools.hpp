@@ -11,32 +11,6 @@
 
 namespace tools 
 {
-    inline uint32_t get_uniform_integer(uint32_t number, uint32_t range_low, uint32_t range_high)
-    {
-        double proportion = static_cast<double>(number) / (1.0 + UINT32_MAX);
-        uint32_t range = range_high - range_low + 1;
-        return static_cast<uint32_t>(proportion * range) + range_low;
-    }
-
-    template<typename T>
-    void shuffle(std::vector<T>& vector, std::mt19937& rng)
-    {
-        if (vector.size() == 0)
-            return;
-
-        std::vector<T> elems;
-
-        while (vector.size() > 1)
-        {
-            uint32_t random_pos = get_uniform_integer(rng(), 0, static_cast<uint32_t>(vector.size()-1));
-            elems.emplace_back(vector[random_pos]);
-            vector.erase(vector.begin() + random_pos);
-        }
-          
-        elems.emplace_back(*vector.begin());
-        vector = elems;
-    }
-
     inline std::vector<std::string> split(const std::string& str, const std::string& delim)
     {
         std::vector<std::string> tokens;
@@ -58,7 +32,7 @@ namespace tools
     {
         if(words.size() == 0)
             return "";
-            
+
         std::string ret = words[0];
         for(size_t i=1 ; i<words.size() ; ++i)
         {

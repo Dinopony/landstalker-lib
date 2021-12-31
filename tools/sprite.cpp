@@ -1,4 +1,3 @@
-#include <vector>
 #include <cstdint>
 #include "sprite.hpp"
 #include "../exceptions.hpp"

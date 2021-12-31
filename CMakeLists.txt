@@ -68,7 +68,7 @@ set(SOURCES
         "tools/bitfield.hpp"
         "tools/byte_array.hpp"
         "tools/flag.hpp"
-        "tools/unsorted_set.hpp"
+        "tools/vectools.hpp"
         "tools/tools.hpp"
         "tools/json.hpp"
 
