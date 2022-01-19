@@ -1,40 +1,23 @@
-#include "world_rom_writer.hpp"
+#include "io.hpp"
 
 #include "../model/entity_type.hpp"
 #include "../model/item_source.hpp"
 #include "../model/map.hpp"
-#include "../tools/color_palette.hpp"
 #include "../model/world_teleport_tree.hpp"
 #include "../model/world.hpp"
 
-#include "../tools/byte_array.hpp"
-#include "../tools/textbanks_encoder.hpp"
+#include "textbanks_encoder.hpp"
 
 #include "../constants/offsets.hpp"
 #include "../constants/entity_type_codes.hpp"
-
 #include "../exceptions.hpp"
 
 #include <cstdint>
 #include <set>
 
-void WorldRomWriter::write_world_to_rom(md::ROM& rom, const World& world)
-{
-    write_items(rom, world);
-    write_item_sources(rom, world);
-    write_entity_types(rom, world);
-    write_entity_type_palettes(rom, world);
-    write_game_strings(rom, world);
-    write_tibor_tree_connections(rom, world);
-    write_fahl_enemies(rom, world);
-    write_map_connections(rom, world);
-    write_map_palettes(rom, world);
-    write_maps(rom, world);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
-void WorldRomWriter::write_items(md::ROM& rom, const World& world)
+static void write_items(const World& world, md::ROM& rom)
 {
     // Prepare a data block for gold values
     uint8_t highest_item_id = world.items().rbegin()->first;
@@ -65,7 +48,7 @@ void WorldRomWriter::write_items(md::ROM& rom, const World& world)
     }
 }
 
-void WorldRomWriter::write_item_sources(md::ROM& rom, const World& world)
+static void write_item_sources(const World& world, md::ROM& rom)
 {
     for(ItemSource* source : world.item_sources())
     {
@@ -90,7 +73,7 @@ void WorldRomWriter::write_item_sources(md::ROM& rom, const World& world)
     }
 }
 
-void WorldRomWriter::write_entity_types(md::ROM& rom, const World& world)
+static void write_entity_types(const World& world, md::ROM& rom)
 {
     std::vector<EntityEnemy*> enemy_types;
     std::set<uint16_t> drop_probabilities;
@@ -166,7 +149,7 @@ void WorldRomWriter::write_entity_types(md::ROM& rom, const World& world)
         throw LandstalkerException("Enemy stats table is bigger than in original game");
 }
 
-void WorldRomWriter::write_entity_type_palettes(md::ROM& rom, const World& world)
+static void write_entity_type_palettes(const World& world, md::ROM& rom)
 {
     // Build arrays for low & high palettes
     std::vector<EntityLowPalette> low_palettes;
@@ -237,13 +220,13 @@ void WorldRomWriter::write_entity_type_palettes(md::ROM& rom, const World& world
     rom.set_bytes(offsets::ENTITY_PALETTES_TABLE_HIGH, high_palettes_bytes);
 }
 
-void WorldRomWriter::write_game_strings(md::ROM& rom, const World& world)
+static void write_game_strings(const World& world, md::ROM& rom)
 {
     TextbanksEncoder encoder(rom, world.game_strings());
     encoder.write_to_rom(rom);
 }
 
-void WorldRomWriter::write_tibor_tree_connections(md::ROM& rom, const World& world)
+static void write_tibor_tree_connections(const World& world, md::ROM& rom)
 {
     for (auto& [tree_1, tree_2] : world.teleport_tree_pairs())
     {
@@ -254,7 +237,7 @@ void WorldRomWriter::write_tibor_tree_connections(md::ROM& rom, const World& wor
     }
 }
 
-void WorldRomWriter::write_fahl_enemies(md::ROM& rom, const World& world)
+static void write_fahl_enemies(const World& world, md::ROM& rom)
 {
     if(world.fahl_enemies().size() > 50)
         throw LandstalkerException("Cannot put more than 50 enemies for Fahl challenge");
@@ -266,7 +249,7 @@ void WorldRomWriter::write_fahl_enemies(md::ROM& rom, const World& world)
     rom.set_bytes(offsets::FAHL_ENEMIES_TABLE, fahl_enemies_bytes);
 }
 
-void WorldRomWriter::write_map_connections(md::ROM& rom, const World& world)
+static void write_map_connections(const World& world, md::ROM& rom)
 {
     uint32_t addr = offsets::MAP_CONNECTIONS_TABLE;
 
@@ -295,7 +278,7 @@ void WorldRomWriter::write_map_connections(md::ROM& rom, const World& world)
     rom.mark_empty_chunk(addr, offsets::MAP_CONNECTIONS_TABLE_END);
 }
 
-void WorldRomWriter::write_map_palettes(md::ROM& rom, const World& world)
+static void write_map_palettes(const World& world, md::ROM& rom)
 {
     ByteArray palette_table_bytes;
 
@@ -312,21 +295,7 @@ void WorldRomWriter::write_map_palettes(md::ROM& rom, const World& world)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void WorldRomWriter::write_maps(md::ROM& rom, const World& world)
-{
-    write_maps_data(rom, world);
-    write_maps_climb_destination(rom, world);
-    write_maps_fall_destination(rom, world);
-    write_maps_variants(rom, world);
-    write_maps_global_entity_masks(rom, world);
-    write_maps_key_door_masks(rom, world);
-    write_maps_entity_masks(rom, world);
-    write_maps_dialogue_table(rom, world);
-    write_maps_entities(rom, world);
-    write_maps_entity_persistence_flags(rom, world);
-}
-
-void WorldRomWriter::write_maps_data(md::ROM& rom, const World& world)
+static void write_maps_data(const World& world, md::ROM& rom)
 {
     for(auto& [map_id, map] : world.maps())
     {
@@ -336,15 +305,15 @@ void WorldRomWriter::write_maps_data(md::ROM& rom, const World& world)
         byte4 = map->tileset_id() & 0x1F;
         byte4 |= (map->primary_big_tileset_id() & 0x01) << 5;
         byte4 |= (map->unknown_param_1() & 0x03) << 6;
-        
+
         uint8_t byte5;
         byte5 = world.map_palette_id(map->palette()) & 0x3F;
         byte5 |= (map->unknown_param_2() & 0x03) << 6;
-        
+
         uint8_t byte7;
         byte7 = map->background_music() & 0x1F;
         byte7 |= (map->secondary_big_tileset_id() & 0x07) << 5;
-        
+
         rom.set_long(addr, map->address());
         rom.set_byte(addr+4, byte4);
         rom.set_byte(addr+5, byte5);
@@ -360,7 +329,7 @@ void WorldRomWriter::write_maps_data(md::ROM& rom, const World& world)
     }
 }
 
-void WorldRomWriter::write_maps_fall_destination(md::ROM& rom, const World& world)
+static void write_maps_fall_destination(const World& world, md::ROM& rom)
 {
     uint32_t addr = offsets::MAP_FALL_DESTINATION_TABLE;
 
@@ -381,7 +350,7 @@ void WorldRomWriter::write_maps_fall_destination(md::ROM& rom, const World& worl
         throw LandstalkerException("Fall destination table must not be bigger than the one from base game");
 }
 
-void WorldRomWriter::write_maps_climb_destination(md::ROM& rom, const World& world)
+static void write_maps_climb_destination(const World& world, md::ROM& rom)
 {
     uint32_t addr = offsets::MAP_CLIMB_DESTINATION_TABLE;
 
@@ -402,7 +371,7 @@ void WorldRomWriter::write_maps_climb_destination(md::ROM& rom, const World& wor
         throw LandstalkerException("Climb destination table must not be bigger than the one from base game");
 }
 
-void WorldRomWriter::write_maps_variants(md::ROM& rom, const World& world)
+static void write_maps_variants(const World& world, md::ROM& rom)
 {
     uint32_t addr = offsets::MAP_VARIANTS_TABLE;
 
@@ -437,7 +406,7 @@ void WorldRomWriter::write_maps_variants(md::ROM& rom, const World& world)
     rom.mark_empty_chunk(addr, offsets::MAP_VARIANTS_TABLE_END);
 }
 
-void WorldRomWriter::write_maps_global_entity_masks(md::ROM& rom, const World& world)
+static void write_maps_global_entity_masks(const World& world, md::ROM& rom)
 {
     uint32_t addr = offsets::MAP_CLEAR_FLAGS_TABLE;
 
@@ -459,7 +428,7 @@ void WorldRomWriter::write_maps_global_entity_masks(md::ROM& rom, const World& w
     rom.mark_empty_chunk(addr, offsets::MAP_CLEAR_FLAGS_TABLE_END);
 }
 
-void WorldRomWriter::write_maps_key_door_masks(md::ROM& rom, const World& world)
+static void write_maps_key_door_masks(const World& world, md::ROM& rom)
 {
     uint32_t addr = offsets::MAP_CLEAR_KEY_DOOR_FLAGS_TABLE;
 
@@ -481,13 +450,13 @@ void WorldRomWriter::write_maps_key_door_masks(md::ROM& rom, const World& world)
     rom.mark_empty_chunk(addr, offsets::MAP_CLEAR_KEY_DOOR_FLAGS_TABLE_END);
 }
 
-void WorldRomWriter::write_maps_entity_masks(md::ROM& rom, const World& world)
+static void write_maps_entity_masks(const World& world, md::ROM& rom)
 {
     ByteArray entity_masks_table;
 
     for(auto& [map_id, map] : world.maps())
     {
-        std::vector<uint8_t> bytes; 
+        std::vector<uint8_t> bytes;
 
         uint8_t entity_id = 0;
         for(Entity* entity : map->entities())
@@ -523,7 +492,7 @@ void WorldRomWriter::write_maps_entity_masks(md::ROM& rom, const World& world)
     rom.set_code(0x1A382, md::Code().jsr(setup_addr).nop(2));
 }
 
-void WorldRomWriter::write_maps_dialogue_table(md::ROM& rom, const World& world)
+static void write_maps_dialogue_table(const World& world, md::ROM& rom)
 {
     ByteArray bytes;
 
@@ -581,7 +550,7 @@ void WorldRomWriter::write_maps_dialogue_table(md::ROM& rom, const World& world)
     rom.set_code(0x25276, md::Code().jsr(injected_func).nop(2));
 }
 
-void WorldRomWriter::write_maps_entities(md::ROM& rom, const World& world)
+static void write_maps_entities(const World& world, md::ROM& rom)
 {
     ByteArray entities_offsets_table, entities_table;
 
@@ -611,7 +580,7 @@ void WorldRomWriter::write_maps_entities(md::ROM& rom, const World& world)
     rom.set_long(0x19566, entities_table_addr);
 }
 
-void WorldRomWriter::write_maps_entity_persistence_flags(md::ROM& rom, const World& world)
+static void write_maps_entity_persistence_flags(const World& world, md::ROM& rom)
 {
     uint32_t addr = offsets::PERSISTENCE_FLAGS_TABLE;
     std::vector<Entity*> sacred_trees_with_persistence;
@@ -636,7 +605,7 @@ void WorldRomWriter::write_maps_entity_persistence_flags(md::ROM& rom, const Wor
                     rom.set_byte(addr, (flag_bit << 5) | (entity_id & 0x1F));
                     addr += 0x1;
                 }
-                else 
+                else
                 {
                     sacred_trees_with_persistence.emplace_back(entity);
                 }
@@ -649,7 +618,7 @@ void WorldRomWriter::write_maps_entity_persistence_flags(md::ROM& rom, const Wor
     if(addr > offsets::SACRED_TREES_PERSISTENCE_FLAGS_TABLE)
         throw LandstalkerException("Persistence flags table must not be bigger than the one from base game");
     rom.mark_empty_chunk(addr, offsets::SACRED_TREES_PERSISTENCE_FLAGS_TABLE);
-    
+
     addr = offsets::SACRED_TREES_PERSISTENCE_FLAGS_TABLE;
 
     // Write sacred trees persistence flags table
@@ -672,4 +641,34 @@ void WorldRomWriter::write_maps_entity_persistence_flags(md::ROM& rom, const Wor
     if(addr > offsets::SACRED_TREES_PERSISTENCE_FLAGS_TABLE_END)
         throw LandstalkerException("Sacred trees persistence flags table must not be bigger than the one from base game");
     rom.mark_empty_chunk(addr, offsets::SACRED_TREES_PERSISTENCE_FLAGS_TABLE_END);
+}
+
+static void write_maps(const World& world, md::ROM& rom)
+{
+    write_maps_data(world, rom);
+    write_maps_climb_destination(world, rom);
+    write_maps_fall_destination(world, rom);
+    write_maps_variants(world, rom);
+    write_maps_global_entity_masks(world, rom);
+    write_maps_key_door_masks(world, rom);
+    write_maps_entity_masks(world, rom);
+    write_maps_dialogue_table(world, rom);
+    write_maps_entities(world, rom);
+    write_maps_entity_persistence_flags(world, rom);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void io::write_world_to_rom(const World& world, md::ROM& rom)
+{
+    write_items(world, rom);
+    write_item_sources(world, rom);
+    write_entity_types(world, rom);
+    write_entity_type_palettes(world, rom);
+    write_game_strings(world, rom);
+    write_tibor_tree_connections(world, rom);
+    write_fahl_enemies(world, rom);
+    write_map_connections(world, rom);
+    write_map_palettes(world, rom);
+    write_maps(world, rom);
 }

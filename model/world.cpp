@@ -4,15 +4,12 @@
 #include "map.hpp"
 #include "item.hpp"
 #include "item_source.hpp"
-#include "../tools/color_palette.hpp"
 #include "spawn_location.hpp"
 #include "world_teleport_tree.hpp"
 
 #include "../constants/offsets.hpp"
-#include "../io/world_rom_reader.hpp"
-#include "../io/world_rom_writer.hpp"
+#include "../io/io.hpp"
 
-#include "../tools/textbanks_encoder.hpp"
 #include "../exceptions.hpp"
 
 // Include headers automatically generated from model json files
@@ -28,20 +25,19 @@ World::World(const md::ROM& rom)
 {
     // No requirements
     this->load_items();
-    WorldRomReader::read_game_strings(*this, rom);
+    io::read_game_strings(rom, *this);
+    io::read_blocksets(rom, *this);
+    io::read_tilesets(rom, *this);
 
-    WorldRomReader::read_entity_types(*this, rom);
+    io::read_entity_types(rom, *this);
     this->load_entity_types();
     this->load_teleport_trees();
 
     // Reading map entities might actually require items
-    WorldRomReader::read_map_palettes(*this, rom);
-    WorldRomReader::read_maps(*this, rom);
-    WorldRomReader::read_map_connections(*this, rom);
+    io::read_maps(rom, *this);
 
     // Require maps & entities
     this->load_item_sources();
-
 }
 
 World::~World()
@@ -59,12 +55,25 @@ World::~World()
         delete entity;
     for (MapPalette* palette : _map_palettes)
         delete palette;
+
+    std::set<Blockset*> deleted_blocksets;
+    for(const std::vector<Blockset*>& group : _blockset_groups)
+    {
+        for(Blockset* blockset : group)
+        {
+            if(!deleted_blocksets.count(blockset))
+            {
+                deleted_blocksets.insert(blockset);
+                delete blockset;
+            }
+        }
+    }
 }
 
 void World::write_to_rom(md::ROM& rom)
 {
     this->clean_unused_palettes();
-    WorldRomWriter::write_world_to_rom(rom, *this);
+    io::write_world_to_rom(*this, rom);
 }
 
 Item* World::item(const std::string& name) const

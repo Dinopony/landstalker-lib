@@ -20,6 +20,7 @@ class Item;
 class WorldTeleportTree;
 class EntityType;
 class Map;
+class Blockset;
 
 class World
 {
@@ -37,6 +38,9 @@ private:
     std::vector<Flag> _starting_flags;
     uint16_t _starting_golds = 0;
     uint8_t _custom_starting_life = 0;
+
+    std::vector<std::vector<uint8_t>> _tilesets;
+    std::vector<std::vector<Blockset*>> _blockset_groups;
 
     /// Used by the "alter_lantern_handling" patch
     std::vector<uint16_t> _dark_maps;
@@ -104,6 +108,12 @@ public:
 
     [[nodiscard]] const std::vector<EntityType*>& fahl_enemies() const { return _fahl_enemies; }
     void add_fahl_enemy(EntityType* enemy) { _fahl_enemies.emplace_back(enemy); }
+
+    [[nodiscard]] const std::vector<std::vector<uint8_t>>& tilesets() const { return _tilesets; }
+    [[nodiscard]] std::vector<std::vector<uint8_t>>& tilesets() { return _tilesets; }
+
+    [[nodiscard]] const std::vector<std::vector<Blockset*>>& blockset_groups() const { return _blockset_groups; }
+    [[nodiscard]] std::vector<std::vector<Blockset*>>& blockset_groups() { return _blockset_groups; }
 
 private:
     void load_items();

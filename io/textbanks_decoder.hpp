@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include "../md_tools.hpp"
-#include "huffman/tree.hpp"
+#include "../tools/huffman/tree.hpp"
 
 class TextbanksDecoder
 {

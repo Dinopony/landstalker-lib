@@ -72,6 +72,20 @@ public:
     [[nodiscard]] uint8_t extra_byte_2() const { return _extra_byte_2; }
     void extra_byte_2(uint8_t value) { _extra_byte_2 = value; }
 
+    void position_for_map(uint16_t map_id, uint8_t pos_x, uint8_t pos_y)
+    {
+        if(_map_id_1 == map_id)
+        {
+            _pos_x_1 = pos_x;
+            _pos_y_1 = pos_y;
+        }
+        else if(_map_id_2 == map_id)
+        {
+            _pos_x_2 = pos_x;
+            _pos_y_2 = pos_y;
+        }
+    }
+
     void replace_map(uint16_t map_id, uint16_t replacement)
     {
         if(_map_id_1 == map_id)

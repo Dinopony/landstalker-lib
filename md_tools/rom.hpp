@@ -44,7 +44,7 @@ namespace md {
         [[nodiscard]] uint32_t inject_code(const Code& code, const std::string& label = "");
         [[nodiscard]] uint32_t reserve_data_block(uint32_t byte_count, const std::string& label = "");
 
-        const uint8_t* iterator_at(uint32_t addr) { return reinterpret_cast<uint8_t*>(_byte_array + addr); }
+        [[nodiscard]] const uint8_t* iterator_at(uint32_t addr) const { return reinterpret_cast<const uint8_t*>(_byte_array + addr); }
 
         void store_address(const std::string& name, uint32_t address) { _stored_addresses[name] = address; }
         uint32_t stored_address(const std::string& name) { return _stored_addresses.at(name); }

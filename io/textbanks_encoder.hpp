@@ -4,8 +4,8 @@
 #include <vector>
 #include <string>
 
-#include "huffman/tree.hpp"
-#include "huffman/symbols.hpp"
+#include "../tools/huffman/tree.hpp"
+#include "../tools/huffman/symbols.hpp"
 #include "../md_tools.hpp"
 
 class TextbanksEncoder 

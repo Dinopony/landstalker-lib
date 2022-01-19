@@ -62,6 +62,10 @@ namespace offsets
     constexpr uint32_t LITHOGRAPH_TILES = 0x0389D3;
     constexpr uint32_t LITHOGRAPH_TILES_END = 0x039762;
 
+    constexpr uint32_t TILESETS_TABLE_POINTER = 0x44010;
+    constexpr uint32_t TILESETS_TABLE = 0x44070;
+    constexpr uint32_t TILESETS_TABLE_END = 0x440F0;
+
     constexpr uint32_t BEHAVIOR_OFFSETS_TABLE = 0x09B058; 
     constexpr uint32_t BEHAVIOR_TABLE = 0x09B458;
     constexpr uint32_t BEHAVIOR_TABLE_END = 0x09E75E;
@@ -88,4 +92,9 @@ namespace offsets
     constexpr uint32_t ENTITY_PALETTES_TABLE_LOW_END = 0x1A4BA0;
     constexpr uint32_t ENTITY_PALETTES_TABLE_HIGH = ENTITY_PALETTES_TABLE_LOW_END;
     constexpr uint32_t ENTITY_PALETTES_TABLE_HIGH_END = 0x1A4C8E;
+
+    constexpr uint32_t BLOCKSETS_GROUPS_TABLE_POINTER = 0x1AF800;
+    constexpr uint32_t BLOCKSETS_GROUPS_TABLE = 0x1AF804;
+    constexpr uint32_t BLOCKSETS_GROUPS_TABLE_END = 0x1AF8C8;
+    constexpr uint32_t FIRST_BLOCKSET = 0x1AFAD0;
 }

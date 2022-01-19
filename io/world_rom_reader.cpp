@@ -1,4 +1,4 @@
-#include "world_rom_reader.hpp"
+#include "io.hpp"
 
 #include "../model/entity_type.hpp"
 #include "../model/item.hpp"
@@ -7,106 +7,36 @@
 #include "../tools/color_palette.hpp"
 #include "../model/world_teleport_tree.hpp"
 #include "../model/world.hpp"
+#include "../model/blockset.hpp"
 
 #include "../constants/offsets.hpp"
 #include "../constants/entity_type_codes.hpp"
 
-#include "../tools/textbanks_decoder.hpp"
+#include "textbanks_decoder.hpp"
 #include "../tools/byte_array.hpp"
+#include "../tools/vectools.hpp"
 
 #include "../exceptions.hpp"
+#include "../tools/lz77.hpp"
 
-void WorldRomReader::read_game_strings(World& world, const md::ROM& rom)
+static void read_map_palettes(const md::ROM& rom, World& world)
 {
-    TextbanksDecoder decoder(rom);
-    world.game_strings() = decoder.strings();
-}
+    uint32_t addr = offsets::MAP_PALETTES_TABLE;
 
-void WorldRomReader::read_entity_types(World& world, const md::ROM& rom)
-{
-    // Init ground item pseudo entity types
-    for(auto& [item_id, item] : world.items())
+    while(addr < offsets::MAP_PALETTES_TABLE_END)
     {
-        if(item_id > 0x3F)
-            continue;
-        uint8_t entity_id = item_id + 0xC0;
-        world.add_entity_type(new EntityItemOnGround(entity_id, "ground_item (" + item->name() + ")", item));
-    }
-
-    // Read item drop probabilities from a table in the ROM
-    std::vector<uint16_t> probability_table;
-    for(uint32_t addr = offsets::PROBABILITY_TABLE ; addr < offsets::PROBABILITY_TABLE_END ; addr += 0x2)
-        probability_table.emplace_back(rom.get_word(addr));
-
-    // Read enemy info from a table in the ROM
-    for(uint32_t addr = offsets::ENEMY_STATS_TABLE ; rom.get_word(addr) != 0xFFFF ; addr += 0x6)
-    {
-        uint8_t id = rom.get_byte(addr);
-        std::string name = "enemy_" + std::to_string(id);
-
-        uint8_t health = rom.get_byte(addr+1);
-        uint8_t defence = rom.get_byte(addr+2);
-        uint8_t dropped_golds = rom.get_byte(addr+3);
-        uint8_t attack = rom.get_byte(addr+4) & 0x7F;
-        Item* dropped_item = world.item(rom.get_byte(addr+5) & 0x3F);
-
-        // Use previously built probability table to know the real drop chances
-        uint8_t probability_id = ((rom.get_byte(addr+4) & 0x80) >> 5) | (rom.get_byte(addr+5) >> 6);
-        uint16_t drop_probability = probability_table.at(probability_id);
-
-        world.add_entity_type(new EntityEnemy(id, name,
-                                              health, attack, defence,
-                                              dropped_golds, dropped_item, drop_probability));
-    }
-
-    WorldRomReader::read_entity_type_palettes(world, rom);
-}
-
-void WorldRomReader::read_entity_type_palettes(World& world, const md::ROM& rom)
-{
-    // Read entity palettes
-    for(uint32_t addr = offsets::ENTITY_PALETTES_TABLE ; rom.get_word(addr) != 0xFFFF ; addr += 0x2)
-    {
-        uint8_t entity_id = rom.get_byte(addr);
-        uint8_t palette_id = rom.get_byte(addr+1);
-
-        if(!world.entity_types().count(entity_id))
-            world.add_entity_type(new EntityType(entity_id, "No" + std::to_string(entity_id)));
-
-        EntityType* entity_type = world.entity_type(entity_id);
-        if(palette_id & 0x80)
+        MapPalette palette_data {};
+        for(uint8_t i=0 ; i<13 ; ++i)
         {
-            // High palette
-            palette_id &= 0x7F;
-            uint32_t palette_base_addr = offsets::ENTITY_PALETTES_TABLE_HIGH + (palette_id * 7 * 2);
-            EntityHighPalette high_palette_colors = EntityHighPalette::from_rom(rom, palette_base_addr);
-            entity_type->high_palette(high_palette_colors);
+            palette_data[i] = Color::from_bgr_word(rom.get_word(addr));
+            addr += 0x2;
         }
-        else
-        {
-            // Low palette
-            uint32_t palette_base_addr = offsets::ENTITY_PALETTES_TABLE_LOW + (palette_id * 6 * 2);
-            EntityLowPalette low_palette_colors = EntityLowPalette::from_rom(rom, palette_base_addr);
-            entity_type->low_palette(low_palette_colors);
-        }
+
+        world.add_map_palette(new MapPalette(palette_data));
     }
 }
 
-void WorldRomReader::read_maps(World& world, const md::ROM& rom)
-{
-    read_maps_data(world, rom);
-    read_maps_fall_destination(world, rom);
-    read_maps_climb_destination(world, rom);
-    read_maps_entities(world, rom);
-    read_maps_variants(world, rom);
-    read_maps_entity_masks(world, rom);
-    read_maps_global_entity_masks(world, rom);
-    read_maps_key_door_masks(world, rom);
-    read_maps_dialogue_table(world, rom);
-    read_persistence_flags(world, rom);
-}
-
-void WorldRomReader::read_maps_data(World& world, const md::ROM& rom)
+static void read_maps_data(const md::ROM& rom, World& world)
 {
     constexpr uint16_t MAP_COUNT = 816;
     for(uint16_t map_id = 0 ; map_id < MAP_COUNT ; ++map_id)
@@ -129,7 +59,7 @@ void WorldRomReader::read_maps_data(World& world, const md::ROM& rom)
 
         map->background_music(rom.get_byte(addr+7) & 0x1F);
         map->secondary_big_tileset_id((rom.get_byte(addr+7) >> 5) & 0x07);
-        
+
         // Read base chest ID from its dedicated table
         map->base_chest_id(rom.get_byte(offsets::MAP_BASE_CHEST_ID_TABLE + map_id));
 
@@ -143,7 +73,7 @@ void WorldRomReader::read_maps_data(World& world, const md::ROM& rom)
     }
 }
 
-void WorldRomReader::read_maps_fall_destination(World& world, const md::ROM& rom)
+static void read_maps_fall_destination(const md::ROM& rom, World& world)
 {
     for(uint32_t addr = offsets::MAP_FALL_DESTINATION_TABLE ; rom.get_word(addr) != 0xFFFF ; addr += 0x4)
     {
@@ -152,7 +82,7 @@ void WorldRomReader::read_maps_fall_destination(World& world, const md::ROM& rom
     }
 }
 
-void WorldRomReader::read_maps_climb_destination(World& world, const md::ROM& rom)
+static void read_maps_climb_destination(const md::ROM& rom, World& world)
 {
     for(uint32_t addr = offsets::MAP_CLIMB_DESTINATION_TABLE ; rom.get_word(addr) != 0xFFFF ; addr += 0x4)
     {
@@ -161,7 +91,7 @@ void WorldRomReader::read_maps_climb_destination(World& world, const md::ROM& ro
     }
 }
 
-void WorldRomReader::read_maps_entities(World& world, const md::ROM& rom)
+static void read_maps_entities(const md::ROM& rom, World& world)
 {
     for(auto& [map_id, map] : world.maps())
     {
@@ -175,7 +105,7 @@ void WorldRomReader::read_maps_entities(World& world, const md::ROM& rom)
     }
 }
 
-void WorldRomReader::read_maps_variants(World& world, const md::ROM& rom)
+static void read_maps_variants(const md::ROM& rom, World& world)
 {
     for(uint32_t addr = offsets::MAP_VARIANTS_TABLE ; rom.get_word(addr) != 0xFFFF ; addr += 0x6)
     {
@@ -184,12 +114,12 @@ void WorldRomReader::read_maps_variants(World& world, const md::ROM& rom)
 
         uint8_t flag_byte = rom.get_byte(addr+4);
         uint8_t flag_bit = rom.get_byte(addr+5);
-        
+
         map->add_variant(variant_map, flag_byte, flag_bit);
     }
 }
 
-void WorldRomReader::read_maps_entity_masks(World& world, const md::ROM& rom)
+static void read_maps_entity_masks(const md::ROM& rom, World& world)
 {
     for(uint32_t addr = offsets::MAP_ENTITY_MASKS_TABLE ; rom.get_word(addr) != 0xFFFF ; addr += 0x4)
     {
@@ -209,7 +139,7 @@ void WorldRomReader::read_maps_entity_masks(World& world, const md::ROM& rom)
     }
 }
 
-void WorldRomReader::read_maps_global_entity_masks(World& world, const md::ROM& rom)
+static void read_maps_global_entity_masks(const md::ROM& rom, World& world)
 {
     for(uint32_t addr = offsets::MAP_CLEAR_FLAGS_TABLE ; rom.get_word(addr) != 0xFFFF ; addr += 0x4)
     {
@@ -220,12 +150,12 @@ void WorldRomReader::read_maps_global_entity_masks(World& world, const md::ROM& 
         uint8_t lsb = rom.get_byte(addr+3);
         uint8_t flag_bit = lsb >> 5;
         uint8_t first_entity_id = lsb & 0x1F;
- 
+
         map->global_entity_mask_flags().emplace_back(GlobalEntityMaskFlag(flag_byte, flag_bit, first_entity_id));
     }
 }
 
-void WorldRomReader::read_maps_key_door_masks(World& world, const md::ROM& rom)
+static void read_maps_key_door_masks(const md::ROM& rom, World& world)
 {
     for(uint32_t addr = offsets::MAP_CLEAR_KEY_DOOR_FLAGS_TABLE ; rom.get_word(addr) != 0xFFFF ; addr += 0x4)
     {
@@ -239,9 +169,9 @@ void WorldRomReader::read_maps_key_door_masks(World& world, const md::ROM& rom)
 
         map->key_door_mask_flags().emplace_back(GlobalEntityMaskFlag(flag_byte, flag_bit, first_entity_id));
     }
-};
+}
 
-void WorldRomReader::read_maps_dialogue_table(World& world, const md::ROM& rom)
+static void read_maps_dialogue_table(const md::ROM& rom, World& world)
 {
     uint32_t addr = offsets::DIALOGUE_TABLE;
 
@@ -258,7 +188,7 @@ void WorldRomReader::read_maps_dialogue_table(World& world, const md::ROM& rom)
         {
             uint32_t offset = (i+1)*2;
             uint16_t word = rom.get_word(addr + offset);
-            
+
             uint16_t speaker_id = word & 0x7FF;
             uint8_t consecutive_speakers = word >> 11;
             for(uint8_t j=0 ; j<consecutive_speakers ; ++j)
@@ -270,10 +200,10 @@ void WorldRomReader::read_maps_dialogue_table(World& world, const md::ROM& rom)
     }
 }
 
-void WorldRomReader::read_persistence_flags(World& world, const md::ROM& rom)
+static void read_maps_persistence_flags(const md::ROM& rom, World& world)
 {
     uint32_t addr = offsets::PERSISTENCE_FLAGS_TABLE;
- 
+
     // Read switches persistence flags table
     while(rom.get_word(addr) != 0xFFFF)
     {
@@ -317,7 +247,7 @@ void WorldRomReader::read_persistence_flags(World& world, const md::ROM& rom)
         {
             Entity* sacred_tree = sacred_trees_per_map.at(map_id).at(sacred_tree_id);
             sacred_tree->persistence_flag(Flag(flag_byte, flag_bit));
-        } 
+        }
         catch (std::out_of_range&)
         {
             throw LandstalkerException("Sacred tree persistence flag points on tree #"
@@ -327,7 +257,7 @@ void WorldRomReader::read_persistence_flags(World& world, const md::ROM& rom)
     }
 }
 
-void WorldRomReader::read_map_connections(World& world, const md::ROM& rom)
+static void read_map_connections(const md::ROM& rom, World& world)
 {
     for(uint32_t addr = offsets::MAP_CONNECTIONS_TABLE ; rom.get_word(addr) != 0xFFFF ; addr += 0x8)
     {
@@ -347,19 +277,139 @@ void WorldRomReader::read_map_connections(World& world, const md::ROM& rom)
     }
 }
 
-void WorldRomReader::read_map_palettes(World& world, const md::ROM& rom)
+void io::read_maps(const md::ROM& rom, World& world)
 {
-    uint32_t addr = offsets::MAP_PALETTES_TABLE;
+    read_map_palettes(rom, world);
+    read_maps_data(rom, world);
+    read_maps_fall_destination(rom, world);
+    read_maps_climb_destination(rom, world);
+    read_maps_entities(rom, world);
+    read_maps_variants(rom, world);
+    read_maps_entity_masks(rom, world);
+    read_maps_global_entity_masks(rom, world);
+    read_maps_key_door_masks(rom, world);
+    read_maps_dialogue_table(rom, world);
+    read_maps_persistence_flags(rom, world);
+    read_map_connections(rom, world);
+}
 
-    while(addr < offsets::MAP_PALETTES_TABLE_END)
+void io::read_game_strings(const md::ROM& rom, World& world)
+{
+    TextbanksDecoder decoder(rom);
+    world.game_strings() = decoder.strings();
+}
+
+static void read_entity_type_palettes(const md::ROM& rom, World& world)
+{
+    // Read entity palettes
+    for(uint32_t addr = offsets::ENTITY_PALETTES_TABLE ; rom.get_word(addr) != 0xFFFF ; addr += 0x2)
     {
-        MapPalette palette_data {};
-        for(uint8_t i=0 ; i<13 ; ++i)
-        {
-            palette_data[i] = Color::from_bgr_word(rom.get_word(addr));
-            addr += 0x2;
-        }
+        uint8_t entity_id = rom.get_byte(addr);
+        uint8_t palette_id = rom.get_byte(addr+1);
 
-        world.add_map_palette(new MapPalette(palette_data));
-    }    
+        if(!world.entity_types().count(entity_id))
+            world.add_entity_type(new EntityType(entity_id, "No" + std::to_string(entity_id)));
+
+        EntityType* entity_type = world.entity_type(entity_id);
+        if(palette_id & 0x80)
+        {
+            // High palette
+            palette_id &= 0x7F;
+            uint32_t palette_base_addr = offsets::ENTITY_PALETTES_TABLE_HIGH + (palette_id * 7 * 2);
+            EntityHighPalette high_palette_colors = EntityHighPalette::from_rom(rom, palette_base_addr);
+            entity_type->high_palette(high_palette_colors);
+        }
+        else
+        {
+            // Low palette
+            uint32_t palette_base_addr = offsets::ENTITY_PALETTES_TABLE_LOW + (palette_id * 6 * 2);
+            EntityLowPalette low_palette_colors = EntityLowPalette::from_rom(rom, palette_base_addr);
+            entity_type->low_palette(low_palette_colors);
+        }
+    }
+}
+
+void io::read_entity_types(const md::ROM& rom, World& world)
+{
+    // Init ground item pseudo entity types
+    for(auto& [item_id, item] : world.items())
+    {
+        if(item_id > 0x3F)
+            continue;
+        uint8_t entity_id = item_id + 0xC0;
+        world.add_entity_type(new EntityItemOnGround(entity_id, "ground_item (" + item->name() + ")", item));
+    }
+
+    // Read item drop probabilities from a table in the ROM
+    std::vector<uint16_t> probability_table;
+    for(uint32_t addr = offsets::PROBABILITY_TABLE ; addr < offsets::PROBABILITY_TABLE_END ; addr += 0x2)
+        probability_table.emplace_back(rom.get_word(addr));
+
+    // Read enemy info from a table in the ROM
+    for(uint32_t addr = offsets::ENEMY_STATS_TABLE ; rom.get_word(addr) != 0xFFFF ; addr += 0x6)
+    {
+        uint8_t id = rom.get_byte(addr);
+        std::string name = "enemy_" + std::to_string(id);
+
+        uint8_t health = rom.get_byte(addr+1);
+        uint8_t defence = rom.get_byte(addr+2);
+        uint8_t dropped_golds = rom.get_byte(addr+3);
+        uint8_t attack = rom.get_byte(addr+4) & 0x7F;
+        Item* dropped_item = world.item(rom.get_byte(addr+5) & 0x3F);
+
+        // Use previously built probability table to know the real drop chances
+        uint8_t probability_id = ((rom.get_byte(addr+4) & 0x80) >> 5) | (rom.get_byte(addr+5) >> 6);
+        uint16_t drop_probability = probability_table.at(probability_id);
+
+        world.add_entity_type(new EntityEnemy(id, name,
+                                              health, attack, defence,
+                                              dropped_golds, dropped_item, drop_probability));
+    }
+
+    read_entity_type_palettes(rom, world);
+}
+
+void io::read_blocksets(const md::ROM& rom, World& world)
+{
+    // A blockset group is a table of blocksets where the first one is a "primary blockset", and other ones are "secondary".
+    // A map always uses the primary blockset concatenated with one of the secondary blocksets in the group.
+    // We have a "blockset groups table" which associates blockset group IDs to an actual blockset group.
+
+    std::vector<uint32_t> blockset_groups_addrs;
+    for(uint32_t addr=offsets::BLOCKSETS_GROUPS_TABLE ; addr < offsets::BLOCKSETS_GROUPS_TABLE_END ; addr += 0x4)
+        blockset_groups_addrs.push_back(rom.get_long(addr));
+
+    std::map<uint32_t, std::vector<uint32_t>> blocksets_in_groups;
+    for(uint32_t blockset_group_addr : blockset_groups_addrs)
+    {
+        if(blocksets_in_groups.count(blockset_group_addr))
+            continue;
+
+        uint32_t addr = blockset_group_addr;
+        do
+        {
+            blocksets_in_groups[blockset_group_addr].push_back(rom.get_long(addr));
+            addr += 0x4;
+        } while(!vectools::contains(blockset_groups_addrs, addr) && addr < offsets::FIRST_BLOCKSET);
+    }
+
+    std::map<uint32_t, std::vector<Blockset*>> blockset_groups_by_addr;
+    for(const auto& [group_addr, blocksets_in_group] : blocksets_in_groups)
+    {
+        for(uint32_t blockset_addr : blocksets_in_group)
+            blockset_groups_by_addr[group_addr].push_back(decode_blockset(rom, blockset_addr));
+    }
+
+    std::vector<std::vector<Blockset*>>& blockset_groups = world.blockset_groups();
+    for(uint32_t group_addr : blockset_groups_addrs)
+        blockset_groups.push_back(blockset_groups_by_addr.at(group_addr));
+}
+
+void io::read_tilesets(const md::ROM& rom, World& world)
+{
+    const uint8_t* it = rom.iterator_at(0x440F0);
+    std::vector<uint8_t> decoded_bytes = decode_lz77(it);
+
+    Json json = decoded_bytes;
+    tools::dump_json_to_file(json, "./tileset_0.bin");
 }

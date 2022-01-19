@@ -63,32 +63,40 @@ set(SOURCES
         "constants/offsets.hpp"
         "constants/values.hpp"
 
+        # --- I/O ----------------------------------------
+        "io/io.hpp"
+        "io/blocksets_decoder.cpp"
+        "io/world_rom_reader.cpp"
+        "io/world_rom_writer.cpp"
+        "io/textbanks_decoder.hpp"
+        "io/textbanks_decoder.cpp"
+        "io/textbanks_encoder.hpp"
+        "io/textbanks_encoder.cpp"
+
         # --- Tools ----------------------------------------
         "tools/argument_dictionary.hpp"
         "tools/bitfield.hpp"
+        "tools/bitstream.hpp"
         "tools/byte_array.hpp"
         "tools/flag.hpp"
         "tools/vectools.hpp"
         "tools/tools.hpp"
         "tools/json.hpp"
-
         "tools/color.hpp"
         "tools/color.cpp"
         "tools/color_palette.hpp"
         "tools/game_text.hpp"
         "tools/game_text.cpp"
-        "tools/textbanks_decoder.hpp"
-        "tools/textbanks_decoder.cpp"
-        "tools/textbanks_encoder.hpp"
-        "tools/textbanks_encoder.cpp"
         "tools/sprite.hpp"
         "tools/sprite.cpp"
+        "tools/tile_queue.hpp"
 
         "tools/huffman/tree.hpp"
         "tools/huffman/tree_node.hpp"
         "tools/huffman/symbols.hpp"
 
         # --- Model ----------------------------------------
+        "model/blockset.hpp"
         "model/entity_type.hpp"
         "model/entity_type.cpp"
         "model/entity.hpp"
@@ -101,6 +109,7 @@ set(SOURCES
         "model/map.hpp"
         "model/map.cpp"
         "model/spawn_location.hpp"
+        "model/tile.hpp"
         "model/world_teleport_tree.hpp"
         "model/world.hpp"
         "model/world.cpp"
@@ -125,12 +134,6 @@ set(SOURCES
         "patches/normalize_special_enemies_hp.cpp"
         "patches/quality_of_life.cpp"
         "patches/story_dependencies.cpp"
-
-        # --- I/O ----------------------------------------
-        "io/world_rom_reader.hpp"
-        "io/world_rom_reader.cpp"
-        "io/world_rom_writer.hpp"
-        "io/world_rom_writer.cpp"
-        )
+        tools/lz77.hpp tools/lz77.cpp)
 
 add_library(landstalker_lib STATIC "${SOURCES}")
