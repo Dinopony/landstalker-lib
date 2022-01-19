@@ -66,6 +66,7 @@ set(SOURCES
         # --- I/O ----------------------------------------
         "io/io.hpp"
         "io/blocksets_decoder.cpp"
+        "io/exports.cpp"
         "io/world_rom_reader.cpp"
         "io/world_rom_writer.cpp"
         "io/textbanks_decoder.hpp"
@@ -87,6 +88,8 @@ set(SOURCES
         "tools/color_palette.hpp"
         "tools/game_text.hpp"
         "tools/game_text.cpp"
+        "tools/lz77.hpp"
+        "tools/lz77.cpp"
         "tools/sprite.hpp"
         "tools/sprite.cpp"
         "tools/tile_queue.hpp"
@@ -134,6 +137,6 @@ set(SOURCES
         "patches/normalize_special_enemies_hp.cpp"
         "patches/quality_of_life.cpp"
         "patches/story_dependencies.cpp"
-        tools/lz77.hpp tools/lz77.cpp)
+        )
 
 add_library(landstalker_lib STATIC "${SOURCES}")

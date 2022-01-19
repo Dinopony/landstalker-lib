@@ -17,20 +17,20 @@ public:
         _blocks(std::move(blocks))
     {}
 
-    [[nodiscard]] Json to_json() const
+    [[nodiscard]] std::vector<std::string> to_csv() const
     {
-        Json json = Json::array();
+        std::vector<std::string> csv;
 
         for(const Block& block : _blocks)
         {
-            Json block_json = Json::array();
-            block_json.push_back(block[0].to_json());
-            block_json.push_back(block[1].to_json());
-            block_json.push_back(block[2].to_json());
-            block_json.push_back(block[3].to_json());
-            json.push_back(block_json);
+            std::string line;
+            line = block[0].to_csv() + ","
+                    + block[1].to_csv() + ","
+                    + block[2].to_csv() + ","
+                    + block[3].to_csv();
+            csv.push_back(line);
         }
 
-        return json;
+        return csv;
     }
 };

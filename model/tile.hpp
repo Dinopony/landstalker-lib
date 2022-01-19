@@ -23,7 +23,7 @@ public:
     }
     [[nodiscard]] bool attribute(uint16_t attr) const { return _attributes & attr; }
 
-    [[nodiscard]] Json to_json() const
+    [[nodiscard]] std::string to_csv() const
     {
         std::string attributes;
         if(attribute(ATTR_PRIORITY))
@@ -33,10 +33,7 @@ public:
         if(attribute(ATTR_VFLIP))
             attributes.push_back('v');
 
-        if(attributes.empty())
-            return { _tile_index };
-        else
-            return { _tile_index, attributes };
+        return std::to_string(_tile_index) + "," + attributes;
     }
 
     static constexpr uint16_t ATTR_PRIORITY = 0x8000;
