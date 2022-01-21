@@ -9,6 +9,7 @@
 
 class Entity;
 class World;
+class Blockset;
 
 struct GlobalEntityMaskFlag : public Flag
 {
@@ -56,9 +57,7 @@ private:
     uint16_t _id;
     uint32_t _address;
 
-    uint8_t _tileset_id;
-    uint8_t _primary_big_tileset_id;
-    uint8_t _secondary_big_tileset_id;
+    Blockset* _blockset;
 
     MapPalette* _palette;
     uint8_t _room_height;
@@ -98,12 +97,8 @@ public:
     [[nodiscard]] bool is_variant() const { return _parent_map != nullptr; }
     [[nodiscard]] Map* parent_map() const { return _parent_map; }
 
-    [[nodiscard]] uint8_t tileset_id() const { return _tileset_id; }
-    void tileset_id(uint8_t tileset_id) { _tileset_id = tileset_id; }
-    [[nodiscard]] uint8_t primary_big_tileset_id() const { return _primary_big_tileset_id; }
-    void primary_big_tileset_id(uint8_t value) { _primary_big_tileset_id = value; }
-    [[nodiscard]] uint8_t secondary_big_tileset_id() const { return _secondary_big_tileset_id; }
-    void secondary_big_tileset_id(uint8_t value) { _secondary_big_tileset_id = value; }
+    [[nodiscard]] Blockset* blockset() const { return _blockset; }
+    void blockset(Blockset* value) { _blockset = value; }
 
     [[nodiscard]] MapPalette* palette() const { return _palette; }
     void palette(MapPalette* palette) { _palette = palette; }

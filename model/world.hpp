@@ -114,6 +114,9 @@ public:
 
     [[nodiscard]] const std::vector<std::vector<Blockset*>>& blockset_groups() const { return _blockset_groups; }
     [[nodiscard]] std::vector<std::vector<Blockset*>>& blockset_groups() { return _blockset_groups; }
+    [[nodiscard]] Blockset* blockset(uint8_t primary_id, uint8_t secondary_id) const { return _blockset_groups[primary_id][secondary_id]; }
+    [[nodiscard]] std::pair<uint8_t, uint8_t> blockset_id(Blockset* blockset) const;
+    void clean_unused_blocksets();
 
 private:
     void load_items();

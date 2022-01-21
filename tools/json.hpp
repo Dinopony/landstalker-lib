@@ -26750,4 +26750,17 @@ inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std
 
 typedef nlohmann::ordered_json Json;
 
+#include <fstream>
+inline bool dump_json_to_file(const Json& json, const std::string& file_path)
+{
+    std::ofstream file(file_path);
+    if(!file)
+        return false;
+
+    file << json.dump(4);
+    file.close();
+    return true;
+}
+
+
 #endif  // INCLUDE_NLOHMANN_JSON_HPP_

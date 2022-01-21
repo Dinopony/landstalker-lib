@@ -1,7 +1,7 @@
 #include "color.hpp"
 
 #include <cmath>
-#include "./tools.hpp"
+#include "./stringtools.hpp"
 #include "../exceptions.hpp"
 
 Color::Color(uint8_t r, uint8_t g, uint8_t b)

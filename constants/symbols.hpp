@@ -1,30 +1,29 @@
 #pragma once
 
-#define SYMBOL_COUNT 101
+constexpr size_t SYMBOL_COUNT = 108;
 
 class SymbolCount {
+private:
+    uint8_t _symbol = 0xFF;
+    uint32_t _count = 0;
+
 public:
-    SymbolCount() : _symbol(0xFF), _count(0) 
-    {}
+    SymbolCount() = default;
 
     SymbolCount(uint8_t symbol, uint32_t count) : _symbol(symbol), _count(count)
     {}
 
-    uint8_t getSymbol() const { return _symbol; }
-    uint32_t getCount() const { return _count; }
+    [[nodiscard]] uint8_t symbol() const { return _symbol; }
+    [[nodiscard]] uint32_t count() const { return _count; }
 
-    bool operator<(const SymbolCount& b)
+    bool operator < (const SymbolCount& b) const
     {
-        if (_count > b._count)
+        if(_count > b._count)
             return true;
-        else if (_count == b._count)
+        else if(_count == b._count)
             return _symbol < b._symbol;
         return false;
     }
-
-private:
-    uint8_t _symbol;
-    uint32_t _count;
 };
 
 namespace Symbols 

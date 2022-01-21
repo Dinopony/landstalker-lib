@@ -1,10 +1,8 @@
 #include "io.hpp"
 
 #include "../model/entity_type.hpp"
-#include "../model/item.hpp"
 #include "../model/item_source.hpp"
 #include "../model/map.hpp"
-#include "../tools/color_palette.hpp"
 #include "../model/world_teleport_tree.hpp"
 #include "../model/world.hpp"
 #include "../model/blockset.hpp"
@@ -12,11 +10,8 @@
 #include "../constants/offsets.hpp"
 #include "../constants/entity_type_codes.hpp"
 
-#include "textbanks_decoder.hpp"
-#include "../tools/byte_array.hpp"
 #include "../tools/vectools.hpp"
-
-#include "../exceptions.hpp"
+#include "../tools/huffman_tree.hpp"
 #include "../tools/lz77.hpp"
 
 static void read_map_palettes(const md::ROM& rom, World& world)
@@ -47,8 +42,7 @@ static void read_maps_data(const md::ROM& rom, World& world)
 
         map->address(rom.get_long(addr));
 
-        map->tileset_id(rom.get_byte(addr+4) & 0x1F);
-        map->primary_big_tileset_id((rom.get_byte(addr+4) >> 5) & 0x01);
+        uint8_t primary_blockset_id = rom.get_byte(addr+4) & 0x3F;
         map->unknown_param_1((rom.get_byte(addr+4) >> 6));
 
         uint8_t palette_id = rom.get_byte(addr+5) & 0x3F;
@@ -58,7 +52,7 @@ static void read_maps_data(const md::ROM& rom, World& world)
         map->room_height(rom.get_byte(addr+6));
 
         map->background_music(rom.get_byte(addr+7) & 0x1F);
-        map->secondary_big_tileset_id((rom.get_byte(addr+7) >> 5) & 0x07);
+        uint8_t secondary_blockset_id = (rom.get_byte(addr+7) >> 5) & 0x07;
 
         // Read base chest ID from its dedicated table
         map->base_chest_id(rom.get_byte(offsets::MAP_BASE_CHEST_ID_TABLE + map_id));
@@ -68,6 +62,8 @@ static void read_maps_data(const md::ROM& rom, World& world)
         uint16_t byte = (flag_description >> 3) + 0xC0;
         uint8_t bit = flag_description & 0x7;
         map->visited_flag(Flag(byte, bit));
+
+        map->blockset(world.blockset(primary_blockset_id, secondary_blockset_id+1));
 
         world.set_map(map_id, map);
     }
@@ -295,8 +291,27 @@ void io::read_maps(const md::ROM& rom, World& world)
 
 void io::read_game_strings(const md::ROM& rom, World& world)
 {
-    TextbanksDecoder decoder(rom);
-    world.game_strings() = decoder.strings();
+    uint32_t huffman_trees_base_addr = offsets::HUFFMAN_TREE_OFFSETS + (SYMBOL_COUNT * 2);
+
+    std::vector<HuffmanTree*> huffman_trees;
+
+    std::vector<uint16_t> trees_offsets = rom.get_words(offsets::HUFFMAN_TREE_OFFSETS, huffman_trees_base_addr);
+    for(uint16_t tree_offset : trees_offsets)
+    {
+        if (tree_offset == 0xFFFF)
+            huffman_trees.emplace_back(nullptr);
+        else
+            huffman_trees.emplace_back(io::decode_huffman_tree(rom, huffman_trees_base_addr + tree_offset));
+    }
+
+    uint32_t textbank_table_addr = rom.get_long(offsets::TEXTBANKS_TABLE_POINTER);
+    std::vector<uint32_t> textbank_addrs;
+    for(uint32_t addr = textbank_table_addr ; rom.get_long(addr) != 0xFFFFFFFF ; addr += 0x4)
+        textbank_addrs.push_back(rom.get_long(addr));
+
+    world.game_strings() = io::decode_textbanks(rom, textbank_addrs, huffman_trees);
+    for(HuffmanTree* tree : huffman_trees)
+        delete tree;
 }
 
 static void read_entity_type_palettes(const md::ROM& rom, World& world)
@@ -374,6 +389,7 @@ void io::read_blocksets(const md::ROM& rom, World& world)
     // A blockset group is a table of blocksets where the first one is a "primary blockset", and other ones are "secondary".
     // A map always uses the primary blockset concatenated with one of the secondary blocksets in the group.
     // We have a "blockset groups table" which associates blockset group IDs to an actual blockset group.
+    // When the same blockset group is encountered several times, only the last occurence is valid.
 
     std::vector<uint32_t> blockset_groups_addrs;
     for(uint32_t addr=offsets::BLOCKSETS_GROUPS_TABLE ; addr < offsets::BLOCKSETS_GROUPS_TABLE_END ; addr += 0x4)
@@ -403,13 +419,22 @@ void io::read_blocksets(const md::ROM& rom, World& world)
     std::vector<std::vector<Blockset*>>& blockset_groups = world.blockset_groups();
     for(uint32_t group_addr : blockset_groups_addrs)
         blockset_groups.push_back(blockset_groups_by_addr.at(group_addr));
+
+    // Only keep the last occurence for each blockset group
+    for(size_t i=0 ; i<blockset_groups.size() ; ++i)
+        if(world.blockset_id(blockset_groups[i][1]).first != i)
+            blockset_groups[i].clear();
 }
+
 
 void io::read_tilesets(const md::ROM& rom, World& world)
 {
+    /*
+
     const uint8_t* it = rom.iterator_at(0x440F0);
     std::vector<uint8_t> decoded_bytes = decode_lz77(it);
 
     Json json = decoded_bytes;
-    tools::dump_json_to_file(json, "./tileset_0.bin");
+    dump_json_to_file(json, "./tileset_0.bin");
+     */
 }

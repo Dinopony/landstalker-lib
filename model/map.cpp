@@ -17,9 +17,7 @@ Map::Map(uint16_t map_id) :
 Map::Map(const Map& map) :
     _id                         (map._id),
     _address                    (map._address),
-    _tileset_id                 (map._tileset_id),
-    _primary_big_tileset_id     (map._primary_big_tileset_id),
-    _secondary_big_tileset_id   (map._secondary_big_tileset_id),
+    _blockset                   (map._blockset),
     _palette                    (map._palette),
     _room_height                (map._room_height),
     _background_music           (map._background_music),
@@ -168,9 +166,7 @@ Json Map::to_json(const World& world) const
     Json json;
 
     json["address"] = _address;
-    json["tilesetId"] = _tileset_id;
-    json["primaryBigTilesetId"] = _primary_big_tileset_id;
-    json["secondaryBigTilesetId"] = _secondary_big_tileset_id;
+    json["blocksetId"] = world.blockset_id(_blockset);
 
     json["paletteId"] = world.map_palette_id(_palette);
     json["roomHeight"] = _room_height;

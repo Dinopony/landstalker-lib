@@ -3,16 +3,16 @@
 #include <vector>
 #include "../exceptions.hpp"
 
-class Bitstream {
+class BitstreamReader {
 private:
     const uint8_t* _data;
     int8_t _bit_position = 7;
 
 public:
-    explicit Bitstream(std::vector<uint8_t>& data) : _data(&(data[0]))
+    explicit BitstreamReader(const std::vector<uint8_t>& data) : _data(&(data[0]))
     {}
 
-    explicit Bitstream(const uint8_t* data) : _data(data)
+    explicit BitstreamReader(const uint8_t* data) : _data(data)
     {}
 
     bool next_bit()
@@ -57,6 +57,6 @@ public:
             exponent += 1;
 
         uint32_t mantissa = this->read_bits(exponent);
-        return (1 << exponent) + mantissa;
+        return (1 << exponent) + mantissa - 1;
     }
 };

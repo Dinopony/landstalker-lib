@@ -61,27 +61,27 @@ set(SOURCES
         "constants/item_codes.hpp"
         "constants/map_codes.hpp"
         "constants/offsets.hpp"
+        "constants/symbols.hpp"
         "constants/values.hpp"
 
         # --- I/O ----------------------------------------
         "io/io.hpp"
         "io/blocksets_decoder.cpp"
+        "io/blocksets_encoder.cpp"
         "io/exports.cpp"
         "io/world_rom_reader.cpp"
         "io/world_rom_writer.cpp"
-        "io/textbanks_decoder.hpp"
         "io/textbanks_decoder.cpp"
-        "io/textbanks_encoder.hpp"
         "io/textbanks_encoder.cpp"
 
         # --- Tools ----------------------------------------
         "tools/argument_dictionary.hpp"
-        "tools/bitfield.hpp"
-        "tools/bitstream.hpp"
+        "tools/bitstream_reader.hpp"
+        "tools/bitstream_writer.hpp"
         "tools/byte_array.hpp"
         "tools/flag.hpp"
-        "tools/vectools.hpp"
-        "tools/tools.hpp"
+        "tools/huffman_tree.hpp"
+        "tools/huffman_tree_node.hpp"
         "tools/json.hpp"
         "tools/color.hpp"
         "tools/color.cpp"
@@ -93,10 +93,8 @@ set(SOURCES
         "tools/sprite.hpp"
         "tools/sprite.cpp"
         "tools/tile_queue.hpp"
-
-        "tools/huffman/tree.hpp"
-        "tools/huffman/tree_node.hpp"
-        "tools/huffman/symbols.hpp"
+        "tools/stringtools.hpp"
+        "tools/vectools.hpp"
 
         # --- Model ----------------------------------------
         "model/blockset.hpp"

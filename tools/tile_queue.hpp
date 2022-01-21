@@ -1,26 +1,32 @@
 #pragma once
 
-#include <vector>
+#include <deque>
 
 class TileQueue {
 private:
-    std::vector<uint16_t> _tiles;
+    std::deque<uint16_t> _tiles;
 
 public:
     explicit TileQueue(size_t size) { _tiles.resize(size, 0); }
 
-    void move_to_front(size_t index)
+    void move_to_front(int index)
     {
-        uint16_t value = _tiles[index];
-        _tiles.erase(_tiles.begin() + static_cast<int32_t>(index));
-        _tiles.insert(_tiles.begin(), value);
+        std::rotate(_tiles.begin(), _tiles.begin() + index, _tiles.begin() + index + 1);
     }
 
     void push_front(uint16_t value)
     {
-        _tiles.insert(_tiles.begin(), value);
-        _tiles.erase(_tiles.begin() + static_cast<int32_t>(_tiles.size() - 1));
+        _tiles.push_front(value);
+        _tiles.pop_back();
     }
 
-    [[nodiscard]] uint16_t front() const { return _tiles.at(0); }
+    int find(uint16_t value)
+    {
+        auto it = std::find(_tiles.begin(), _tiles.end(), value);
+        if(it == _tiles.end())
+            return -1;
+        return (int)(it-_tiles.begin());
+    }
+
+    [[nodiscard]] uint16_t front() const { return _tiles.front(); }
 };

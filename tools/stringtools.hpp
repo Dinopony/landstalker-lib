@@ -9,7 +9,7 @@
 #include <fstream>
 #include "json.hpp"
 
-namespace tools 
+namespace stringtools
 {
     inline std::vector<std::string> split(const std::string& str, const std::string& delim)
     {
@@ -30,7 +30,7 @@ namespace tools
 
     inline std::string join(const std::vector<std::string>& words, const std::string& junction)
     {
-        if(words.size() == 0)
+        if(words.empty())
             return "";
 
         std::string ret = words[0];
@@ -65,16 +65,5 @@ namespace tools
 
     inline void to_lower(std::string& s) {
         std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
-    }
-
-    inline bool dump_json_to_file(const Json& json, const std::string& file_path)
-    {
-        std::ofstream file(file_path);
-        if(!file)
-            return false;
-
-        file << json.dump(4);
-        file.close();
-        return true;
     }
 }

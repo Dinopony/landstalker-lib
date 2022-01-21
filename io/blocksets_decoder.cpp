@@ -1,10 +1,10 @@
 #include "io.hpp"
 
 #include "../model/blockset.hpp"
-#include "../tools/bitstream.hpp"
+#include "../tools/bitstream_reader.hpp"
 #include "../tools/tile_queue.hpp"
 
-static uint16_t decode_tile(Bitstream& bitstream, TileQueue& tile_queue)
+static uint16_t decode_tile(BitstreamReader& bitstream, TileQueue& tile_queue)
 {
     if(bitstream.next_bit())
     {
@@ -20,7 +20,7 @@ static uint16_t decode_tile(Bitstream& bitstream, TileQueue& tile_queue)
     return tile_queue.front();
 }
 
-static void read_tile_attributes(Bitstream& bitstream, std::vector<Tile>& tiles, uint16_t attr)
+static void read_tile_attributes(BitstreamReader& bitstream, std::vector<Tile>& tiles, uint16_t attr)
 {
     bool current_attribute_value = false;
     bool firstLoop = true;
@@ -30,10 +30,9 @@ static void read_tile_attributes(Bitstream& bitstream, std::vector<Tile>& tiles,
     {
         uint32_t num = bitstream.read_variable_length_number();
         if(firstLoop)
-        {
             firstLoop = false;
-            num -= 1;
-        }
+        else
+            num += 1;
 
         size_t upper_bound = tile_id + num;
         for( ; tile_id < upper_bound ; ++tile_id)
@@ -43,7 +42,7 @@ static void read_tile_attributes(Bitstream& bitstream, std::vector<Tile>& tiles,
     }
 }
 
-static std::vector<Tile> decompress_tiles(Bitstream& bitstream, uint16_t tile_count)
+static std::vector<Tile> decompress_tiles(BitstreamReader& bitstream, uint16_t tile_count)
 {
     std::vector<Tile> tiles;
     tiles.resize(tile_count);
@@ -83,7 +82,7 @@ static std::vector<Tile> decompress_tiles(Bitstream& bitstream, uint16_t tile_co
 Blockset* io::decode_blockset(const md::ROM& rom, uint32_t addr)
 {
     uint16_t block_count = rom.get_word(addr);
-    Bitstream bitstream(rom.iterator_at(addr + 2));
+    BitstreamReader bitstream(rom.iterator_at(addr + 2));
 
     std::vector<Tile> tiles = decompress_tiles(bitstream, block_count*4);
 

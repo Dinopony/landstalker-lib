@@ -17,6 +17,8 @@ public:
         _blocks(std::move(blocks))
     {}
 
+    [[nodiscard]] const std::vector<Blockset::Block>& blocks() const { return _blocks; }
+
     [[nodiscard]] std::vector<std::string> to_csv() const
     {
         std::vector<std::string> csv;

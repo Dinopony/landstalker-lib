@@ -7,14 +7,14 @@
 #include "../model/blockset.hpp"
 #include "../model/world_teleport_tree.hpp"
 #include "../model/world.hpp"
-#include "../tools/tools.hpp"
+#include "../tools/stringtools.hpp"
 
 void io::export_item_sources_as_json(const World& world, const std::string& file_path)
 {
     Json item_sources_json = Json::array();
     for(ItemSource* source : world.item_sources())
         item_sources_json.emplace_back(source->to_json());
-    tools::dump_json_to_file(item_sources_json, file_path);
+    dump_json_to_file(item_sources_json, file_path);
 }
 
 void io::export_items_as_json(const World& world, const std::string& file_path)
@@ -22,7 +22,7 @@ void io::export_items_as_json(const World& world, const std::string& file_path)
     Json items_json;
     for(auto& [id, item] : world.items())
         items_json[std::to_string(id)] = item->to_json();
-    tools::dump_json_to_file(items_json, file_path);
+    dump_json_to_file(items_json, file_path);
 }
 
 void io::export_entity_types_as_json(const World& world, const std::string& file_path)
@@ -30,7 +30,7 @@ void io::export_entity_types_as_json(const World& world, const std::string& file
     Json entity_types_json = Json::object();
     for(auto&[id, entity_type] : world.entity_types())
         entity_types_json[std::to_string(id)] = entity_type->to_json();
-    tools::dump_json_to_file(entity_types_json, file_path);
+    dump_json_to_file(entity_types_json, file_path);
 }
 
 void io::export_maps_as_json(const World& world, const std::string& file_path)
@@ -38,7 +38,7 @@ void io::export_maps_as_json(const World& world, const std::string& file_path)
     Json maps_json = Json::object();
     for(auto& [map_id, map] : world.maps())
         maps_json[std::to_string(map_id)] = map->to_json(world);
-    tools::dump_json_to_file(maps_json, file_path);
+    dump_json_to_file(maps_json, file_path);
 }
 
 void io::export_map_connections_as_json(const World& world, const std::string& file_path)
@@ -46,7 +46,7 @@ void io::export_map_connections_as_json(const World& world, const std::string& f
     Json map_connections_json = Json::array();
     for(const MapConnection& connection : world.map_connections())
         map_connections_json.emplace_back(connection.to_json());
-    tools::dump_json_to_file(map_connections_json, file_path);
+    dump_json_to_file(map_connections_json, file_path);
 }
 
 void io::export_map_palettes_as_json(const World& world, const std::string& file_path)
@@ -54,7 +54,7 @@ void io::export_map_palettes_as_json(const World& world, const std::string& file
     Json map_palettes_json = Json::array();
     for(MapPalette* palette : world.map_palettes())
         map_palettes_json.emplace_back(palette->to_json());
-    tools::dump_json_to_file(map_palettes_json, file_path);
+    dump_json_to_file(map_palettes_json, file_path);
 }
 
 void io::export_teleport_trees_as_json(const World& world, const std::string& file_path)
@@ -67,7 +67,7 @@ void io::export_teleport_trees_as_json(const World& world, const std::string& fi
         pair_json.emplace_back(tree_2->to_json());
         trees_json.emplace_back(pair_json);
     }
-    tools::dump_json_to_file(trees_json, file_path);
+    dump_json_to_file(trees_json, file_path);
 }
 
 void io::export_game_strings_as_json(const World& world, const std::string& file_path)
@@ -79,7 +79,7 @@ void io::export_game_strings_as_json(const World& world, const std::string& file
         hex_id << "0x" << std::hex << i;
         strings_json[hex_id.str()] = world.game_strings()[i];
     }
-    tools::dump_json_to_file(strings_json, file_path);
+    dump_json_to_file(strings_json, file_path);
 }
 
 void io::export_blocksets_as_csv(const World& world, const std::string& blocksets_directory)

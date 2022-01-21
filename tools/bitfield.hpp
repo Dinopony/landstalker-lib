@@ -3,7 +3,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "tools.hpp"
+#include "stringtools.hpp"
 
 class Bitfield 
 {

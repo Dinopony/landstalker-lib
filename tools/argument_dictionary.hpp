@@ -3,7 +3,7 @@
 #include <string>
 #include <map>
 #include <stdexcept>
-#include "tools.hpp"
+#include "stringtools.hpp"
 
 class ArgumentDictionary {
 private:
@@ -20,7 +20,7 @@ public:
 
             auto token_iter = std::find(param.begin() + 2, param.end(), '=');
             std::string param_name(param.begin() + 2, token_iter);
-            tools::to_lower(param_name);
+            stringtools::to_lower(param_name);
             if (token_iter != param.end())
                 _args_map[param_name] = std::string(token_iter + 1, param.end());
             else
@@ -73,7 +73,7 @@ public:
 
         try {
             std::string contents = _args_map.at(name);
-            tools::to_lower(contents);
+            stringtools::to_lower(contents);
 
             // "--param=false"
             if (contents == "false")

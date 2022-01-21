@@ -6,14 +6,13 @@
 #include "../model/world_teleport_tree.hpp"
 #include "../model/world.hpp"
 
-#include "textbanks_encoder.hpp"
-
 #include "../constants/offsets.hpp"
 #include "../constants/entity_type_codes.hpp"
 #include "../exceptions.hpp"
 
 #include <cstdint>
 #include <set>
+#include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -222,8 +221,33 @@ static void write_entity_type_palettes(const World& world, md::ROM& rom)
 
 static void write_game_strings(const World& world, md::ROM& rom)
 {
-    TextbanksEncoder encoder(rom, world.game_strings());
-    encoder.write_to_rom(rom);
+    // Write Huffman tree offsets & tree data consecutively in the ROM
+    std::vector<HuffmanTree*> huffman_trees = io::build_trees_from_strings(world.game_strings());
+    ByteArray encodeded_trees = io::encode_huffman_trees(huffman_trees);
+
+    constexpr uint32_t ORIGINAL_SIZE = 0x2469C - offsets::HUFFMAN_TREE_OFFSETS;
+    if(encodeded_trees.size() > ORIGINAL_SIZE)
+        throw LandstalkerException("New Huffman trees data size is " + std::to_string(encodeded_trees.size() - ORIGINAL_SIZE) + " bytes bigger than the original size");
+
+    rom.set_bytes(offsets::HUFFMAN_TREE_OFFSETS, encodeded_trees);
+
+    // Write textbanks to the ROM
+    rom.mark_empty_chunk(offsets::FIRST_TEXTBANK, offsets::TEXTBANKS_TABLE_END);
+
+    std::vector<ByteArray> encoded_textbanks = io::encode_textbanks(world.game_strings(), huffman_trees);
+    ByteArray textbanks_table_bytes;
+    for(const ByteArray& encoded_textbank : encoded_textbanks)
+    {
+        uint32_t textbank_addr = rom.inject_bytes(encoded_textbank);
+        textbanks_table_bytes.add_long(textbank_addr);
+    }
+    textbanks_table_bytes.add_long(0xFFFFFFFF);
+
+    uint32_t textbanks_table_addr = rom.inject_bytes(textbanks_table_bytes);
+    rom.set_long(offsets::TEXTBANKS_TABLE_POINTER, textbanks_table_addr);
+
+    for(HuffmanTree* tree : huffman_trees)
+        delete tree;
 }
 
 static void write_tibor_tree_connections(const World& world, md::ROM& rom)
@@ -293,6 +317,33 @@ static void write_map_palettes(const World& world, md::ROM& rom)
     rom.set_long(offsets::MAP_PALETTES_TABLE_POINTER, new_palette_table_addr);
 }
 
+static void write_blocksets(const World& world, md::ROM& rom)
+{
+    rom.mark_empty_chunk(offsets::BLOCKSETS_GROUPS_TABLE, offsets::SOUND_BANK);
+    ByteArray blockset_groups_table;
+
+    std::map<Blockset*, uint32_t> blockset_addresses;
+    for(auto& group : world.blockset_groups())
+    {
+        ByteArray blockset_group_bytes;
+        for(Blockset* blockset : group)
+        {
+            if(!blockset_addresses.count(blockset))
+            {
+                ByteArray blockset_bytes = io::encode_blockset(blockset);
+                blockset_addresses[blockset] = rom.inject_bytes(blockset_bytes);
+            }
+
+            blockset_group_bytes.add_long(blockset_addresses[blockset]);
+        }
+        uint32_t blockset_group_addr = rom.inject_bytes(blockset_group_bytes);
+        blockset_groups_table.add_long(blockset_group_addr);
+    }
+
+    uint32_t blockset_groups_table_addr = rom.inject_bytes(blockset_groups_table);
+    rom.set_long(offsets::BLOCKSETS_GROUPS_TABLE_POINTER, blockset_groups_table_addr);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 static void write_maps_data(const World& world, md::ROM& rom)
@@ -301,9 +352,10 @@ static void write_maps_data(const World& world, md::ROM& rom)
     {
         uint32_t addr = offsets::MAP_DATA_TABLE + (map_id * 8);
 
+        std::pair<uint8_t, uint8_t> blockset_id = world.blockset_id(map->blockset());
+
         uint8_t byte4;
-        byte4 = map->tileset_id() & 0x1F;
-        byte4 |= (map->primary_big_tileset_id() & 0x01) << 5;
+        byte4 = blockset_id.first & 0x3F;
         byte4 |= (map->unknown_param_1() & 0x03) << 6;
 
         uint8_t byte5;
@@ -312,7 +364,7 @@ static void write_maps_data(const World& world, md::ROM& rom)
 
         uint8_t byte7;
         byte7 = map->background_music() & 0x1F;
-        byte7 |= (map->secondary_big_tileset_id() & 0x07) << 5;
+        byte7 |= ((blockset_id.second-1) & 0x07) << 5;
 
         rom.set_long(addr, map->address());
         rom.set_byte(addr+4, byte4);
@@ -661,6 +713,7 @@ static void write_maps(const World& world, md::ROM& rom)
 
 void io::write_world_to_rom(const World& world, md::ROM& rom)
 {
+    write_blocksets(world, rom);
     write_items(world, rom);
     write_item_sources(world, rom);
     write_entity_types(world, rom);

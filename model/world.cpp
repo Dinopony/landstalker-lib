@@ -6,6 +6,7 @@
 #include "item_source.hpp"
 #include "spawn_location.hpp"
 #include "world_teleport_tree.hpp"
+#include "blockset.hpp"
 
 #include "../constants/offsets.hpp"
 #include "../io/io.hpp"
@@ -73,6 +74,7 @@ World::~World()
 void World::write_to_rom(md::ROM& rom)
 {
     this->clean_unused_palettes();
+    this->clean_unused_blocksets();
     io::write_world_to_rom(*this, rom);
 }
 
@@ -259,6 +261,60 @@ void World::add_map_palette(MapPalette* palette)
         throw LandstalkerException("Cannot add palette because maximum number of palettes (" + std::to_string(0x3F) + ") was reached");
     _map_palettes.emplace_back(palette);
 }
+
+std::pair<uint8_t, uint8_t> World::blockset_id(Blockset* blockset) const
+{
+    std::pair<uint8_t, uint8_t> last_encountered_id (0xFF, 0xFF);
+    for(size_t i=0 ; i<_blockset_groups.size() ; ++i)
+    {
+        for(size_t j=0 ; j<_blockset_groups[i].size() ; ++j)
+        {
+            Blockset* b = _blockset_groups[i][j];
+            if(blockset == b)
+                last_encountered_id = std::make_pair(static_cast<uint8_t>(i), static_cast<uint8_t>(j));
+        }
+    }
+
+    if(last_encountered_id.first == 0xFF)
+        throw LandstalkerException("Could not find blockset ID for blockset referenced by a map");
+
+    return last_encountered_id;
+}
+
+void World::clean_unused_blocksets()
+{
+    std::set<Blockset*> used_blocksets;
+    for(auto& [id, map] : _maps)
+        used_blocksets.insert(map->blockset());
+
+    // Iterate over all secondary blocksets, and remove unused ones
+    for(auto& blockset_group : _blockset_groups)
+    {
+        // Only start from one to exclude primary blocksets (which are never directly referenced)
+        // Primary blocksets are removed only if all linked secondary blocksets are removed as well
+        for(size_t j=1 ; j<blockset_group.size() ; ++j)
+        {
+            Blockset* blockset = blockset_group[j];
+            if(!used_blocksets.count(blockset))
+            {
+                blockset_group.erase(blockset_group.begin() + (int)j);
+                delete blockset;
+                --j;
+            }
+        }
+    }
+
+    // Empty eventual blockset groups where only the primary blockset remains (no secondary blockset in the group)
+    for(auto& blockset_group : _blockset_groups)
+    {
+        if(blockset_group.size() == 1)
+        {
+            delete blockset_group[0];
+            blockset_group.clear();
+        }
+    }
+}
+
 
 void World::load_items()
 {
