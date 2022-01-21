@@ -54,4 +54,52 @@ public:
         this->add_bit(true);
         this->add_number(mantissa, exponent);
     }
+
+    ////////////////////////////////////////////////////////////
+
+    template<typename T>
+    void pack_pod_type(T& value)
+    {
+        uint8_t* value_as_bytes = reinterpret_cast<uint8_t*>(&value);
+        std::vector<uint8_t> value_as_bytes_vec(value_as_bytes, value_as_bytes + sizeof(T));
+
+        std::vector<bool> value_as_bits;
+        value_as_bits.reserve(value_as_bytes_vec.size() * 8);
+        for(uint8_t byte : value_as_bytes_vec)
+            for(uint8_t i=0 ; i<8 ; ++i)
+                this->add_bit(byte & (1 << (7 - i)));
+    }
+
+    template<typename T>
+    void pack_vector(const std::vector<T>& vector)
+    {
+        this->pack((uint16_t)vector.size());
+        for(const T& elem : vector)
+            this->pack(elem);
+    }
+
+    template<typename K, typename V>
+    void pack_map(const std::map<K,V>& map)
+    {
+        this->pack((uint16_t)map.size());
+        for(auto& [k,v] : map)
+        {
+            this->pack((K)k);
+            this->pack((V)v);
+        }
+    }
+
+    void pack(uint8_t value)       { this->pack_pod_type(value); }
+    void pack(uint16_t value)      { this->pack_pod_type(value); }
+    void pack(uint32_t value)      { this->pack_pod_type(value); }
+    void pack(float value)         { this->pack_pod_type(value); }
+    void pack(double value)        { this->pack_pod_type(value); }
+    void pack(bool value)          { this->add_bit(value); }
+
+    void pack(const std::string& value)
+    {
+        for(uint8_t character : value)
+            this->pack(character);
+        this->pack((uint8_t) '\0');
+    }
 };

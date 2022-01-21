@@ -77,6 +77,7 @@ set(SOURCES
         # --- Tools ----------------------------------------
         "tools/argument_dictionary.hpp"
         "tools/bitstream_reader.hpp"
+        "tools/bitstream_reader.cpp"
         "tools/bitstream_writer.hpp"
         "tools/byte_array.hpp"
         "tools/flag.hpp"
