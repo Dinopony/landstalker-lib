@@ -6,13 +6,13 @@
 #include "../model/world_teleport_tree.hpp"
 #include "../model/world.hpp"
 
+#include "../exceptions.hpp"
 #include "../constants/offsets.hpp"
 #include "../constants/entity_type_codes.hpp"
-#include "../exceptions.hpp"
+#include "../tools/huffman_tree.hpp"
 
 #include <cstdint>
 #include <set>
-#include <iostream>
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -8,6 +8,7 @@
 #include <iostream>
 #include <algorithm>
 #include <array>
+#include <cmath>
 
 static uint8_t char_to_symbol(char c)
 {
