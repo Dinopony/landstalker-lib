@@ -131,3 +131,12 @@ std::string unpack_from<std::string>(BitstreamReader& bitpack);
 
 template<>
 bool unpack_from<bool>(BitstreamReader& bitpack);
+
+template<>
+uint8_t unpack_from<uint8_t>(BitstreamReader& bitpack);
+
+template<>
+uint16_t unpack_from<uint16_t>(BitstreamReader& bitpack);
+
+template<>
+uint32_t unpack_from<uint32_t>(BitstreamReader& bitpack);
