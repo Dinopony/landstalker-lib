@@ -5,7 +5,6 @@
 #include "item.hpp"
 #include "item_source.hpp"
 #include "spawn_location.hpp"
-#include "world_teleport_tree.hpp"
 #include "blockset.hpp"
 
 #include "../constants/offsets.hpp"
@@ -17,7 +16,6 @@
 #include "data/entity_type.json.hxx"
 #include "data/item.json.hxx"
 #include "data/item_source.json.hxx"
-#include "data/world_teleport_tree.json.hxx"
 
 #include <iostream>
 #include <set>
@@ -32,7 +30,6 @@ World::World(const md::ROM& rom)
 
     io::read_entity_types(rom, *this);
     this->load_entity_types();
-    this->load_teleport_trees();
 
     // Reading map entities might actually require items
     io::read_maps(rom, *this);
@@ -47,11 +44,6 @@ World::~World()
         delete item;
     for (ItemSource* source : _item_sources)
         delete source;
-    for (auto& [tree_1, tree_2] : _teleport_tree_pairs)
-    {
-        delete tree_1;
-        delete tree_2;
-    }
     for (auto& [id, entity] : _entity_types)
         delete entity;
     for (MapPalette* palette : _map_palettes)
@@ -175,6 +167,30 @@ MapConnection& World::map_connection(uint16_t map_id_1, uint16_t map_id_2)
             return connection;
 
     throw LandstalkerException("Could not find a map connection between maps " + std::to_string(map_id_1) + " and " + std::to_string(map_id_2));
+}
+
+std::vector<MapConnection*> World::map_connections(uint16_t map_id)
+{
+    std::vector<MapConnection*> connections;
+    for(MapConnection& connection : _map_connections)
+        if(connection.map_id_1() == map_id || connection.map_id_2() == map_id)
+            connections.emplace_back(&connection);
+
+    return connections;
+}
+
+std::vector<MapConnection*> World::map_connections(uint16_t map_id_1, uint16_t map_id_2)
+{
+    std::vector<MapConnection*> connections;
+    for(MapConnection& connection : _map_connections)
+    {
+        if(connection.map_id_1() == map_id_1 && connection.map_id_2() == map_id_2)
+            connections.emplace_back(&connection);
+        if(connection.map_id_1() == map_id_2 && connection.map_id_2() == map_id_1)
+            connections.emplace_back(&connection);
+    }
+
+    return connections;
 }
 
 void World::swap_map_connections(uint16_t map_id_1, uint16_t map_id_2, uint16_t map_id_3, uint16_t map_id_4)
@@ -355,19 +371,6 @@ void World::load_item_sources()
     // 0xBD (189): Crypt (Larson. E room)
     // 0xBE (190): Crypt (Larson. E room)
     // 0xC3 (195): Map 712 / 0x2C8 ???
-}
-
-void World::load_teleport_trees()
-{
-    Json trees_json = Json::parse(WORLD_TELEPORT_TREES_JSON);
-    for(const Json& tree_pair_json : trees_json)
-    {
-        WorldTeleportTree* tree_1 = WorldTeleportTree::from_json(tree_pair_json[0]);
-        WorldTeleportTree* tree_2 = WorldTeleportTree::from_json(tree_pair_json[1]);
-        _teleport_tree_pairs.emplace_back(std::make_pair(tree_1, tree_2));
-    }
-
-    std::cout << _teleport_tree_pairs.size()  << " teleport tree pairs loaded." << std::endl;
 }
 
 void World::load_entity_types()

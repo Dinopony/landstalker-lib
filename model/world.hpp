@@ -27,7 +27,6 @@ class World
 private:
     std::map<uint8_t, Item*> _items;
     std::vector<ItemSource*> _item_sources;
-    std::vector<std::pair<WorldTeleportTree*, WorldTeleportTree*>> _teleport_tree_pairs;
     std::vector<std::string> _game_strings;
     std::map<uint8_t, EntityType*> _entity_types;
     std::map<uint16_t, Map*> _maps;
@@ -63,9 +62,6 @@ public:
     [[nodiscard]] std::vector<ItemSource*>& item_sources() { return _item_sources; }
     [[nodiscard]] ItemSource* item_source(const std::string& name) const;
     [[nodiscard]] std::vector<ItemSource*> item_sources_with_item(Item* item);
-    
-    [[nodiscard]] const std::vector<std::pair<WorldTeleportTree*, WorldTeleportTree*>>& teleport_tree_pairs() const { return _teleport_tree_pairs; }
-    void teleport_tree_pairs(const std::vector<std::pair<WorldTeleportTree*, WorldTeleportTree*>>& new_pairs) { _teleport_tree_pairs = new_pairs; }
 
     [[nodiscard]] const std::vector<std::string>& game_strings() const { return _game_strings; }
     std::vector<std::string>& game_strings() { return _game_strings; }
@@ -99,6 +95,8 @@ public:
     [[nodiscard]] const std::vector<MapConnection>& map_connections() const { return _map_connections; }
     std::vector<MapConnection>& map_connections() { return _map_connections; }
     MapConnection& map_connection(uint16_t map_id_1, uint16_t map_id_2);
+    std::vector<MapConnection*> map_connections(uint16_t map_id);
+    std::vector<MapConnection*> map_connections(uint16_t map_id_1, uint16_t map_id_2);
     void swap_map_connections(uint16_t map_id_1, uint16_t map_id_2, uint16_t map_id_3, uint16_t map_id_4);
 
     [[nodiscard]] const std::vector<MapPalette*>& map_palettes() const { return _map_palettes; }

@@ -3,7 +3,7 @@
 #include "../model/entity_type.hpp"
 #include "../model/item_source.hpp"
 #include "../model/map.hpp"
-#include "../model/world_teleport_tree.hpp"
+#include "../../../src/logic_model/world_teleport_tree.hpp"
 #include "../model/world.hpp"
 
 #include "../exceptions.hpp"
@@ -248,17 +248,6 @@ static void write_game_strings(const World& world, md::ROM& rom)
 
     for(HuffmanTree* tree : huffman_trees)
         delete tree;
-}
-
-static void write_tibor_tree_connections(const World& world, md::ROM& rom)
-{
-    for (auto& [tree_1, tree_2] : world.teleport_tree_pairs())
-    {
-        rom.set_word(tree_1->left_entrance_address(), tree_1->tree_map_id());
-        rom.set_word(tree_1->right_entrance_address(), tree_1->tree_map_id());
-        rom.set_word(tree_2->left_entrance_address(), tree_2->tree_map_id());
-        rom.set_word(tree_2->right_entrance_address(), tree_2->tree_map_id());
-    }
 }
 
 static void write_fahl_enemies(const World& world, md::ROM& rom)
@@ -719,7 +708,6 @@ void io::write_world_to_rom(const World& world, md::ROM& rom)
     write_entity_types(world, rom);
     write_entity_type_palettes(world, rom);
     write_game_strings(world, rom);
-    write_tibor_tree_connections(world, rom);
     write_fahl_enemies(world, rom);
     write_map_connections(world, rom);
     write_map_palettes(world, rom);

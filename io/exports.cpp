@@ -5,7 +5,7 @@
 #include "../model/map.hpp"
 #include "../model/map_connection.hpp"
 #include "../model/blockset.hpp"
-#include "../model/world_teleport_tree.hpp"
+#include "../../../src/logic_model/world_teleport_tree.hpp"
 #include "../model/world.hpp"
 #include "../tools/stringtools.hpp"
 
@@ -55,19 +55,6 @@ void io::export_map_palettes_as_json(const World& world, const std::string& file
     for(MapPalette* palette : world.map_palettes())
         map_palettes_json.emplace_back(palette->to_json());
     dump_json_to_file(map_palettes_json, file_path);
-}
-
-void io::export_teleport_trees_as_json(const World& world, const std::string& file_path)
-{
-    Json trees_json = Json::array();
-    for(auto& [tree_1, tree_2] : world.teleport_tree_pairs())
-    {
-        Json pair_json = Json::array();
-        pair_json.emplace_back(tree_1->to_json());
-        pair_json.emplace_back(tree_2->to_json());
-        trees_json.emplace_back(pair_json);
-    }
-    dump_json_to_file(trees_json, file_path);
 }
 
 void io::export_game_strings_as_json(const World& world, const std::string& file_path)

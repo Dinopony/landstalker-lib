@@ -3,7 +3,7 @@
 #include "../model/entity_type.hpp"
 #include "../model/item_source.hpp"
 #include "../model/map.hpp"
-#include "../model/world_teleport_tree.hpp"
+#include "../../../src/logic_model/world_teleport_tree.hpp"
 #include "../model/world.hpp"
 #include "../model/blockset.hpp"
 

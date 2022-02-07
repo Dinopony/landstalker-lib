@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../tools/json.hpp"
+#include "../exceptions.hpp"
 
 class MapConnection 
 {
@@ -71,6 +72,15 @@ public:
 
     [[nodiscard]] uint8_t extra_byte_2() const { return _extra_byte_2; }
     void extra_byte_2(uint8_t value) { _extra_byte_2 = value; }
+
+    [[nodiscard]] uint16_t map_id_connected_to(uint16_t map_id) const
+    {
+        if(_map_id_1 == map_id)
+            return _map_id_2;
+        else if(_map_id_2 == map_id)
+            return _map_id_1;
+        throw LandstalkerException("Invalid map ID provided to check other side of MapConnection");
+    }
 
     void position_for_map(uint16_t map_id, uint8_t pos_x, uint8_t pos_y)
     {
