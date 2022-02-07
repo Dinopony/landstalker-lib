@@ -5,7 +5,6 @@
 #include "../model/map.hpp"
 #include "../model/map_connection.hpp"
 #include "../model/blockset.hpp"
-#include "../../../src/logic_model/world_teleport_tree.hpp"
 #include "../model/world.hpp"
 #include "../tools/stringtools.hpp"
 
