@@ -81,6 +81,16 @@ public:
         return ret;
     }
 
+    template<typename T, size_t N>
+    std::array<T,N> unpack_array()
+    {
+        std::array<T,N> ret;
+        for(size_t i=0 ; i<N ; ++i)
+            ret[i] = this->unpack<T>();
+
+        return ret;
+    }
+
     template<typename K, typename V>
     std::map<K,V> unpack_map()
     {

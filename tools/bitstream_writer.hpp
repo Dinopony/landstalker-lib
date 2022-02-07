@@ -78,6 +78,13 @@ public:
             this->pack(elem);
     }
 
+    template<typename T, size_t N>
+    void pack_array(const std::array<T,N>& array)
+    {
+        for(const T& elem : array)
+            this->pack(elem);
+    }
+
     template<typename K, typename V>
     void pack_map(const std::map<K,V>& map)
     {
