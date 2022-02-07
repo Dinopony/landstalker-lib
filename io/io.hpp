@@ -26,6 +26,7 @@ namespace io {
     void read_game_strings(const md::ROM& rom, World& world);
     void read_entity_types(const md::ROM& rom, World& world);
     void read_blocksets(const md::ROM& rom, World& world);
+    void read_items(const md::ROM& rom, World& world);
     void read_tilesets(const md::ROM& rom, World& world);
 
     // exports.cpp

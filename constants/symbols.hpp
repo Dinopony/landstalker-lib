@@ -72,4 +72,20 @@ namespace Symbols
             ret.emplace_back(byte_for_symbol(c));
         return ret;
     }
+
+    inline std::string parse_from_bytes(const std::vector<uint8_t>& bytes)
+    {
+        std::string ret;
+        for(uint8_t byte : bytes)
+        {
+            if(byte == 0x69 || byte == 0x6B)
+                continue;
+            else if(byte == 0x6A)
+                ret += ' ';
+            else
+                ret += TABLE[byte];
+        }
+
+        return ret;
+    }
 }

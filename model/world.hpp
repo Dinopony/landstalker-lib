@@ -117,9 +117,7 @@ public:
     void clean_unused_blocksets();
 
 private:
-    void load_items();
     void load_item_sources();
-    void load_teleport_trees();
     void load_entity_types();
 
     void clean_unused_palettes();

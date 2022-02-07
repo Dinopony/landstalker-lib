@@ -426,6 +426,34 @@ void io::read_blocksets(const md::ROM& rom, World& world)
             blockset_groups[i].clear();
 }
 
+void io::read_items(const md::ROM& rom, World& world)
+{
+    std::vector<std::string> item_names;
+    item_names.reserve(0x40);
+    for(uint32_t addr = offsets::ITEM_NAMES_TABLE ; addr < offsets::ITEM_NAMES_TABLE_END ; )
+    {
+        uint8_t length = rom.get_byte(addr);
+        addr += 1;
+        if(length == 0xFF)
+            break;
+
+        std::vector<uint8_t> string_bytes = rom.get_bytes(addr, addr + length);
+        item_names.emplace_back(Symbols::parse_from_bytes(string_bytes));
+        addr += length;
+    }
+
+    std::map<uint8_t, Item*>& items = world.items();
+    for(uint8_t id=0 ; id<0x40 ; ++id)
+    {
+        std::string name = item_names[id];
+
+        uint32_t item_base_addr = offsets::ITEM_DATA_TABLE + id * 0x04;
+        uint8_t max_quantity = rom.get_byte(item_base_addr) & 0x0F;
+        uint16_t gold_value = rom.get_word(item_base_addr + 0x2);
+
+        items[id] = new Item(id, name, max_quantity, 0, gold_value);
+    }
+}
 
 void io::read_tilesets(const md::ROM& rom, World& world)
 {

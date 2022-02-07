@@ -14,7 +14,6 @@
 
 // Include headers automatically generated from model json files
 #include "data/entity_type.json.hxx"
-#include "data/item.json.hxx"
 #include "data/item_source.json.hxx"
 
 #include <iostream>
@@ -23,7 +22,7 @@
 World::World(const md::ROM& rom)
 {
     // No requirements
-    this->load_items();
+    io::read_items(rom, *this);
     io::read_game_strings(rom, *this);
     io::read_blocksets(rom, *this);
     io::read_tilesets(rom, *this);
@@ -329,19 +328,6 @@ void World::clean_unused_blocksets()
             blockset_group.clear();
         }
     }
-}
-
-
-void World::load_items()
-{
-    // Load base model
-    Json items_json = Json::parse(ITEMS_JSON);
-    for(auto& [id_string, item_json] : items_json.items())
-    {
-        uint8_t id = std::stoi(id_string);
-        this->add_item(Item::from_json(id, item_json));
-    }
-    std::cout << _items.size() << " items loaded." << std::endl;
 }
 
 void World::load_item_sources()

@@ -25,7 +25,6 @@ endmacro()
 
 # Wrap JSON model files and assets into automated .hxx headers
 wrapped_dependency(TEXT     model/data/entity_type.json             ENTITIES_JSON)
-wrapped_dependency(TEXT     model/data/item.json                    ITEMS_JSON)
 wrapped_dependency(TEXT     model/data/item_source.json             ITEM_SOURCES_JSON)
 wrapped_dependency(RAW      patches/assets/fixed_hud_tilemap.bin    FIXED_HUD_TILEMAP)
 wrapped_dependency(RAW      patches/assets/blue_jewel.bin           BLUE_JEWEL_SPRITE)
@@ -35,7 +34,6 @@ wrapped_dependency(RAW      patches/assets/yellow_jewel.bin         YELLOW_JEWEL
 set(SOURCES
         # --- Auto-generated dependencies----------------------------------------
         "model/data/entity_type.json.hxx"
-        "model/data/item.json.hxx"
         "model/data/item_source.json.hxx"
         "patches/assets/fixed_hud_tilemap.bin.hxx"
         "patches/assets/blue_jewel.bin.hxx"

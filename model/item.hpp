@@ -7,22 +7,15 @@
 class Item
 {
 private:
-    uint8_t     _id;
+    uint8_t     _id = 0xFF;
     std::string _name;
-    uint8_t     _max_quantity;
-    uint8_t     _starting_quantity;
-    uint16_t    _gold_value;
+    uint8_t     _max_quantity = 0;
+    uint8_t     _starting_quantity = 0;
+    uint16_t    _gold_value = 0;
 
 public:
-    Item() :
-        _id(0xFF),
-        _name(),
-        _max_quantity(0),
-        _starting_quantity(0),
-        _gold_value(0)
-    {}
-
-    Item(uint8_t id, std::string name, uint8_t max_quantity, uint8_t starting_quantity, uint16_t gold_value, bool allowed_on_ground = true) :
+    Item() = default;
+    Item(uint8_t id, std::string name, uint8_t max_quantity, uint8_t starting_quantity, uint16_t gold_value) :
         _id                 (id),
         _name               (std::move(name)),
         _max_quantity       (max_quantity),
@@ -56,12 +49,7 @@ class ItemGolds : public Item
 {
 public:
     ItemGolds(uint8_t id, uint16_t gold_value) : 
-        Item(id,
-             std::to_string(gold_value) + " golds",
-             0,
-             0,
-             gold_value,
-             false)
+        Item(id, std::to_string(gold_value) + " golds", 0, 0, gold_value)
     {}
 
     Item& gold_value(uint16_t value) override
