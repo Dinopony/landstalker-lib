@@ -119,6 +119,9 @@ namespace md
 
         Code& ori_to_ccr(uint8_t value);
 
+        Code& extw(const DataRegister& reg);
+        Code& extl(const DataRegister& reg);
+
         Code& rts();
         Code& nop(uint16_t amount = 1);
         Code& trap(uint8_t trap_id, const std::vector<uint8_t>& additionnal_bytes = {});

@@ -441,6 +441,18 @@ Code& Code::ori_to_ccr(uint8_t value)
     return *this;
 }
 
+Code& Code::extw(const DataRegister& reg)
+{
+    this->add_opcode(0x4880 + reg.getXn());
+    return *this;
+}
+
+Code& Code::extl(const DataRegister& reg)
+{
+    this->add_opcode(0x48C0 + reg.getXn());
+    return *this;
+}
+
 Code& Code::rts()
 {
     this->add_word(0x4E75);
