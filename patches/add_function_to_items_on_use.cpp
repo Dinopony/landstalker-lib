@@ -47,7 +47,16 @@ static uint32_t make_record_book_save_on_use(md::ROM& rom, bool consumable_recor
     
     func_use_record_book.movew(addr_(MAP_ENTRANCE_POSITION_ADDRESS), addr_(0xFF1204));
     func_use_record_book.movew(addr_(MAP_ENTRANCE_POSITION_ADDRESS+2), addr_(0xFF5400));
-    func_use_record_book.jsr(0x1592); // "func_save_game"
+
+//    func_use_record_book.trap(0, { 0x00, 0xFD }); // Fade out BGM
+//    func_use_record_book.jsr(0x29046); // Sleep_0 for 0x20 frames
+//    func_use_record_book.add_word(0x0020);
+    func_use_record_book.trap(0, { 0x00, 0x07 }); // Play save game music
+    func_use_record_book.jsr(0x29046); // Sleep_0 for 0x17 frames
+    func_use_record_book.add_word(0x0000);
+    func_use_record_book.jsr(0x852); // Restore BGM
+
+    func_use_record_book.jsr(0x1592); // Save game to SRAM
 
     func_use_record_book.movew(reg_D0, addr_(0xFF1204));
     func_use_record_book.movew(reg_D1, addr_(0xFF5400));
