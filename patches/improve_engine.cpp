@@ -27,8 +27,16 @@ static void improve_visited_flag_handling(md::ROM& rom)
     rom.set_long(0x2954, 0xFF1000);
 }
 
+static void make_ingame_timer_more_precise(md::ROM& rom)
+{
+    // A NTSC Megadrive runs at 59.92275 FPS instead of 60 FPS as expected by the game
+    // A minute lasts 3595 frames, not 3600
+    rom.set_word(0x121C, 0xE0B);
+}
+
 void improve_engine(md::ROM& rom)
 {
     improve_gfx_tile_swap_flag_check(rom);
     improve_visited_flag_handling(rom);
+    make_ingame_timer_more_precise(rom);
 }
