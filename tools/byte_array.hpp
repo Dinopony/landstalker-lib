@@ -8,6 +8,10 @@ class ByteArray : public std::vector<uint8_t>
 public:
     ByteArray() = default;
 
+    explicit ByteArray(const std::vector<uint8_t>& vec) {
+        this->insert(this->end(), vec.begin(), vec.end());
+    }
+
     void add_byte(uint8_t byte)
     { 
         this->emplace_back(byte);

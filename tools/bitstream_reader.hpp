@@ -8,6 +8,7 @@ class BitstreamReader {
 private:
     const uint8_t* _data;
     int8_t _bit_position = 7;
+    size_t _size = 0;
 
 public:
     explicit BitstreamReader(const std::vector<uint8_t>& data) : _data(&(data[0]))
@@ -16,6 +17,8 @@ public:
     explicit BitstreamReader(const uint8_t* data) : _data(data)
     {}
 
+    [[nodiscard]] size_t size() const { return _size; }
+
     bool next_bit()
     {
         if(_bit_position < 0)
@@ -23,6 +26,7 @@ public:
             // First byte was fully read already, reset bit position and go onto next byte
             _bit_position = 7;
             _data++;
+            _size++;
         }
 
         bool first_bit = (*_data >> _bit_position) & 0x01;
@@ -44,6 +48,16 @@ public:
         }
 
         return value;
+    }
+
+    void skip_byte_remainder()
+    {
+        if(_bit_position != 7)
+        {
+            _bit_position = 7;
+            _data++;
+            _size++;
+        }
     }
 
     /**

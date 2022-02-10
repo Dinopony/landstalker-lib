@@ -6,12 +6,18 @@ class Blockset;
 class World;
 class ByteArray;
 class HuffmanTree;
+class MapLayout;
 
 namespace io {
     // blocksets_decoder.cpp
     Blockset* decode_blockset(const md::ROM& rom, uint32_t addr);
     // blocksets_encoder.cpp
     ByteArray encode_blockset(Blockset* blockset);
+
+    // map_layout_decoder.cpp
+    MapLayout* decode_map_layout(const md::ROM& rom, uint32_t addr);
+    // map_layout_encoder.cpp
+    ByteArray encode_map_layout(MapLayout* map_layout);
 
     // textbanks_decoder.cpp
     HuffmanTree* decode_huffman_tree(const md::ROM& rom, uint32_t addr);
@@ -27,7 +33,6 @@ namespace io {
     void read_entity_types(const md::ROM& rom, World& world);
     void read_blocksets(const md::ROM& rom, World& world);
     void read_items(const md::ROM& rom, World& world);
-    void read_tilesets(const md::ROM& rom, World& world);
 
     // exports.cpp
     void export_item_sources_as_json(const World& world, const std::string& file_path);
@@ -36,9 +41,7 @@ namespace io {
     void export_maps_as_json(const World& world, const std::string& file_path);
     void export_map_connections_as_json(const World& world, const std::string& file_path);
     void export_map_palettes_as_json(const World& world, const std::string& file_path);
-    void export_teleport_trees_as_json(const World& world, const std::string& file_path);
     void export_game_strings_as_json(const World& world, const std::string& file_path);
-    void export_blocksets_as_csv(const World& world, const std::string& blocksets_directory);
 
     // world_rom_writer.cpp
     void write_world_to_rom(const World& world, md::ROM& rom);

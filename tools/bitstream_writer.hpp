@@ -39,6 +39,12 @@ public:
             this->add_bit(value & (1 << bit));
     }
 
+    void skip_byte_remainder()
+    {
+        if(_bit_position != 0)
+            _bit_position = 8;
+    }
+
     void add_variable_length_number(uint32_t number)
     {
         uint16_t exponent = 0;

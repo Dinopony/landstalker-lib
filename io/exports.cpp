@@ -4,9 +4,7 @@
 #include "../model/entity_type.hpp"
 #include "../model/map.hpp"
 #include "../model/map_connection.hpp"
-#include "../model/blockset.hpp"
 #include "../model/world.hpp"
-#include "../tools/stringtools.hpp"
 
 void io::export_item_sources_as_json(const World& world, const std::string& file_path)
 {
@@ -68,19 +66,3 @@ void io::export_game_strings_as_json(const World& world, const std::string& file
     dump_json_to_file(strings_json, file_path);
 }
 
-void io::export_blocksets_as_csv(const World& world, const std::string& blocksets_directory)
-{
-    for(uint32_t i=0 ; i<world.blockset_groups().size() ; ++i)
-    {
-        for(uint32_t j=0 ; j<world.blockset_groups()[i].size() ; ++j)
-        {
-            Blockset* blockset = world.blockset_groups()[i][j];
-
-            std::string path = blocksets_directory + "/blockset_" + std::to_string(i) + "_" + std::to_string(j) + ".csv";
-            std::ofstream file(path);
-            for(const std::string& line : blockset->to_csv())
-                file << line << "\n";
-            file.close();
-        }
-    }
-}

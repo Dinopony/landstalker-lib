@@ -25,7 +25,6 @@ World::World(const md::ROM& rom)
     io::read_items(rom, *this);
     io::read_game_strings(rom, *this);
     io::read_blocksets(rom, *this);
-    io::read_tilesets(rom, *this);
 
     io::read_entity_types(rom, *this);
     this->load_entity_types();
