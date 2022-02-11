@@ -129,6 +129,7 @@ set(SOURCES
         "patches/gameplay_tweaks.cpp"
         "patches/handle_additional_jewels.cpp"
         "patches/handle_armor_upgrades.cpp"
+        "patches/handle_items_renaming.cpp"
         "patches/improve_engine.cpp"
         "patches/make_sword_of_gaia_work_in_volcano.cpp"
         "patches/normalize_special_enemies_hp.cpp"

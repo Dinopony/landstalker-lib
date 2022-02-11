@@ -54,6 +54,13 @@ namespace Symbols
         '\x1E', // {CLR} = Clear Panel
             '\0', // unused
         '\x1F', // {DELAY_SHORT} = Wait
+            '\0',
+            '\0',
+            '\0',
+            '\0',
+        '\x69', // Line break with hyphen in inventory, no space in textboxes
+        '\x6A', // Line break without hyphen in inventory, space in textboxes
+        '\x6B', // Line break without hyphen in inventory, no space in textboxes
     };
 
     inline uint8_t byte_for_symbol(char symbol)
