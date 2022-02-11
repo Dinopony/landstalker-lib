@@ -24,7 +24,7 @@ public:
 
     [[nodiscard]] uint8_t id() const { return _id; }
 
-    [[nodiscard]] std::string name() const { return _name; }
+    [[nodiscard]] virtual std::string name() const { return _name; }
     void name(const std::string& name) { _name = name; }
 
     [[nodiscard]] bool has_low_palette() const { return _low_palette.is_valid(); }
@@ -118,12 +118,14 @@ private :
     Item* _item;
 
 public:
-    EntityItemOnGround(uint8_t id, const std::string& name, Item* item) :
-        EntityType  (id, name),
+    EntityItemOnGround(uint8_t id, Item* item) :
+        EntityType  (id, "ground_item"),
         _item       (item)
     {}
 
     [[nodiscard]] std::string type_name() const override { return "ground_item"; };
+
+    [[nodiscard]] std::string name() const override { return "ground_item (" + _item->name() + ")"; }
 
     [[nodiscard]] Item* item() const { return _item; }
 

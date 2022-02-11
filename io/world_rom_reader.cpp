@@ -352,7 +352,7 @@ void io::read_entity_types(const md::ROM& rom, World& world)
         if(item_id > 0x3F)
             continue;
         uint8_t entity_id = item_id + 0xC0;
-        world.add_entity_type(new EntityItemOnGround(entity_id, "ground_item (" + item->name() + ")", item));
+        world.add_entity_type(new EntityItemOnGround(entity_id, item));
     }
 
     // Read item drop probabilities from a table in the ROM
