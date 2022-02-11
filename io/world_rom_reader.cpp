@@ -3,7 +3,6 @@
 #include "../model/entity_type.hpp"
 #include "../model/item_source.hpp"
 #include "../model/map.hpp"
-#include "../../../src/logic_model/world_teleport_tree.hpp"
 #include "../model/world.hpp"
 #include "../model/blockset.hpp"
 
@@ -453,16 +452,4 @@ void io::read_items(const md::ROM& rom, World& world)
 
         items[id] = new Item(id, name, max_quantity, 0, gold_value);
     }
-}
-
-void io::read_tilesets(const md::ROM& rom, World& world)
-{
-    /*
-
-    const uint8_t* it = rom.iterator_at(0x440F0);
-    std::vector<uint8_t> decoded_bytes = decode_lz77(it);
-
-    Json json = decoded_bytes;
-    dump_json_to_file(json, "./tileset_0.bin");
-     */
 }
