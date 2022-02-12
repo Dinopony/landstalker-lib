@@ -27,7 +27,7 @@ void make_pawn_ticket_consumable(md::ROM& rom);
 void make_key_not_consumed_on_use(md::ROM& rom);
 
 // quality_of_life.cpp patches
-void alter_item_order_in_menu(md::ROM& rom);
+void alter_item_order_in_menu(md::ROM& rom, const std::array<uint8_t, 40>& inventory_order);
 void quicken_gaia_effect(md::ROM& rom);
 void quicken_pawn_ticket_effect(md::ROM& rom);
 
