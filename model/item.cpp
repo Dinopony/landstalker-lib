@@ -9,6 +9,8 @@ Json Item::to_json() const
     json["maxQuantity"] = _max_quantity;
     json["startingQuantity"] = _starting_quantity;
     json["goldValue"] = _gold_value;
+    json["preUseAddress"] = _pre_use_address;
+    json["postUseAddress"] = _post_use_address;
     return json;
 }
 

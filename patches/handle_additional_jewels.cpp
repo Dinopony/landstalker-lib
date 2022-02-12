@@ -2,6 +2,7 @@
 
 #include "../model/world.hpp"
 #include "../model/map.hpp"
+#include "../model/entity.hpp"
 #include "../constants/item_codes.hpp"
 #include "../constants/map_codes.hpp"
 #include "../constants/offsets.hpp"
@@ -88,20 +89,21 @@ static void remove_books_replaced_by_jewels(md::ROM& rom, World& world, uint8_t 
     if(jewel_count > 3 && jewel_count <= MAX_INDIVIDUAL_JEWELS)
     {
         // Remove jewels replaced from book IDs from priest stands
-        world.map(MAP_MASSAN_CHURCH)->remove_entity(3);
-        world.map(MAP_MASSAN_CHURCH)->remove_entity(2);
-        world.map(MAP_GUMI_CHURCH)->remove_entity(2);
-        world.map(MAP_GUMI_CHURCH)->remove_entity(1);
-        world.map(MAP_RYUMA_CHURCH)->remove_entity(4);
-        world.map(MAP_RYUMA_CHURCH)->remove_entity(3);
-        world.map(MAP_MERCATOR_CHURCH_VARIANT)->remove_entity(3);
-        world.map(MAP_MERCATOR_CHURCH_VARIANT)->remove_entity(2);
-        world.map(MAP_VERLA_CHURCH)->remove_entity(3);
-        world.map(MAP_VERLA_CHURCH)->remove_entity(2);
-        world.map(MAP_DESTEL_CHURCH)->remove_entity(3);
-        world.map(MAP_DESTEL_CHURCH)->remove_entity(2);
-        world.map(MAP_KAZALT_CHURCH)->remove_entity(3);
-        world.map(MAP_KAZALT_CHURCH)->remove_entity(2);
+        const std::vector<uint16_t> maps_to_clean = {
+            MAP_MASSAN_CHURCH, MAP_GUMI_CHURCH, MAP_RYUMA_CHURCH, MAP_MERCATOR_CHURCH_VARIANT, MAP_VERLA_CHURCH,
+            MAP_DESTEL_CHURCH, MAP_KAZALT_CHURCH
+        };
+
+        for(uint16_t map_id : maps_to_clean)
+        {
+            Map* map = world.map(map_id);
+            for(int i = (int)map->entities().size()-1 ; i >= 0 ; --i)
+            {
+                uint8_t type_id = map->entities()[i]->entity_type_id();
+                if(type_id == 0xC0 + ITEM_BLUE_JEWEL || type_id == 0xC0 + ITEM_YELLOW_JEWEL)
+                    map->remove_entity(i);
+            }
+        }
 
         // Make the Awakening Book (the only one remaining in churches) heal all status conditions
         rom.set_code(0x24F6C, md::Code().nop(6));

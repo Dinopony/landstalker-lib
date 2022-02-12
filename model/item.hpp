@@ -12,15 +12,20 @@ private:
     uint8_t     _max_quantity = 0;
     uint8_t     _starting_quantity = 0;
     uint16_t    _gold_value = 0;
+    uint32_t    _pre_use_address = 0;
+    uint32_t    _post_use_address = 0;
 
 public:
     Item() = default;
-    Item(uint8_t id, std::string name, uint8_t max_quantity, uint8_t starting_quantity, uint16_t gold_value) :
+    Item(uint8_t id, std::string name, uint8_t max_quantity, uint8_t starting_quantity, uint16_t gold_value,
+         uint32_t pre_use_addr = 0, uint32_t post_use_addr = 0) :
         _id                 (id),
         _name               (std::move(name)),
         _max_quantity       (max_quantity),
         _starting_quantity  (starting_quantity),
-        _gold_value         (gold_value)
+        _gold_value         (gold_value),
+        _pre_use_address    (pre_use_addr),
+        _post_use_address   (post_use_addr)
     {}
     
     [[nodiscard]] uint8_t id() const { return _id; }
@@ -37,6 +42,12 @@ public:
 
     [[nodiscard]] uint16_t gold_value() const { return _gold_value; }
     virtual Item& gold_value(uint16_t value) { _gold_value = value; return *this; }
+
+    [[nodiscard]] uint32_t pre_use_address() const { return _pre_use_address; }
+    virtual Item& pre_use_address(uint32_t addr) { _pre_use_address = addr; return *this; }
+
+    [[nodiscard]] uint32_t post_use_address() const { return _post_use_address; }
+    virtual Item& post_use_address(uint32_t addr) { _post_use_address = addr; return *this; }
 
     [[nodiscard]] Json to_json() const;
     static Item* from_json(uint8_t id, const Json& json);

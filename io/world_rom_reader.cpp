@@ -427,6 +427,7 @@ void io::read_blocksets(const md::ROM& rom, World& world)
 
 void io::read_items(const md::ROM& rom, World& world)
 {
+    // Read item names
     std::vector<std::string> item_names;
     item_names.reserve(0x40);
     for(uint32_t addr = offsets::ITEM_NAMES_TABLE ; addr < offsets::ITEM_NAMES_TABLE_END ; )
@@ -441,6 +442,30 @@ void io::read_items(const md::ROM& rom, World& world)
         addr += length;
     }
 
+    std::array<uint32_t, 0x40> pre_uses_functions {};
+    pre_uses_functions.fill(0);
+    for(uint32_t addr = offsets::ITEM_PRE_USE_TABLE ; addr < offsets::ITEM_PRE_USE_TABLE_END ; addr += 0x6)
+    {
+        uint8_t item_id = rom.get_byte(addr + 0x4);
+        if(item_id == 0xFF)
+            break;
+
+        uint16_t branch_offset = rom.get_word(addr + 0x02);
+        pre_uses_functions[item_id] = addr + 0x02 + branch_offset;
+    }
+
+    std::array<uint32_t, 0x40> post_uses_functions {};
+    post_uses_functions.fill(0);
+    for(uint32_t addr = offsets::ITEM_POST_USE_TABLE ; addr < offsets::ITEM_POST_USE_TABLE_END ; addr += 0x6)
+    {
+        uint8_t item_id = rom.get_byte(addr + 0x4) & 0x7F;
+        if(item_id == 0x7F)
+            break;
+
+        uint16_t branch_offset = rom.get_word(addr + 0x02);
+        post_uses_functions[item_id] = addr + 0x02 + branch_offset;
+    }
+
     std::map<uint8_t, Item*>& items = world.items();
     for(uint8_t id=0 ; id<0x40 ; ++id)
     {
@@ -449,7 +474,9 @@ void io::read_items(const md::ROM& rom, World& world)
         uint32_t item_base_addr = offsets::ITEM_DATA_TABLE + id * 0x04;
         uint8_t max_quantity = rom.get_byte(item_base_addr) & 0x0F;
         uint16_t gold_value = rom.get_word(item_base_addr + 0x2);
+        uint32_t pre_use_addr = pre_uses_functions[id];
+        uint32_t post_use_addr = post_uses_functions[id];
 
-        items[id] = new Item(id, name, max_quantity, 0, gold_value);
+        items[id] = new Item(id, name, max_quantity, 0, gold_value, pre_use_addr, post_use_addr);
     }
 }

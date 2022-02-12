@@ -2,7 +2,9 @@
 
 #include "../model/world.hpp"
 #include "../model/map.hpp"
+#include "../model/item.hpp"
 #include "../constants/offsets.hpp"
+#include "../constants/item_codes.hpp"
 #include "../exceptions.hpp"
 
 static void remove_alternate_palette_for_knl(const World& world)
@@ -14,15 +16,6 @@ static void remove_alternate_palette_for_knl(const World& world)
     for(auto& [map_id, map] : world.maps())
         if(map->palette() == dark_knl_palette)
             map->palette(lit_knl_palette);
-}
-
-static void neutralize_lantern_effect_on_use(md::ROM& rom)
-{
-    rom.set_code(0x87AA, md::Code().nop());
-    rom.set_byte(0x87AC, 0x60); // Always jump to "return failure"
-
-    // Remove the "CheckIfRoomIsLit" function and the "LightableRooms" table
-    rom.mark_empty_chunk(0x87B0, 0x8832);
 }
 
 static uint32_t inject_func_and_words(md::ROM& rom)
@@ -167,7 +160,10 @@ static void simplify_function_change_map_palette(md::ROM& rom, uint32_t func_dar
 void alter_lantern_handling(md::ROM& rom, const World& world)
 {
     remove_alternate_palette_for_knl(world);
-    neutralize_lantern_effect_on_use(rom);
+
+    // Remove all code related to old lantern usage
+    rom.mark_empty_chunk(0x87AA, 0x8832);
+    world.item(ITEM_LANTERN)->pre_use_address(0);
 
     uint32_t dark_rooms_table = inject_dark_rooms_table(rom, world);
     uint32_t and_words = inject_func_and_words(rom);

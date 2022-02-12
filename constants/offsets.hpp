@@ -3,7 +3,15 @@
 #include <cstdint>
 
 namespace offsets 
-{    
+{
+    constexpr uint32_t ITEM_PRE_USE_TABLE = 0x008620;
+    constexpr uint32_t ITEM_PRE_USE_TABLE_END = 0x0086B0;
+    constexpr uint32_t ITEM_POST_USE_TABLE = ITEM_PRE_USE_TABLE_END;
+    constexpr uint32_t ITEM_POST_USE_TABLE_END = 0x0086DA;
+    constexpr uint32_t PROC_ITEM_USE_RETURN_SUCCESS_HAS_POST_USE = 0x008BB2;
+    constexpr uint32_t PROC_ITEM_USE_RETURN_SUCCESS = 0x008BBA;
+    constexpr uint32_t PROC_ITEM_USE_RETURN_FAILURE = 0x008BC0;
+
     constexpr uint32_t HUD_TILEMAP = 0x009242;
 
     constexpr uint32_t MAP_FALL_DESTINATION_TABLE = 0x00A1A8;
