@@ -484,7 +484,7 @@ void Code::label(const std::string& label)
 const std::vector<uint8_t>& Code::get_bytes() const
 {
     if (!_pending_branches.empty())
-        throw LandstalkerException("Pending branches are remaining on injected code");
+        throw LandstalkerException(std::string("Pending branch is unresolved on injected code : ") + _pending_branches.begin()->second);
     return _bytes;
 }
 
