@@ -822,7 +822,7 @@
     {
         "name": "Verla Shore: chest on highest cliff after Verla tunnel (accessible through Verla mines)",
         "type": "chest",
-        "nodeId": "verla_shore",
+        "nodeId": "verla_shore_cliff",
         "chestId": 140
     },
     {
