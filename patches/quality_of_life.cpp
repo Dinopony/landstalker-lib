@@ -37,3 +37,9 @@ void quicken_pawn_ticket_effect(md::ROM& rom)
 
     rom.set_word(0x8920, rom.get_word(0x8920) / SPEEDUP_FACTOR);
 }
+
+void quicken_pause_menu_transitions(md::ROM& rom)
+{
+    rom.set_byte(0x8F17, 0x01); // 2x faster fade to black
+    rom.set_byte(0x8EE7, 0x01); // 2x faster fade from black
+}
