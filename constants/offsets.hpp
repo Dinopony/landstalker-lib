@@ -87,6 +87,7 @@ namespace offsets
 
     constexpr uint32_t MAP_BASE_CHEST_ID_TABLE = 0x09E78E;
     constexpr uint32_t CREDITS_TEXT = 0x09ED1A;
+    constexpr uint32_t CREDITS_TEXT_END = 0x09F644;
 
     constexpr uint32_t MAP_PALETTES_TABLE_POINTER = 0x0A0A04;
     constexpr uint32_t MAP_DATA_TABLE = 0x0A0A12;
