@@ -30,7 +30,7 @@ void make_key_not_consumed_on_use(md::ROM& rom);
 void alter_item_order_in_menu(md::ROM& rom, const std::array<uint8_t, 40>& inventory_order);
 void quicken_gaia_effect(md::ROM& rom);
 void quicken_pawn_ticket_effect(md::ROM& rom);
-void quicken_pause_menu_transitions(md::ROM& rom);
+void make_transitions_faster(md::ROM& rom);
 
 // story_dependencies.cpp patches
 void make_massan_elder_reward_not_story_dependant(md::ROM& rom, const World& world);

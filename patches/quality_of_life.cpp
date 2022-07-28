@@ -38,7 +38,12 @@ void quicken_pawn_ticket_effect(md::ROM& rom)
     rom.set_word(0x8920, rom.get_word(0x8920) / SPEEDUP_FACTOR);
 }
 
-void quicken_pause_menu_transitions(md::ROM& rom)
+/**
+ * All sorts of transitions (map transition, pause menu transition...) use a fade to black followed by a fade from
+ * black. Both those fades originally take 2 frames per fade step, this patch makes those steps only 1-frame long.
+ * This makes for overall faster and smoother transitions.
+ */
+void make_transitions_faster(md::ROM& rom)
 {
     rom.set_byte(0x8F17, 0x01); // 2x faster fade to black
     rom.set_byte(0x8EE7, 0x01); // 2x faster fade from black
