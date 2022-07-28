@@ -32,8 +32,10 @@ uint16_t unpack_from<uint16_t>(BitstreamReader& bitpack)
     return (uint16_t)bitpack.read_variable_length_number();
 }
 
+/*
 template<>
 uint32_t unpack_from<uint32_t>(BitstreamReader& bitpack)
 {
     return (uint32_t)bitpack.read_variable_length_number();
 }
+ */

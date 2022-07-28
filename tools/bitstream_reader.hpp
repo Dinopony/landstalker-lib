@@ -152,5 +152,7 @@ uint8_t unpack_from<uint8_t>(BitstreamReader& bitpack);
 template<>
 uint16_t unpack_from<uint16_t>(BitstreamReader& bitpack);
 
+/*
 template<>
 uint32_t unpack_from<uint32_t>(BitstreamReader& bitpack);
+*/

@@ -104,7 +104,7 @@ public:
 
     void pack(uint8_t value)       { this->add_variable_length_number(value); }
     void pack(uint16_t value)      { this->add_variable_length_number(value); }
-    void pack(uint32_t value)      { this->add_variable_length_number(value); }
+    void pack(uint32_t value)      { this->pack_pod_type(value); }
     void pack(float value)         { this->pack_pod_type(value); }
     void pack(double value)        { this->pack_pod_type(value); }
     void pack(bool value)          { this->add_bit(value); }
