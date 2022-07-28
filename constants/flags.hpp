@@ -10,6 +10,7 @@ constexpr Flag FLAG_FARA_KIDNAPPED                  (0x00, 0);
 constexpr Flag FLAG_TALKED_WITH_HIDDEN_VILLAGER_RYUMA       (0x02, 7);
 constexpr Flag FLAG_SPIED_ON_GUMI_RITUAL                    (0x02, 4);
 constexpr Flag FLAG_BRIDGE_TO_GUMI_REPAIRED                 (0x02, 2);
+constexpr Flag FLAG_PROSPERO_NOISY_BOY_TEXTLINE_READ        (0x02, 1);
 constexpr Flag FLAG_MASSAN_VILLAGER_WARNED_BRIDGE_IS_BROKEN (0x02, 0);
 
 constexpr Flag FLAG_FIRST_ENCOUNTER_WITH_DUKE          (0x03, 7);
