@@ -117,7 +117,7 @@ std::vector<ByteArray> io::encode_textbanks(const std::vector<std::string>& stri
     {
         const std::string& string = strings[i];
         if(string.size() > 0xFE)
-            throw LandstalkerException("String #" + std::to_string(i) + "is too long to be integrated in textbanks ('" + string + "')");
+            throw LandstalkerException("String #" + std::to_string(i) + " is too long (" + std::to_string(string.size()) + " chars) to be integrated in textbanks ('" + string + "')");
 
         ByteArray& current_textbank = textbanks[i / 256];
 

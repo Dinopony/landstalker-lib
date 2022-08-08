@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.0)
+cmake_minimum_required(VERSION 3.21.0)
 
 project(landstalker-lib VERSION 1.6.0 LANGUAGES CXX)
 

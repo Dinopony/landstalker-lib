@@ -263,7 +263,7 @@ static void write_fahl_enemies(const World& world, md::ROM& rom)
 
 static void write_map_connections(const World& world, md::ROM& rom)
 {
-    uint32_t addr = offsets::MAP_CONNECTIONS_TABLE;
+    ByteArray map_connection_bytes;
 
     for(const MapConnection& connection : world.map_connections())
     {
@@ -279,15 +279,14 @@ static void write_map_connections(const World& world, md::ROM& rom)
         uint8_t byte_7 = connection.pos_x_2();
         uint8_t byte_8 = connection.pos_y_2();
 
-        rom.set_bytes(addr, { byte_1, byte_2, byte_3, byte_4, byte_5, byte_6, byte_7, byte_8 });
-        addr += 0x8;
+        map_connection_bytes.add_bytes({ byte_1, byte_2, byte_3, byte_4, byte_5, byte_6, byte_7, byte_8 });
     }
-    
-    rom.set_word(addr, 0xFFFF);
-    addr += 0x2;
-    if(addr > offsets::MAP_CONNECTIONS_TABLE_END)
-        throw LandstalkerException("Map connections table is bigger than in original game");
-    rom.mark_empty_chunk(addr, offsets::MAP_CONNECTIONS_TABLE_END);
+
+    map_connection_bytes.add_word(0xFFFF);
+
+    rom.mark_empty_chunk(offsets::MAP_CONNECTIONS_TABLE, offsets::MAP_CONNECTIONS_TABLE_END);
+    uint32_t new_map_connections_table_addr = rom.inject_bytes(map_connection_bytes);
+    rom.set_long(offsets::MAP_CONNECTIONS_TABLE_POINTER, new_map_connections_table_addr);
 }
 
 static void write_map_palettes(const World& world, md::ROM& rom)

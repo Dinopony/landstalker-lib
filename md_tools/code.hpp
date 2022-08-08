@@ -81,6 +81,8 @@ namespace md
 
         Code& bset(uint8_t bit_id, const Param& target);
         Code& bset(const DataRegister& dx, const Param& target);
+        Code& bclr(uint8_t bit_id, const Param& target);
+        Code& bclr(const DataRegister& dx, const Param& target);
         Code& btst(uint8_t bit_id, const Param& target);
         Code& btst(const DataRegister& dx, const Param& target);
 

@@ -187,7 +187,7 @@ void ROM::mark_empty_chunk(uint32_t begin, uint32_t end)
 
     for(auto& pair : _empty_chunks)
     {
-        if((begin >= pair.first && begin < pair.second) || (end >= pair.first && end < pair.second))
+        if((begin >= pair.first && begin < pair.second) || (end > pair.first && end <= pair.second))
         {
             std::cerr << "There is an overlap between empty chunks" << std::endl;
             return;

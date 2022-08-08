@@ -36,8 +36,8 @@ public:
         _extra_byte_2    (0)
     {}
 
-    MapConnection(uint16_t map_id_1, uint16_t map_id_2, 
-                  uint8_t pos_x_1, uint8_t pos_y_1, uint8_t pos_x_2, uint8_t pos_y_2, 
+    MapConnection(uint16_t map_id_1, uint8_t pos_x_1, uint8_t pos_y_1,
+                  uint16_t map_id_2, uint8_t pos_x_2, uint8_t pos_y_2,
                   uint8_t extra_byte_1 = 0, uint8_t extra_byte_2 = 0) : 
         _map_id_1        (map_id_1),
         _pos_x_1         (pos_x_1),

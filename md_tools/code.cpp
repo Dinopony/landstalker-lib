@@ -304,6 +304,23 @@ Code& Code::bset(const DataRegister& dx, const Param& target)
     return *this;
 }
 
+Code& Code::bclr(uint8_t bit_id, const Param& target)
+{
+    this->add_opcode(0x0880 + target.getMXn());
+    this->add_word(static_cast<uint16_t>(bit_id));
+    this->add_bytes(target.getAdditionnalData());
+    return *this;
+}
+
+Code& Code::bclr(const DataRegister& dx, const Param& target)
+{
+    uint16_t opcode = 0x0180 + (dx.getXn() << 9) + target.getMXn();
+    this->add_opcode(opcode);
+    this->add_bytes(target.getAdditionnalData());
+    return *this;
+}
+
+
 Code& Code::btst(uint8_t bit_id, const Param& target)
 {
     this->add_opcode(0x0800 + target.getMXn());

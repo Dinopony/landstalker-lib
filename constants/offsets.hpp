@@ -90,6 +90,7 @@ namespace offsets
     constexpr uint32_t CREDITS_TEXT_END = 0x09F644;
 
     constexpr uint32_t MAP_PALETTES_TABLE_POINTER = 0x0A0A04;
+    constexpr uint32_t MAP_CONNECTIONS_TABLE_POINTER = 0x0A0A08;
     constexpr uint32_t MAP_DATA_TABLE = 0x0A0A12;
 
     constexpr uint32_t KNL_LIT_ROOM_PALETTE = 0x11CD1C;
