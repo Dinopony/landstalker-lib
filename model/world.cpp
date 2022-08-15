@@ -149,12 +149,12 @@ EntityType* World::entity_type(const std::string& name) const
     return nullptr;
 }
 
-void World::set_map(uint16_t map_id, Map* map)
+void World::add_map(Map* map)
 {
+    uint16_t map_id = map->id();
     if(_maps.count(map_id))
         delete _maps[map_id];
- 
-    map->id(map_id);
+
     _maps[map_id] = map;
 }
 

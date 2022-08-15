@@ -335,10 +335,10 @@ static void write_blocksets(const World& world, md::ROM& rom)
 
 static void write_maps_data(const World& world, md::ROM& rom)
 {
+    ByteArray map_data_table;
+
     for(auto& [map_id, map] : world.maps())
     {
-        uint32_t addr = offsets::MAP_DATA_TABLE + (map_id * 8);
-
         std::pair<uint8_t, uint8_t> blockset_id = world.blockset_id(map->blockset());
 
         uint8_t byte4;
@@ -353,19 +353,55 @@ static void write_maps_data(const World& world, md::ROM& rom)
         byte7 = map->background_music() & 0x1F;
         byte7 |= ((blockset_id.second-1) & 0x07) << 5;
 
-        rom.set_long(addr, map->address());
-        rom.set_byte(addr+4, byte4);
-        rom.set_byte(addr+5, byte5);
-        rom.set_byte(addr+6, map->room_height());
-        rom.set_byte(addr+7, byte7);
-
-        // Write map base chest id
-        rom.set_byte(offsets::MAP_BASE_CHEST_ID_TABLE + map_id, map->base_chest_id());
-
-        // Write map visited flag
-        uint16_t flag_word = (map->visited_flag().byte << 3) + map->visited_flag().bit;
-        rom.set_word(offsets::MAP_VISITED_FLAG_TABLE + (map->id()*2), flag_word);
+        map_data_table.add_long(map->address());
+        map_data_table.add_byte(byte4);
+        map_data_table.add_byte(byte5);
+        map_data_table.add_byte(map->room_height());
+        map_data_table.add_byte(byte7);
     }
+
+    rom.mark_empty_chunk(offsets::MAP_DATA_TABLE, offsets::MAP_DATA_TABLE_END);
+    uint32_t map_data_table_addr = rom.inject_bytes(map_data_table);
+    rom.set_long(offsets::MAP_DATA_TABLE_POINTER, map_data_table_addr);
+}
+
+static void write_maps_visited_flag(const World& world, md::ROM& rom)
+{
+    ByteArray map_visited_flag_table;
+
+    for(auto& [map_id, map] : world.maps())
+    {
+        uint16_t flag_word = (map->visited_flag().byte << 3) + map->visited_flag().bit;
+        map_visited_flag_table.add_word(flag_word);
+    }
+
+    rom.mark_empty_chunk(offsets::MAP_VISITED_FLAG_TABLE, offsets::MAP_VISITED_FLAG_TABLE_END);
+    uint32_t map_visited_flag_table_addr = rom.inject_bytes(map_visited_flag_table);
+    rom.set_long(offsets::MAP_VISITED_FLAG_TABLE_POINTER, map_visited_flag_table_addr);
+}
+
+static void write_maps_base_chest_id(const World& world, md::ROM& rom)
+{
+    ByteArray map_base_chest_id_table;
+
+    for(auto& [map_id, map] : world.maps())
+    {
+        map_base_chest_id_table.add_byte(map->base_chest_id());
+    }
+
+    rom.mark_empty_chunk(offsets::MAP_BASE_CHEST_ID_TABLE, offsets::MAP_BASE_CHEST_ID_TABLE_END);
+    uint32_t map_base_chest_id_table_addr = rom.inject_bytes(map_base_chest_id_table);
+
+    // Extend the appropriate function to go get the new table instead of the old one
+    md::Code func;
+    {
+        func.clrw(reg_D1);
+        func.lea(map_base_chest_id_table_addr, reg_A0);
+        func.moveb(addr_(reg_A0, reg_D0), reg_D1);
+        func.rts();
+    }
+    uint32_t extended_base_chest_id_handler = rom.inject_code(func);
+    rom.set_code(0x9E76A, md::Code().jsr(extended_base_chest_id_handler));
 }
 
 static void write_maps_fall_destination(const World& world, md::ROM& rom)
@@ -524,9 +560,11 @@ static void write_maps_entity_masks(const World& world, md::ROM& rom)
 
     // Modify pointer leading to this table, since its address has changed
     md::Code func_setup_entity_masks_pointer;
-    func_setup_entity_masks_pointer.lea(entity_masks_table_addr, reg_A0);
-    func_setup_entity_masks_pointer.lea(0xFF1000, reg_A1);
-    func_setup_entity_masks_pointer.rts();
+    {
+        func_setup_entity_masks_pointer.lea(entity_masks_table_addr, reg_A0);
+        func_setup_entity_masks_pointer.lea(0xFF1000, reg_A1);
+        func_setup_entity_masks_pointer.rts();
+    }
     uint32_t setup_addr = rom.inject_code(func_setup_entity_masks_pointer);
     rom.set_code(0x1A382, md::Code().jsr(setup_addr).nop(2));
 }
@@ -582,9 +620,11 @@ static void write_maps_dialogue_table(const World& world, md::ROM& rom)
 
     // Inject a small function in order to load dialogue table address in A0 wherever it is in the ROM
     md::Code code;
-    code.movew(addr_(0xFF1206), reg_D0);
-    code.lea(room_dialogue_table_addr, reg_A0);
-    code.rts();
+    {
+        code.movew(addr_(0xFF1206), reg_D0);
+        code.lea(room_dialogue_table_addr, reg_A0);
+        code.rts();
+    }
     uint32_t injected_func = rom.inject_code(code);
     rom.set_code(0x25276, md::Code().jsr(injected_func).nop(2));
 }
@@ -685,6 +725,8 @@ static void write_maps_entity_persistence_flags(const World& world, md::ROM& rom
 static void write_maps(const World& world, md::ROM& rom)
 {
     write_maps_data(world, rom);
+    write_maps_visited_flag(world, rom);
+    write_maps_base_chest_id(world, rom);
     write_maps_climb_destination(world, rom);
     write_maps_fall_destination(world, rom);
     write_maps_variants(world, rom);

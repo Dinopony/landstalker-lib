@@ -26,6 +26,7 @@ namespace offsets
     constexpr uint32_t NIGEL_PALETTE_SAVE_MENU = 0x00FB32;
     constexpr uint32_t NIGEL_PALETTE_SAVE_MENU_END = 0x00FB52;
 
+    constexpr uint32_t MAP_VISITED_FLAG_TABLE_POINTER = 0x002942;
     constexpr uint32_t MAP_VISITED_FLAG_TABLE = 0x00C74E;
     constexpr uint32_t MAP_VISITED_FLAG_TABLE_END = 0x00CDAE;
 
@@ -86,12 +87,15 @@ namespace offsets
     constexpr uint32_t BEHAVIOR_TABLE_END = 0x09E75E;
 
     constexpr uint32_t MAP_BASE_CHEST_ID_TABLE = 0x09E78E;
+    constexpr uint32_t MAP_BASE_CHEST_ID_TABLE_END = 0x09EABE;
     constexpr uint32_t CREDITS_TEXT = 0x09ED1A;
     constexpr uint32_t CREDITS_TEXT_END = 0x09F644;
 
     constexpr uint32_t MAP_PALETTES_TABLE_POINTER = 0x0A0A04;
     constexpr uint32_t MAP_CONNECTIONS_TABLE_POINTER = 0x0A0A08;
+    constexpr uint32_t MAP_DATA_TABLE_POINTER = 0x0A0A00;
     constexpr uint32_t MAP_DATA_TABLE = 0x0A0A12;
+    constexpr uint32_t MAP_DATA_TABLE_END = 0x0A2392;
 
     constexpr uint32_t KNL_LIT_ROOM_PALETTE = 0x11CD1C;
     constexpr uint32_t KNL_DARK_ROOM_PALETTE = 0x11CD36;

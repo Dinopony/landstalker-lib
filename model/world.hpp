@@ -86,7 +86,7 @@ public:
 
     [[nodiscard]] const std::map<uint16_t, Map*>& maps() const { return _maps; }
     [[nodiscard]] Map* map(uint16_t map_id) const { return _maps.at(map_id); }
-    void set_map(uint16_t map_id, Map* map);
+    void add_map(Map* map);
 
     [[nodiscard]] const std::vector<MapConnection>& map_connections() const { return _map_connections; }
     std::vector<MapConnection>& map_connections() { return _map_connections; }

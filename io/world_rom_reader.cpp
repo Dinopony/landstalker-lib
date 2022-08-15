@@ -64,7 +64,7 @@ static void read_maps_data(const md::ROM& rom, World& world)
 
         map->blockset(world.blockset(primary_blockset_id, secondary_blockset_id+1));
 
-        world.set_map(map_id, map);
+        world.add_map(map);
     }
 }
 
