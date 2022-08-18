@@ -36,7 +36,7 @@ namespace md
         Code& cmpib(uint8_t value, const Param& other) { return this->cmpi(ImmediateValue(value), other, Size::BYTE); }
         Code& cmpiw(uint16_t value, const Param& other) { return this->cmpi(ImmediateValue(value), other, Size::WORD); }
         Code& cmpil(uint32_t value, const Param& other) { return this->cmpi(ImmediateValue(value), other, Size::LONG); }
-        
+
         Code& cmpa(const Param& value, const AddressRegister& reg);
 
         Code& tst(const Param& target, Size size);
@@ -120,6 +120,18 @@ namespace md
         Code& oril(uint32_t value, const Param& target) { return this->ori(ImmediateValue(value), target, Size::LONG); }
 
         Code& ori_to_ccr(uint8_t value);
+
+        Code& lsx(uint8_t bitcount, const DataRegister& reg, bool direction_left, md::Size size);
+
+        Code& lsl(uint8_t bitcount, const DataRegister& reg, md::Size size) { return this->lsx(bitcount, reg, true, size); }
+        Code& lslb(uint8_t bitcount, const DataRegister& reg) { return this->lsl(bitcount, reg, md::Size::BYTE); }
+        Code& lslw(uint8_t bitcount, const DataRegister& reg) { return this->lsl(bitcount, reg, md::Size::WORD); }
+        Code& lsll(uint8_t bitcount, const DataRegister& reg) { return this->lsl(bitcount, reg, md::Size::LONG); }
+
+        Code& lsr(uint8_t bitcount, const DataRegister& reg, md::Size size) { return this->lsx(bitcount, reg, false, size); }
+        Code& lsrb(uint8_t bitcount, const DataRegister& reg) { return this->lsr(bitcount, reg, md::Size::BYTE); }
+        Code& lsrw(uint8_t bitcount, const DataRegister& reg) { return this->lsr(bitcount, reg, md::Size::WORD); }
+        Code& lsrl(uint8_t bitcount, const DataRegister& reg) { return this->lsr(bitcount, reg, md::Size::LONG); }
 
         Code& extw(const DataRegister& reg);
         Code& extl(const DataRegister& reg);
