@@ -395,6 +395,10 @@ static void write_maps_base_chest_id(const World& world, md::ROM& rom)
     // Extend the appropriate function to go get the new table instead of the old one
     md::Code func;
     {
+        // Loading a save gives an invalid chest ID for the first chest because map ID stored in D0 was preceded
+        // by FFFF when loading, and 0000 during normal gameplay. Using EXT makes the behavior consistent.
+        func.extw(reg_D0);
+
         func.clrw(reg_D1);
         func.lea(map_base_chest_id_table_addr, reg_A0);
         func.moveb(addr_(reg_A0, reg_D0), reg_D1);
