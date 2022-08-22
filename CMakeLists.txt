@@ -12,6 +12,10 @@ endif ()
 add_compile_definitions(RELEASE="${PROJECT_VERSION}")
 add_compile_definitions(MAJOR_RELEASE="${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 
+if(DEBUG)
+    add_compile_definitions(DEBUG)
+endif()
+
 macro(WRAPPED_DEPENDENCY)
     message(STATUS "Defining wrapped dependency for ${CMAKE_CURRENT_SOURCE_DIR}/${ARGV1}")
     add_custom_command(

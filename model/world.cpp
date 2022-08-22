@@ -336,7 +336,10 @@ void World::load_item_sources()
     {
         _item_sources.emplace_back(ItemSource::from_json(source_json, *this));
     }
+
+#ifdef DEBUG
     std::cout << _item_sources.size() << " item sources loaded." << std::endl;
+#endif
 
     // The following chests are absent from the game on release or modded out of the game for the rando, and their IDs are therefore free:
     // 0x0E (14): Mercator Kitchen (variant?)
@@ -371,7 +374,9 @@ void World::load_entity_types()
             _entity_types[id]->apply_json(entity_json, *this);
     }
 
+#ifdef DEBUG
     std::cout << _entity_types.size()  << " entities loaded." << std::endl;
+#endif
 }
 
 void World::add_entity_type(EntityType* entity_type)
