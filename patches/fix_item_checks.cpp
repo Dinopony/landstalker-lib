@@ -71,17 +71,40 @@ static void fix_sunstone_check(md::ROM& rom)
 }
 
 /**
- * Usually, when talking to Massan's doggo, the game checks if we went through the cutscene
- * where Greenmaze's lumberjack gives us Einstein Whistle, instead of checking if we actually
- * own the item.
- * This function fixes this behavior.
+ * Usually, when talking to dogs, the game checks if we went through various story events looking at story flagts.
+ * This patch makes the game look if Einstein Whistle is owned instead of looking at those flags.
  */
 static void fix_dog_talking_check(md::ROM& rom)
 {
+    // Massan dog
     // 0x0253C0:
         // Before:	01 24 (0124 >> 3 = 24 and 0124 & 7 = 04 -----> bit 4 of FF1024)
         // After:	02 81 (0281 >> 3 = 50 and 0281 & 7 = 01 -----> bit 1 of FF1050)
     rom.set_word(0x0253C0, 0x0281);
+
+    // Other dogs
+    std::vector<uint32_t> dog_cutscenes = { 0x26238, 0x2647E, 0x26A40, 0x272B4 };
+    for(uint32_t addr : dog_cutscenes)
+    {
+        uint32_t dialogue_without_whistle_offset = rom.get_word(addr + 6);
+        uint32_t dialogue_with_whistle_offset = rom.get_word(addr + 10);
+
+        md::Code cutscene;
+        {
+            uint32_t offset = 0x25D96 - (addr + 2); // 0x25D96 = CheckFlagAndDisplayMessage
+            cutscene.add_word(0x6100);
+            cutscene.add_word((uint16_t) offset);
+
+            cutscene.add_word(0x0281); // 0281 (0281 >> 3 = 50 and 0281 & 7 = 01 -----> bit 1 of FF1050)
+
+            cutscene.add_word(dialogue_with_whistle_offset);
+            cutscene.add_word(dialogue_without_whistle_offset);
+
+            cutscene.rts();
+        }
+
+        rom.set_code(addr, cutscene);
+    }
 }
 
 /**
