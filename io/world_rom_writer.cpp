@@ -396,8 +396,8 @@ static void write_maps_base_chest_id(const World& world, md::ROM& rom)
     md::Code func;
     {
         // Loading a save gives an invalid chest ID for the first chest because map ID stored in D0 was preceded
-        // by FFFF when loading, and 0000 during normal gameplay. Using EXT makes the behavior consistent.
-        func.extw(reg_D0);
+        // by FFFF when loading, and 0000 during normal gameplay. Using a bitmask makes the behavior consistent.
+        func.andil(0x0000FFFF, reg_D0);
 
         func.clrw(reg_D1);
         func.lea(map_base_chest_id_table_addr, reg_A0);
