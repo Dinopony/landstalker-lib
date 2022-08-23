@@ -4,10 +4,11 @@
 #include <vector>
 #include "byte_array.hpp"
 #include "../md_tools.hpp"
+#include "color_palette.hpp"
 
 struct SubSpriteMetadata {
-    uint8_t x = 0;
-    uint8_t y = 0;
+    int8_t x = 0;
+    int8_t y = 0;
     uint8_t tile_count_w = 0;
     uint8_t tile_count_h = 0;
     uint16_t original_word = 0;
@@ -55,13 +56,15 @@ public:
     void replace_color(uint8_t color_index, uint8_t new_color_index, size_t start_index, size_t end_index);
     void replace_color_in_tile(uint8_t color_index, uint8_t new_color_index, uint8_t tile_index);
 
+    uint8_t get_pixel(uint8_t tile_id, uint8_t x, uint8_t y);
     void set_pixel(uint8_t tile_id, uint8_t x, uint8_t y, uint8_t color);
 
     [[nodiscard]] const std::vector<uint8_t>& data() const { return _data; }
     [[nodiscard]] const std::vector<SubSpriteMetadata>& subsprites() const { return _subsprites; }
 
     ByteArray encode();
-
     static Sprite decode_from(const uint8_t* it);
+
+    void write_to_png(const std::string& path, const ColorPalette<16>& palette);
 };
 

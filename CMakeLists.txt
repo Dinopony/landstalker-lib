@@ -98,6 +98,8 @@ set(SOURCES
         "tools/tile_queue.hpp"
         "tools/stringtools.hpp"
         "tools/vectools.hpp"
+        "tools/lodepng.h"
+        "tools/lodepng.cpp"
 
         # --- Model ----------------------------------------
         "model/blockset.hpp"
