@@ -43,3 +43,6 @@ void make_falling_ribbon_not_story_dependant(World& world);
 // gameplay_tweaks.cpp patches
 void make_lifestocks_give_specific_health(md::ROM& rom, uint8_t health_per_lifestock);
 void remove_tree_cutting_glitch_drops(md::ROM& rom);
+
+// new_map_format.cpp patches
+void new_map_format(md::ROM& rom, World& world);

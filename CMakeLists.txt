@@ -141,6 +141,7 @@ set(SOURCES
         "patches/normalize_special_enemies_hp.cpp"
         "patches/quality_of_life.cpp"
         "patches/story_dependencies.cpp"
+        "patches/new_map_format.cpp"
         )
 
 add_library(landstalker_lib STATIC "${SOURCES}")
