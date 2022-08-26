@@ -13,14 +13,12 @@ namespace md {
     {
     private:
         bool _was_open;
-        char* _byte_array;
+        std::vector<uint8_t> _byte_array;
         std::map<std::string, uint32_t> _stored_addresses;
         std::vector<std::pair<uint32_t, uint32_t>> _empty_chunks;
 
     public:
         explicit ROM(const std::string& input_path);
-        ROM(const ROM& other);
-        ~ROM();
 
         [[nodiscard]] bool is_valid() const { return _was_open; }
 
@@ -44,14 +42,16 @@ namespace md {
         [[nodiscard]] uint32_t inject_code(const Code& code, const std::string& label = "");
         [[nodiscard]] uint32_t reserve_data_block(uint32_t byte_count, const std::string& label = "");
 
-        [[nodiscard]] const uint8_t* iterator_at(uint32_t addr) const { return reinterpret_cast<const uint8_t*>(_byte_array + addr); }
+        [[nodiscard]] const uint8_t* iterator_at(uint32_t addr) const { return reinterpret_cast<const uint8_t*>(&(_byte_array[addr])); }
 
         void store_address(const std::string& name, uint32_t address) { _stored_addresses[name] = address; }
         uint32_t stored_address(const std::string& name) { return _stored_addresses.at(name); }
 
         void mark_empty_chunk(uint32_t begin, uint32_t end);
         [[nodiscard]] uint32_t remaining_empty_bytes() const;
-    
+
+        void extend(size_t new_size);
+
         void write_to_file(std::ofstream& output_file);
     private:
         void update_checksum();

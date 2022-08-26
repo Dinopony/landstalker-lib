@@ -3,42 +3,24 @@
 
 #include <iostream>
 
-constexpr uint32_t ROM_SIZE = 0x200000;
-
 namespace md {
 
 ROM::ROM(const std::string& input_path) : _was_open(false)
 {
-    _byte_array = new char[ROM_SIZE];
+    _byte_array.resize(0x200000);
 
     std::ifstream file(input_path, std::ios::binary);
     if (file.is_open())
     {
-        file.read(_byte_array, ROM_SIZE);
+        file.read((char*)&(_byte_array[0]), 0x200000);
         file.close();
         _was_open = true;
     }
 }
 
-ROM::ROM(const ROM& other)
-{
-    _was_open = other._was_open;
-    _stored_addresses = other._stored_addresses;
-    _empty_chunks = other._empty_chunks;
-
-    _byte_array = new char[ROM_SIZE];
-    for (uint32_t i = 0; i < ROM_SIZE; ++i)
-        _byte_array[i] = other._byte_array[i];
-}
-
-ROM::~ROM()
-{
-    delete[] _byte_array;
-}
-
 void ROM::set_byte(uint32_t address, uint8_t byte)
 {
-    if (address >= ROM_SIZE)
+    if (address >= _byte_array.size())
         return;
 
     _byte_array[address] = byte;
@@ -46,7 +28,7 @@ void ROM::set_byte(uint32_t address, uint8_t byte)
 
 void ROM::set_word(uint32_t address, uint16_t word)
 {
-    if (address >= ROM_SIZE - 1)
+    if (address >= _byte_array.size() - 1)
         return;
 
     this->set_byte(address, (word >> 8));
@@ -55,7 +37,7 @@ void ROM::set_word(uint32_t address, uint16_t word)
 
 void ROM::set_long(uint32_t address, uint32_t longWord)
 {
-    if (address >= ROM_SIZE - 3)
+    if (address >= _byte_array.size() - 3)
         return;
 
     this->set_word(address, (longWord >> 16));
@@ -208,17 +190,26 @@ uint32_t ROM::remaining_empty_bytes() const
     return count;
 }
 
+void ROM::extend(size_t new_size)
+{
+    size_t old_size = _byte_array.size();
+    _byte_array.resize(new_size, 0);
+    this->mark_empty_chunk(old_size, new_size);
+
+    this->set_long(0x1A4, new_size-1);
+}
+
 void ROM::write_to_file(std::ofstream& output_file)
 {
     this->update_checksum();
-    output_file.write(_byte_array, ROM_SIZE);
+    output_file.write((char*)&(_byte_array[0]), (int32_t)_byte_array.size());
     output_file.close();
 }
 
 void ROM::update_checksum()
 {
     uint16_t checksum = 0;
-    for (uint32_t addr = 0x200; addr < ROM_SIZE; addr += 0x02)
+    for (uint32_t addr = 0x200; addr < _byte_array.size(); addr += 0x02)
     {
         uint8_t msb = _byte_array[addr];
         uint8_t lsb = _byte_array[addr + 1];

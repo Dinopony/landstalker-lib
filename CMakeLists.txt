@@ -143,6 +143,7 @@ set(SOURCES
         "patches/quality_of_life.cpp"
         "patches/story_dependencies.cpp"
         "patches/new_map_format.cpp"
+        "patches/extend_rom.cpp"
         )
 
 add_library(landstalker_lib STATIC "${SOURCES}")

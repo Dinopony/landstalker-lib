@@ -21,6 +21,8 @@ void handle_armor_upgrades(md::ROM& rom);
 void handle_items_renaming(md::ROM& rom, const World& world);
 void make_sword_of_gaia_work_in_volcano(md::ROM& rom);
 void normalize_special_enemies_hp(md::ROM& rom);
+void extend_rom(md::ROM& rom);
+void new_map_format(md::ROM& rom, World& world);
 
 // alter_items_consumability.cpp patches
 void make_pawn_ticket_consumable(md::ROM& rom);
@@ -44,5 +46,3 @@ void make_falling_ribbon_not_story_dependant(World& world);
 void make_lifestocks_give_specific_health(md::ROM& rom, uint8_t health_per_lifestock);
 void remove_tree_cutting_glitch_drops(md::ROM& rom);
 
-// new_map_format.cpp patches
-void new_map_format(md::ROM& rom, World& world);
