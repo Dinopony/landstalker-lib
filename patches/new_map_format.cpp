@@ -12,10 +12,8 @@ constexpr uint16_t LINE_SIZE_IN_BYTES = LINE_SIZE_IN_WORDS * 2;
 static ByteArray map_foreground_as_bytes(MapLayout* layout)
 {
     std::vector<uint16_t> tile_values = layout->foreground_tiles();
-    std::cout << "Foreground count before = " << tile_values.size() << std::endl;
     while(!tile_values.empty() && *tile_values.rbegin() == 0x0000)
         tile_values.pop_back();
-    std::cout << "Foreground count after = " << tile_values.size() << std::endl << std::endl;
 
     ByteArray bytes;
     for(uint16_t tile : tile_values)
@@ -27,10 +25,8 @@ static ByteArray map_foreground_as_bytes(MapLayout* layout)
 static ByteArray map_background_as_bytes(MapLayout* layout)
 {
     std::vector<uint16_t> tile_values = layout->background_tiles();
-    std::cout << "Background count before = " << tile_values.size() << std::endl;
     while(!tile_values.empty() && *tile_values.rbegin() == 0x0000)
         tile_values.pop_back();
-    std::cout << "Background count after = " << tile_values.size() << std::endl << std::endl;
 
     ByteArray bytes;
     for(uint16_t tile : tile_values)
@@ -42,10 +38,8 @@ static ByteArray map_background_as_bytes(MapLayout* layout)
 static ByteArray map_heightmap_as_bytes(MapLayout* layout)
 {
     std::vector<uint16_t> tile_values = layout->heightmap();
-    std::cout << "Heightmap count before = " << tile_values.size() << std::endl;
     while(!tile_values.empty() && *tile_values.rbegin() == 0x4000)
         tile_values.pop_back();
-    std::cout << "Heightmap count after = " << tile_values.size() << std::endl << std::endl;
 
     ByteArray bytes;
     for(uint16_t tile : tile_values)
@@ -54,7 +48,7 @@ static ByteArray map_heightmap_as_bytes(MapLayout* layout)
     return bytes;
 }
 
-static uint32_t inject_map_data(md::ROM& rom, MapLayout* layout)
+static ByteArray encode_map_data(MapLayout* layout)
 {
     ByteArray data;
 
@@ -65,48 +59,11 @@ static uint32_t inject_map_data(md::ROM& rom, MapLayout* layout)
     data.add_byte(0xc); // heightmap left
     data.add_byte(layout->heightmap_width());
 
-    // HOUSE
-    // (0x8,0x9) | (0x0e 0x0f) ===> 0x9 + 0x3 = 0xc
-
-    // EXTERIOR
-    // (0x1,0x5) | (0x3a 0x3b) ===> 0x5 + 0x7
-
     data.add_bytes(map_foreground_as_bytes(layout));
     data.add_bytes(map_background_as_bytes(layout));
     data.add_bytes(map_heightmap_as_bytes(layout));
 
-    return rom.inject_bytes(data);
-}
-
-/**
- * Copy D0 words from A0 to A1, and stop if a 0xFFFF is found
- * @param rom
- * @return
- */
-static uint32_t inject_func_copy_words(md::ROM& rom)
-{
-    md::Code func_copy_words;
-    func_copy_words.movem_to_stack({ reg_D0 }, {});
-    {
-        func_copy_words.clrl(reg_D7);
-        func_copy_words.label("loop");
-        {
-            func_copy_words.movew(addr_(reg_A0), reg_D7);
-            func_copy_words.adda(2, reg_A0);
-            // Exit if word is a terminal word
-            func_copy_words.cmpiw(0xFFFF, reg_D7);
-            func_copy_words.beq("ret");
-            // Otherwise, just copy it
-            func_copy_words.movew(reg_D7, addr_(reg_A1));
-            func_copy_words.adda(2, reg_A1);
-        }
-        func_copy_words.dbra(reg_D0, "loop");
-    }
-    func_copy_words.label("ret");
-    func_copy_words.movem_from_stack({ reg_D0 }, {});
-    func_copy_words.rts();
-
-    return rom.inject_code(func_copy_words);
+    return data;
 }
 
 /**
@@ -114,20 +71,19 @@ static uint32_t inject_func_copy_words(md::ROM& rom)
  * @param rom
  * @return
  */
-static uint32_t inject_func_set_words(md::ROM& rom)
+static uint32_t inject_func_set_longs(md::ROM& rom)
 {
-    md::Code func_set_words;
+    md::Code func_set_longs;
     {
-        func_set_words.label("loop");
+        func_set_longs.label("loop");
         {
-            func_set_words.movew(reg_D1, addr_(reg_A1));
-            func_set_words.adda(2, reg_A1);
+            func_set_longs.movel(reg_D1, addr_postinc_(reg_A1));
         }
-        func_set_words.dbra(reg_D0, "loop");
+        func_set_longs.dbra(reg_D0, "loop");
     }
-    func_set_words.rts();
+    func_set_longs.rts();
 
-    return rom.inject_code(func_set_words);
+    return rom.inject_code(func_set_longs);
 }
 
 /**
@@ -141,71 +97,51 @@ static uint32_t inject_func_set_words(md::ROM& rom)
  * @param rom
  * @param world
  */
-static uint32_t inject_func_load_data_block(md::ROM& rom, uint32_t func_copy_words)
+static uint32_t inject_func_load_data_block(md::ROM& rom)
 {
     md::Code func_load_data_block;
+    func_load_data_block.movem_to_stack({}, { reg_A3 });
 
     func_load_data_block.adda(reg_D1, reg_A1); // advance to first non-empty line
     func_load_data_block.label("line");
     {
-        func_load_data_block.movem_to_stack({}, { reg_A1 }); // store line start address
+        // Store line starting address (A1) inside A3
+        func_load_data_block.movel(reg_A1, reg_A3);
         {
             func_load_data_block.adda(reg_D2, reg_A1); // advance to first non-empty word in line
-            func_load_data_block.clrl(reg_D0);
-            func_load_data_block.moveb(reg_D3, reg_D0);
-            func_load_data_block.jsr(func_copy_words); // copy D0 words from A0 to A1
-        }
-        func_load_data_block.movem_from_stack({}, { reg_A1 }); // restore line start address
+            // FIXME: Comp + Perf --> Remove the "fixed length" mechanism, exploit the fact that a block ID never uses the topmost bit?
+            func_load_data_block.movew(reg_D3, reg_D0); // setup the amount of words to copy inside D0
 
-        // Check if we left last function because of a terminal word
-        func_load_data_block.cmpiw(0xFFFF, reg_D7);
-        func_load_data_block.beq("ret");
+            // copy D0 words from A0 to A1, or until a 0xFFFF is found
+            func_load_data_block.label("loop");
+            {
+                func_load_data_block.movew(addr_postinc_(reg_A0), reg_D7);
+                func_load_data_block.bpl("not_minus");
+                {
+                    // We know that msb is set, so check if it is a 0xFFFF terminal word and stop everything if that's the case
+                    func_load_data_block.cmpiw(0xFFFF, reg_D7);
+                    func_load_data_block.beq("ret");
+                }
+                func_load_data_block.label("not_minus");
+                func_load_data_block.movew(reg_D7, addr_postinc_(reg_A1)); // If not a terminal word, just copy it
+            }
+            func_load_data_block.dbra(reg_D0, "loop");
+        }
+        func_load_data_block.movel(reg_A3, reg_A1);
 
         func_load_data_block.adda(LINE_SIZE_IN_BYTES, reg_A1); // advance to next line start
     }
     func_load_data_block.bra("line");
 
     func_load_data_block.label("ret");
+    func_load_data_block.movem_from_stack({}, { reg_A3 });
     func_load_data_block.rts();
 
     return rom.inject_code(func_load_data_block);
 }
 
-// TODO: Use postincrement instead of adda for performance
-
-void new_map_format(md::ROM& rom, World& world)
+static uint32_t inject_func_load_map(md::ROM& rom, uint32_t func_load_data_block, uint32_t func_set_longs)
 {
-    // Read layouts from the ROM
-    std::map<uint32_t, MapLayout*> unique_map_layouts;
-    for(uint16_t map_id = 601 ; map_id <= 609 ; ++map_id)
-    {
-        uint32_t addr = world.map(map_id)->address();
-        if(!unique_map_layouts.count(addr))
-            unique_map_layouts[addr] = io::decode_map_layout(rom, addr);
-    }
-
-    // Remove all vanilla map layouts from the ROM
-    rom.mark_empty_chunk(0xA2392, 0x11C926);
-
-    // Re-encode map layouts inside the ROM
-    for(auto it : unique_map_layouts)
-    {
-        uint32_t old_addr = it.first;
-        MapLayout* layout = it.second;
-        uint32_t new_addr = inject_map_data(rom, layout);
-
-        for(auto it2 : world.maps())
-        {
-            Map* map = it2.second;
-            if(map->address() == old_addr)
-                map->address(new_addr);
-        }
-    }
-
-    uint32_t func_copy_words = inject_func_copy_words(rom);
-    uint32_t func_set_words = inject_func_set_words(rom);
-    uint32_t func_load_data_block = inject_func_load_data_block(rom, func_copy_words);
-
     // Input: A2 = address of the map layout
     md::Code func_load_map;
     func_load_map.movem_to_stack({ reg_D0_D7 }, { reg_A0, reg_A1 });
@@ -213,16 +149,18 @@ void new_map_format(md::ROM& rom, World& world)
         func_load_map.clrl(reg_D0);
 
         // Clear foreground & background with 0x0000
-        func_load_map.movew(0x0000, reg_D1);
-        func_load_map.lea(0xFF7C02, reg_A1); // Foreground
-        func_load_map.movew(5476 * 2, reg_D0);
-        func_load_map.jsr(func_set_words);
+        // FIXME: Perf --> 5476 MOVEL + 5476 DBRA
+        func_load_map.movel(0x00000000, reg_D1);
+        func_load_map.lea(0xFF7C02, reg_A1);
+        func_load_map.movew(5476, reg_D0); // 5476 longs
+        func_load_map.jsr(func_set_longs);
 
         // Clear heightmap with 0x4000
-        func_load_map.movew(0x4000, reg_D1);
+        // FIXME: Perf --> 2738 MOVEL + 2738 DBRA
+        func_load_map.movel(0x40004000, reg_D1);
         func_load_map.lea(0xFFD192, reg_A1);
-        func_load_map.movew(5476, reg_D0);
-        func_load_map.jsr(func_set_words);
+        func_load_map.movew(5476 / 2, reg_D0); // 2738 longs
+        func_load_map.jsr(func_set_longs);
 
         // --------------------------------------------------------------------------------------------------------
 
@@ -273,8 +211,70 @@ void new_map_format(md::ROM& rom, World& world)
     }
     func_load_map.movem_from_stack({ reg_D0_D7 }, { reg_A0, reg_A1 });
     func_load_map.rts();
-    uint32_t func_load_map_addr = rom.inject_code(func_load_map);
-    std::cout << "func_load_map_addr = 0x" << std::hex << func_load_map_addr << std::dec << std::endl;
 
-    rom.set_code(0x2BC8, md::Code().jmp(func_load_map_addr));
+    return rom.inject_code(func_load_map);
+}
+
+static void evaluate_total_size(md::ROM& rom, World& world)
+{
+    std::map<uint32_t, MapLayout*> all_map_layouts;
+    for(auto it : world.maps())
+    {
+        Map* map = it.second;
+        uint32_t addr = map->address();
+        if(!all_map_layouts.count(addr))
+            all_map_layouts[addr] = io::decode_map_layout(rom, addr);
+    }
+
+    ByteArray full_data;
+    for(auto it : all_map_layouts)
+    {
+        MapLayout* layout = it.second;
+        full_data.add_bytes(encode_map_data(layout));
+    }
+
+    std::cout << "Full map data for all " << all_map_layouts.size() << " layouts takes " << full_data.size()/1000 << "KB" << std::endl;
+    std::ofstream dump("./map_enc_dump.bin");
+    dump.write((const char*)&(full_data[0]), full_data.size());
+    dump.close();
+}
+
+void new_map_format(md::ROM& rom, World& world)
+{
+    evaluate_total_size(rom, world);
+
+    // Read layouts from the ROM
+    std::map<uint32_t, MapLayout*> unique_map_layouts;
+    for(uint16_t map_id = 601 ; map_id <= 609 ; ++map_id)
+    {
+        uint32_t addr = world.map(map_id)->address();
+        if(!unique_map_layouts.count(addr))
+            unique_map_layouts[addr] = io::decode_map_layout(rom, addr);
+    }
+
+    // Remove all vanilla map layouts from the ROM
+    rom.mark_empty_chunk(0xA2392, 0x11C926);
+
+    // Re-encode map layouts inside the ROM
+    for(auto it : unique_map_layouts)
+    {
+        uint32_t old_addr = it.first;
+        MapLayout* layout = it.second;
+        uint32_t new_addr = rom.inject_bytes(encode_map_data(layout));
+
+        for(auto it2 : world.maps())
+        {
+            Map* map = it2.second;
+            if(map->address() == old_addr)
+                map->address(new_addr);
+        }
+    }
+
+    uint32_t func_set_longs = inject_func_set_longs(rom);
+    uint32_t func_load_data_block = inject_func_load_data_block(rom);
+
+    uint32_t func_load_map = inject_func_load_map(rom, func_load_data_block, func_set_longs);
+    std::cout << "func_load_map = 0x" << std::hex << func_load_map << std::dec << std::endl;
+
+    rom.set_code(0x2BC8, md::Code().jmp(func_load_map));
 }
