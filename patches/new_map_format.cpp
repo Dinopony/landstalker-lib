@@ -69,8 +69,6 @@ static uint32_t inject_func_load_data_block(md::ROM& rom)
             func_load_data_block.label("next_loop_iteration");
             func_load_data_block.dbra(reg_D0, "loop");
         }
-
-        func_load_data_block.label("go_to_next_line");
         func_load_data_block.movel(reg_A3, reg_A1);
         func_load_data_block.adda(LINE_SIZE_IN_BYTES, reg_A1); // advance to next line start
     }
@@ -88,12 +86,28 @@ static uint32_t inject_func_load_data_block(md::ROM& rom)
 
     // Code block handling the case where the msb is set
     func_load_data_block.label("minus_case");
+    // "10000000 00000000" case: block ending
     func_load_data_block.andiw(0x7FFF, reg_D7);
-    func_load_data_block.beq("go_to_next_line");    // 8000 case: line ending
-    func_load_data_block.cmpiw(0x7FFF, reg_D7);
-    func_load_data_block.beq("ret");                // FFFF case: block ending
-    func_load_data_block.movew(reg_D7, reg_D6);     // 8xxx case: skip as many words (amount stored in D6)
-    func_load_data_block.bra("skip");
+    func_load_data_block.beq("ret");
+
+    // Cut the upper part to determine the operand
+    func_load_data_block.movew(reg_D7, reg_D6);
+    func_load_data_block.lsrw(8, reg_D6);
+    func_load_data_block.lsrw(4, reg_D6);
+    // "1000AAAA AAAAAAAA" case: skip A words
+    func_load_data_block.cmpib(0x0, reg_D6); // TODO: Useful? Doesn't lsr set Z flag?
+    func_load_data_block.bne("not_skip");
+    {
+        func_load_data_block.movew(reg_D7, reg_D6);  // Setup the amount of words to skip
+        func_load_data_block.bra("skip");            // Start the skipping loop
+    }
+    func_load_data_block.label("not_skip");
+
+    // "1001XXXX XXXXXXXX" case: ????
+    // "1010AAAA BBBBBBBB" case: repeat A times byte B
+    // "1011AAAA AAAAAAAA" case: repeat next word A times
+    // "11BBBBBB AAAAAAAA" case: put byte B, then byte A
+
 
     return rom.inject_code(func_load_data_block);
 }
