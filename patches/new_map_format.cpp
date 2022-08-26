@@ -199,7 +199,7 @@ static void evaluate_total_size(md::ROM& rom, World& world)
     }
 
     std::cout << "Full map data for all " << all_map_layouts.size() << " layouts takes " << full_data.size()/1000 << "KB" << std::endl;
-    std::ofstream dump("./map_enc_dump.bin");
+    std::ofstream dump("./map_enc_dump.bin", std::ios::binary);
     dump.write((const char*)&(full_data[0]), (long)full_data.size());
     dump.close();
 }

@@ -4,6 +4,8 @@
 
 static ByteArray map_foreground_as_bytes(MapLayout* layout)
 {
+    constexpr uint16_t DEFAULT_VALUE = 0x0000;
+
     std::vector<uint16_t> tile_values = layout->foreground_tiles();
     while(!tile_values.empty() && *tile_values.rbegin() == 0x0000)
         tile_values.pop_back();
@@ -12,17 +14,21 @@ static ByteArray map_foreground_as_bytes(MapLayout* layout)
     uint16_t null_chain_size = 0;
     for(uint16_t tile : tile_values)
     {
-        if(tile == 0x0000)
-            null_chain_size += 1;
-        else
+        if(tile == DEFAULT_VALUE)
         {
-            if(null_chain_size > 0)
-            {
-                bytes.add_word(0x8000 + null_chain_size);
-                null_chain_size = 0;
-            }
-            bytes.add_word(tile);
+            null_chain_size += 1;
+            continue;
         }
+
+        if(null_chain_size > 0)
+        {
+            if(null_chain_size == 1)
+                bytes.add_word(DEFAULT_VALUE);
+            else
+                bytes.add_word(0x8000 + null_chain_size);
+            null_chain_size = 0;
+        }
+        bytes.add_word(tile);
     }
 
     bytes.add_word(0xFFFF);
@@ -31,6 +37,8 @@ static ByteArray map_foreground_as_bytes(MapLayout* layout)
 
 static ByteArray map_background_as_bytes(MapLayout* layout)
 {
+    constexpr uint16_t DEFAULT_VALUE = 0x0000;
+
     std::vector<uint16_t> tile_values = layout->background_tiles();
     while(!tile_values.empty() && *tile_values.rbegin() == 0x0000)
         tile_values.pop_back();
@@ -39,17 +47,21 @@ static ByteArray map_background_as_bytes(MapLayout* layout)
     uint16_t null_chain_size = 0;
     for(uint16_t tile : tile_values)
     {
-        if(tile == 0x0000)
-            null_chain_size += 1;
-        else
+        if(tile == DEFAULT_VALUE)
         {
-            if(null_chain_size > 0)
-            {
-                bytes.add_word(0x8000 + null_chain_size);
-                null_chain_size = 0;
-            }
-            bytes.add_word(tile);
+            null_chain_size += 1;
+            continue;
         }
+
+        if(null_chain_size > 0)
+        {
+            if(null_chain_size == 1)
+                bytes.add_word(DEFAULT_VALUE);
+            else
+                bytes.add_word(0x8000 + null_chain_size);
+            null_chain_size = 0;
+        }
+        bytes.add_word(tile);
     }
 
     bytes.add_word(0xFFFF);
@@ -58,6 +70,8 @@ static ByteArray map_background_as_bytes(MapLayout* layout)
 
 static ByteArray map_heightmap_as_bytes(MapLayout* layout)
 {
+    constexpr uint16_t DEFAULT_VALUE = 0x4000;
+
     std::vector<uint16_t> tile_values = layout->heightmap();
     while(!tile_values.empty() && *tile_values.rbegin() == 0x4000)
         tile_values.pop_back();
@@ -66,17 +80,21 @@ static ByteArray map_heightmap_as_bytes(MapLayout* layout)
     uint16_t null_chain_size = 0;
     for(uint16_t tile : tile_values)
     {
-        if(tile == 0x4000)
-            null_chain_size += 1;
-        else
+        if(tile == DEFAULT_VALUE)
         {
-            if(null_chain_size > 0)
-            {
-                bytes.add_word(0x8000 + null_chain_size);
-                null_chain_size = 0;
-            }
-            bytes.add_word(tile);
+            null_chain_size += 1;
+            continue;
         }
+
+        if(null_chain_size > 0)
+        {
+            if(null_chain_size == 1)
+                bytes.add_word(DEFAULT_VALUE);
+            else
+                bytes.add_word(0x8000 + null_chain_size);
+            null_chain_size = 0;
+        }
+        bytes.add_word(tile);
     }
 
     bytes.add_word(0xFFFF);

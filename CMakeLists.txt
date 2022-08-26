@@ -71,6 +71,7 @@ set(SOURCES
         "io/exports.cpp"
         "io/map_layout_decoder.cpp"
         "io/map_layout_encoder.cpp"
+        "io/map_layout_new_encoder.cpp"
         "io/world_rom_reader.cpp"
         "io/world_rom_writer.cpp"
         "io/textbanks_decoder.cpp"
