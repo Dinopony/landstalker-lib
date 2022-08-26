@@ -1,179 +1,190 @@
 #pragma once
 
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 namespace md
 {
-    enum class Size { BYTE, WORD, LONG };
+enum class Size { BYTE, WORD, LONG };
 
-    class Param {
-    public:
-        constexpr Param() {}
+class Param {
+public:
+    constexpr Param() = default;
 
-        virtual uint16_t getXn() const = 0;
-        virtual uint16_t getM() const = 0;
+    [[nodiscard]] virtual uint16_t getXn() const = 0;
+    [[nodiscard]] virtual uint16_t getM() const = 0;
 
-        uint16_t getMXn() const { return (this->getM() << 3) + this->getXn(); }
-        uint16_t getXnM() const { return (this->getXn() << 3) + this->getM(); }
+    [[nodiscard]] uint16_t getMXn() const { return (this->getM() << 3) + this->getXn(); }
+    [[nodiscard]] uint16_t getXnM() const { return (this->getXn() << 3) + this->getM(); }
 
-        virtual std::vector<uint8_t> getAdditionnalData() const { return {}; }
-    };
+    [[nodiscard]] virtual std::vector<uint8_t> getAdditionnalData() const { return {}; }
+};
 
-    ////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 
-    class Register : public Param {
-    public:
-        constexpr explicit Register(uint8_t code) :
+class Register : public Param {
+public:
+    constexpr explicit Register(uint8_t code) :
             _code(code)
-        {}
+    {}
 
-        virtual uint16_t getXn() const { return _code & 0x7; }
+    [[nodiscard]] uint16_t getXn() const override { return _code & 0x7; }
 
-        virtual bool isDataRegister() const = 0;
-        bool isAddressRegister() const { return !isDataRegister(); }
+    [[nodiscard]] virtual bool isDataRegister() const = 0;
+    [[nodiscard]] bool isAddressRegister() const { return !isDataRegister(); }
 
-    protected:
-        uint8_t _code;
-    };
+protected:
+    uint8_t _code;
+};
 
-    class AddressRegister : public Register {
-    public:
-        constexpr explicit AddressRegister(uint8_t code) : Register(code) {}
+class AddressRegister : public Register {
+public:
+    constexpr explicit AddressRegister(uint8_t code) : Register(code) {}
 
-        virtual uint16_t getM() const { return 0x1; }
-        virtual bool isDataRegister() const { return false; }
-    };
+    [[nodiscard]] uint16_t getM() const override { return 0x1; }
+    [[nodiscard]] bool isDataRegister() const override { return false; }
+};
 
-    class DataRegister : public Register {
-    public:
-        constexpr DataRegister(uint8_t code) : Register(code) {}
+class DataRegister : public Register {
+public:
+    constexpr explicit DataRegister(uint8_t code) : Register(code) {}
 
-        virtual uint16_t getM() const { return 0x0; }
-        virtual bool isDataRegister() const { return true; }
-    };
+    [[nodiscard]] uint16_t getM() const override { return 0x0; }
+    [[nodiscard]] bool isDataRegister() const override { return true; }
+};
 
-    ////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 
-    class DirectAddress : public Param {
-    public:
-        constexpr explicit DirectAddress(uint32_t address) :
-            _address(address)
-        {}
+class DirectAddress : public Param {
+public:
+    constexpr explicit DirectAddress(uint32_t address, md::Size size) :
+            _address        (address),
+            _size           (size)
+    {}
 
-        virtual uint16_t getM() const { return 0x7; }
-        virtual uint16_t getXn() const { return 0x1; }
+    [[nodiscard]] uint16_t getM() const override { return 0x7; }
+    [[nodiscard]] uint16_t getXn() const override { return (_size == md::Size::LONG) ? 0x1 : 0x0; }
 
-        uint32_t getAddress() const { return _address; }
+    [[nodiscard]] uint32_t getAddress() const { return _address; }
+    [[nodiscard]] md::Size getSize() const { return _size; }
 
-        virtual std::vector<uint8_t> getAdditionnalData() const
+    [[nodiscard]] std::vector<uint8_t> getAdditionnalData() const override
+    {
+        std::vector<uint8_t> addressBytes;
+        if(_size == md::Size::LONG)
         {
-            std::vector<uint8_t> addressBytes;
             addressBytes.emplace_back((_address >> 24) & 0xFF);
             addressBytes.emplace_back((_address >> 16) & 0xFF);
-            addressBytes.emplace_back((_address >> 8) & 0xFF);
-            addressBytes.emplace_back(_address & 0xFF);
-            return addressBytes;
         }
+        addressBytes.emplace_back((_address >> 8) & 0xFF);
+        addressBytes.emplace_back(_address & 0xFF);
+        return addressBytes;
+    }
 
-    private:
-        uint32_t _address;
-    };
+private:
+    uint32_t _address;
+    md::Size _size;
+};
 
-    ////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 
-    class AddressInRegister : public Param {
-    public:
-        constexpr AddressInRegister(const AddressRegister& reg, uint16_t offset = 0) :
+class AddressInRegister : public Param {
+public:
+    constexpr explicit AddressInRegister(AddressRegister reg, uint16_t offset = 0) :
             _offset(offset),
-            _reg(reg)
-        {}
+            _reg(std::move(reg))
+    {}
 
-        virtual uint16_t getM() const { return (_offset > 0) ? 0x5 : 0x2; }
-        virtual uint16_t getXn() const { return _reg.getXn(); }
+    [[nodiscard]] uint16_t getM() const override { return (_offset > 0) ? 0x5 : _m_without_offset; }
+    [[nodiscard]] uint16_t getXn() const override { return _reg.getXn(); }
 
-        virtual std::vector<uint8_t> getAdditionnalData() const
+    [[nodiscard]] std::vector<uint8_t> getAdditionnalData() const override
+    {
+        if (_offset > 0)
         {
-            if (_offset > 0)
-            {
-                std::vector<uint8_t> offset_bytes;
-                offset_bytes.emplace_back((_offset >> 8) & 0xFF);
-                offset_bytes.emplace_back(_offset & 0xFF);
-                return offset_bytes;
-            }
-            else return {};
+            std::vector<uint8_t> offset_bytes;
+            offset_bytes.emplace_back((_offset >> 8) & 0xFF);
+            offset_bytes.emplace_back(_offset & 0xFF);
+            return offset_bytes;
         }
+        else return {};
+    }
 
-    private:
-        AddressRegister _reg;
-        uint16_t _offset;
-    };
+    void post_increment() { _m_without_offset = 0x3; }
+    void pre_decrement() { _m_without_offset = 0x4; }
 
-    ////////////////////////////////////////////////////////////////////////////
+private:
+    AddressRegister _reg;
+    uint16_t _offset;
+    uint8_t _m_without_offset = 0x2;
+};
 
-    class AddressWithIndex : public Param {
-    public:
-        constexpr AddressWithIndex(const AddressRegister& baseAddrReg, const Register& offsetReg, Size offsetRegSize, uint8_t additionnalOffset = 0) :
+////////////////////////////////////////////////////////////////////////////
+
+class AddressWithIndex : public Param {
+public:
+    constexpr AddressWithIndex(const AddressRegister& baseAddrReg, const Register& offsetReg, Size offsetRegSize, uint8_t additionnalOffset = 0) :
             _baseAddrReg(baseAddrReg),
             _offsetReg(offsetReg),
             _offsetRegSize(offsetRegSize),
             _additionnalOffset(additionnalOffset)
-        {}
+    {}
 
-        virtual uint16_t getM() const { return 0x6; }
-        virtual uint16_t getXn() const { return _baseAddrReg.getXn(); }
+    [[nodiscard]] uint16_t getM() const override { return 0x6; }
+    [[nodiscard]] uint16_t getXn() const override { return _baseAddrReg.getXn(); }
 
-        virtual std::vector<uint8_t> getAdditionnalData() const
+    [[nodiscard]] std::vector<uint8_t> getAdditionnalData() const override
+    {
+        uint8_t msb = (_offsetReg.getMXn() & 0x0F) << 4;
+        if (_offsetRegSize == Size::LONG)
+            msb |= 0x8;
+
+        uint8_t lsb = _additionnalOffset;
+
+        std::vector<uint8_t> briefExtensionWord;
+        briefExtensionWord.emplace_back(msb);
+        briefExtensionWord.emplace_back(lsb);
+        return briefExtensionWord;
+    }
+
+private:
+    const AddressRegister& _baseAddrReg;
+    const Register& _offsetReg;
+    Size _offsetRegSize;
+    uint8_t _additionnalOffset;
+};
+
+////////////////////////////////////////////////////////////////////////////
+
+class ImmediateValue : public Param {
+public:
+    explicit constexpr ImmediateValue(uint8_t value) : _size(Size::BYTE), _value(value) {}
+    explicit constexpr ImmediateValue(uint16_t value) : _size(Size::WORD), _value(value) {}
+    explicit constexpr ImmediateValue(uint32_t value) : _size(Size::LONG), _value(value) {}
+
+    [[nodiscard]] uint16_t getXn() const override { return 0x4; }
+    [[nodiscard]] uint16_t getM() const override { return 0x7; }
+
+    [[nodiscard]] std::vector<uint8_t> getAdditionnalData() const override
+    {
+        std::vector<uint8_t> valueBytes;
+        if (_size == Size::LONG)
         {
-            uint8_t msb = (_offsetReg.getMXn() & 0x0F) << 4;
-            if (_offsetRegSize == Size::LONG)
-                msb |= 0x8;
-
-            uint8_t lsb = _additionnalOffset;
-
-            std::vector<uint8_t> briefExtensionWord;
-            briefExtensionWord.emplace_back(msb);
-            briefExtensionWord.emplace_back(lsb);
-            return briefExtensionWord;
+            valueBytes.emplace_back((_value >> 24) & 0xFF);
+            valueBytes.emplace_back((_value >> 16) & 0xFF);
         }
 
-    private:
-        const AddressRegister& _baseAddrReg;
-        const Register& _offsetReg;
-        Size _offsetRegSize;
-        uint8_t _additionnalOffset;
-    };
+        valueBytes.emplace_back((_value >> 8) & 0xFF);
+        valueBytes.emplace_back(_value & 0xFF);
 
-    ////////////////////////////////////////////////////////////////////////////
+        return valueBytes;
+    }
 
-    class ImmediateValue : public Param {
-    public:
-        explicit constexpr ImmediateValue(uint8_t value) : _size(Size::BYTE), _value(value) {}
-        explicit constexpr ImmediateValue(uint16_t value) : _size(Size::WORD), _value(value) {}
-        explicit constexpr ImmediateValue(uint32_t value) : _size(Size::LONG), _value(value) {}
-
-        virtual uint16_t getXn() const { return 0x4; }
-        virtual uint16_t getM() const { return 0x7; }
-
-        virtual std::vector<uint8_t> getAdditionnalData() const
-        {
-            std::vector<uint8_t> valueBytes;
-            if (_size == Size::LONG)
-            {
-                valueBytes.emplace_back((_value >> 24) & 0xFF);
-                valueBytes.emplace_back((_value >> 16) & 0xFF);
-            }
-
-            valueBytes.emplace_back((_value >> 8) & 0xFF);
-            valueBytes.emplace_back(_value & 0xFF);
-
-            return valueBytes;
-        }
-
-    private:
-        uint32_t _value;
-        Size _size;
-    };
+private:
+    uint32_t _value;
+    Size _size;
+};
 }
 
 #define reg_A0 md::AddressRegister(0)
@@ -216,15 +227,37 @@ inline constexpr md::ImmediateValue lval_(T value)
 }
 
 template<typename T = void>
-inline constexpr md::DirectAddress addr_(uint32_t address)
+inline constexpr md::DirectAddress addr_(uint32_t address, md::Size size = md::Size::LONG)
 {
-    return md::DirectAddress(address);
+    return md::DirectAddress(address, size);
+}
+
+template<typename T = void>
+inline constexpr md::DirectAddress addrw_(uint32_t address)
+{
+    return addr_(address, md::Size::WORD);
 }
 
 template<typename T = void>
 inline constexpr md::AddressInRegister addr_(const md::AddressRegister& addressRegister)
 {
     return md::AddressInRegister(addressRegister);
+}
+
+template<typename T = void>
+inline constexpr md::AddressInRegister addr_postinc_(const md::AddressRegister& addressRegister)
+{
+    md::AddressInRegister ret(addressRegister);
+    ret.post_increment();
+    return ret;
+}
+
+template<typename T = void>
+inline constexpr md::AddressInRegister addr_predec_(const md::AddressRegister& addressRegister)
+{
+    md::AddressInRegister ret(addressRegister);
+    ret.pre_decrement();
+    return ret;
 }
 
 template<typename T>
@@ -236,8 +269,16 @@ inline constexpr md::AddressInRegister addr_(const md::AddressRegister& addressR
 template<typename T = void>
 inline constexpr md::AddressWithIndex addr_(  const md::AddressRegister& addressRegister,
                                               const md::DataRegister& offsetDataRegister,
-                                              md::Size dataRegisterSize = md::Size::LONG,
-                                              uint8_t additionnalOffset = 0)
+                                              uint8_t additionnalOffset = 0,
+                                              md::Size dataRegisterSize = md::Size::LONG)
 {
     return md::AddressWithIndex(addressRegister, offsetDataRegister, dataRegisterSize, additionnalOffset);
+}
+
+template<typename T = void>
+inline constexpr md::AddressWithIndex addrw_(  const md::AddressRegister& addressRegister,
+                                               const md::DataRegister& offsetDataRegister,
+                                               uint8_t additionnalOffset = 0)
+{
+    return addr_(addressRegister, offsetDataRegister, additionnalOffset, md::Size::WORD);
 }

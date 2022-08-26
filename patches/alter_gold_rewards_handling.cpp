@@ -27,7 +27,7 @@ static uint32_t inject_function_check_gold_reward(md::ROM& rom, uint32_t gold_re
 
     func_get_gold_reward.movem_to_stack({}, { reg_A0 });
     func_get_gold_reward.lea(gold_rewards_block, reg_A0);
-    func_get_gold_reward.moveb(addr_(reg_A0, reg_D0, md::Size::WORD), reg_D0);  // move.b (A0, D0.w), D0 : 1030 0000
+    func_get_gold_reward.moveb(addrw_(reg_A0, reg_D0), reg_D0);  // move.b (A0, D0.w), D0 : 1030 0000
     func_get_gold_reward.movem_from_stack({}, { reg_A0 });
     func_get_gold_reward.rts();
 
