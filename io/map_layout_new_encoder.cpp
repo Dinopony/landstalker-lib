@@ -24,20 +24,35 @@ static ByteArray encode_data_block(const std::vector<uint16_t>& data_block, uint
                 bytes.add_word(0x8000 + effective_size);
                 current_chain_size -= effective_size;
             }
-           //else if(current_chain_word <= 0x00FF)
-           //{
-           //    // "1010AAAA BBBBBBBB" case: repeat A times byte B
-           //    uint16_t effective_size = std::min(current_chain_size, (uint32_t)0x000F);
-           //    bytes.add_word(0xA000 + (effective_size << 8) + current_chain_word);
-           //    current_chain_size -= effective_size;
-           //}
-            else
+            else if(current_chain_word <= 0x00FF)
+            {
+                // "1010AAAA BBBBBBBB" case: repeat A times byte B
+                uint16_t effective_size = std::min(current_chain_size, (uint32_t)0x000F);
+                bytes.add_word(0xA000 + (effective_size << 8) + current_chain_word);
+                current_chain_size -= effective_size;
+            }
+            else if(current_chain_size > 2)
             {
                 // "1011AAAA AAAAAAAA" case: repeat next word A times
-                // TODO
+                uint16_t effective_size = std::min(current_chain_size, (uint32_t)0x0FFF);
+                bytes.add_word(0xB000 + effective_size);
+                bytes.add_word(current_chain_word);
+                current_chain_size -= effective_size;
+            }
+            else
+            {
                 bytes.add_word(current_chain_word);
                 current_chain_size--;
             }
+
+            // "1001XWWW WWWWWWWW" case: repeat word W 2 or 3 times (depending on X) while increasing on every go)
+
+            // "1001" ???
+            // "1100" ???
+            // "1101" ???
+            // "1110" ???
+            // "1111" ???
+            // put byte B, then byte A ?
         }
 
         // If the word is "lonely", just write it

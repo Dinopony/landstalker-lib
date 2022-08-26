@@ -43,8 +43,10 @@ static uint32_t inject_func_set_longs(md::ROM& rom)
 static uint32_t inject_func_load_data_block(md::ROM& rom)
 {
     md::Code func_load_data_block;
-    func_load_data_block.movem_to_stack({}, { reg_A3 });
+    func_load_data_block.movem_to_stack({ reg_D0_D7 }, { reg_A3 });
     func_load_data_block.clrl(reg_D6);
+    func_load_data_block.clrl(reg_D5);
+    func_load_data_block.clrl(reg_D4);
 
     func_load_data_block.adda(reg_D1, reg_A1); // advance to first non-empty line
     func_load_data_block.label("line");
@@ -59,8 +61,10 @@ static uint32_t inject_func_load_data_block(md::ROM& rom)
             func_load_data_block.label("loop");
             {
                 // If there are still words to skip, skip it!
-                func_load_data_block.tstw(reg_D6);
+                func_load_data_block.tstw(reg_D5);
                 func_load_data_block.bne("skip");
+                func_load_data_block.tstw(reg_D4);
+                func_load_data_block.bne("repeat");
 
                 func_load_data_block.movew(addr_postinc_(reg_A0), reg_D7);
                 func_load_data_block.bmi("minus_case");
@@ -75,13 +79,19 @@ static uint32_t inject_func_load_data_block(md::ROM& rom)
     func_load_data_block.bra("line");
 
     func_load_data_block.label("ret");
-    func_load_data_block.movem_from_stack({}, { reg_A3 });
+    func_load_data_block.movem_from_stack({ reg_D0_D7 }, { reg_A3 });
     func_load_data_block.rts();
 
     // Code block handling the case where we need to skip iterations
     func_load_data_block.label("skip");
-    func_load_data_block.subiw(1, reg_D6);
+    func_load_data_block.subiw(1, reg_D5);
     func_load_data_block.adda(2, reg_A1);
+    func_load_data_block.bra("next_loop_iteration");
+
+    // Code block handling the case where we need to repeat data
+    func_load_data_block.label("repeat");
+    func_load_data_block.subiw(1, reg_D4);
+    func_load_data_block.movew(reg_D6, addr_postinc_(reg_A1));
     func_load_data_block.bra("next_loop_iteration");
 
     // Code block handling the case where the msb is set
@@ -90,24 +100,41 @@ static uint32_t inject_func_load_data_block(md::ROM& rom)
     func_load_data_block.andiw(0x7FFF, reg_D7);
     func_load_data_block.beq("ret");
 
-    // Cut the upper part to determine the operand
+    // Split the operand (D7) from the data (D6)
     func_load_data_block.movew(reg_D7, reg_D6);
-    func_load_data_block.lsrw(8, reg_D6);
-    func_load_data_block.lsrw(4, reg_D6);
-    // "1000AAAA AAAAAAAA" case: skip A words
-    func_load_data_block.cmpib(0x0, reg_D6); // TODO: Useful? Doesn't lsr set Z flag?
+    func_load_data_block.andiw(0x0FFF, reg_D6);
+    func_load_data_block.lsrw(8, reg_D7);
+    func_load_data_block.lsrw(4, reg_D7);
     func_load_data_block.bne("not_skip");
     {
-        func_load_data_block.movew(reg_D7, reg_D6);  // Setup the amount of words to skip
+        // "1000AAAA AAAAAAAA" case: skip A words
+        func_load_data_block.movew(reg_D6, reg_D5);  // Setup the amount of words to skip
         func_load_data_block.bra("skip");            // Start the skipping loop
     }
     func_load_data_block.label("not_skip");
-
-    // "1001XXXX XXXXXXXX" case: ????
-    // "1010AAAA BBBBBBBB" case: repeat A times byte B
-    // "1011AAAA AAAAAAAA" case: repeat next word A times
-    // "11BBBBBB AAAAAAAA" case: put byte B, then byte A
-
+    func_load_data_block.cmpib(0x2, reg_D7);
+    func_load_data_block.bne("not_repeat_byte");
+    {
+        // "1010AAAA BBBBBBBB" case: repeat A times byte B
+        // Setup amount of repeats (D4)
+        func_load_data_block.movew(reg_D6, reg_D4);
+        func_load_data_block.lsrw(8, reg_D4);
+        // Setup word to repeat (D6)
+        func_load_data_block.andiw(0x00FF, reg_D6);
+        func_load_data_block.bra("repeat");            // Start the repeat loop
+    }
+    func_load_data_block.label("not_repeat_byte");
+    func_load_data_block.cmpib(0x3, reg_D7);
+    func_load_data_block.bne("not_repeat_word");
+    {
+        // "1011AAAA AAAAAAAA" case: repeat next word A times
+        // Setup amount of repeats (D4)
+        func_load_data_block.movew(reg_D6, reg_D4);
+        // Setup word to repeat (D6)
+        func_load_data_block.movew(addr_postinc_(reg_A0), reg_D6);
+        func_load_data_block.bra("repeat");            // Start the repeat loop
+    }
+    func_load_data_block.label("not_repeat_word");
 
     return rom.inject_code(func_load_data_block);
 }
@@ -213,6 +240,28 @@ static void evaluate_total_size(md::ROM& rom, World& world)
     }
 
     std::cout << "Full map data for all " << all_map_layouts.size() << " layouts takes " << full_data.size()/1000 << "KB" << std::endl;
+
+    size_t repeating_words = 0;
+    size_t saveable_words = 0;
+    uint16_t current_word = full_data[0];
+    size_t current_chain_size = 0;
+    for(size_t i=1 ; i<full_data.size() ; i++)
+    {
+        if(full_data[i] == current_word)
+            current_chain_size++;
+        else
+        {
+            if(current_chain_size)
+            {
+                repeating_words++;
+                saveable_words += current_chain_size;
+            }
+            current_chain_size = 0;
+            current_word = full_data[i];
+        }
+    }
+    std::cout << saveable_words << " savable words scattered in " <<  repeating_words  << "chains" << std::endl;
+
     std::ofstream dump("./map_enc_dump.bin", std::ios::binary);
     dump.write((const char*)&(full_data[0]), (long)full_data.size());
     dump.close();
@@ -239,13 +288,23 @@ void new_map_format(md::ROM& rom, World& world)
     {
         uint32_t old_addr = it.first;
         MapLayout* layout = it.second;
-        uint32_t new_addr = rom.inject_bytes(io::encode_map_layout(layout));
+
+        ByteArray bytes = io::encode_map_layout(layout);
+        uint32_t new_addr = rom.inject_bytes(bytes);
+
+        std::ofstream dump("./map_" + std::to_string(new_addr) + ".bin", std::ios::binary);
+        dump.write((const char*)&(bytes[0]), (long)bytes.size());
+        dump.close();
 
         for(auto it2 : world.maps())
         {
+            uint16_t map_id = it2.first;
             Map* map = it2.second;
             if(map->address() == old_addr)
+            {
                 map->address(new_addr);
+                std::cout << "Map #" << map_id << " address is " << new_addr << std::endl;
+            }
         }
     }
 
@@ -253,7 +312,9 @@ void new_map_format(md::ROM& rom, World& world)
     uint32_t func_load_data_block = inject_func_load_data_block(rom);
 
     uint32_t func_load_map = inject_func_load_map(rom, func_load_data_block, func_set_longs);
+
     std::cout << "func_load_map = 0x" << std::hex << func_load_map << std::dec << std::endl;
+    std::cout << "func_load_data_block = 0x" << std::hex << func_load_data_block << std::dec << std::endl;
 
     rom.set_code(0x2BC8, md::Code().jmp(func_load_map));
 }
