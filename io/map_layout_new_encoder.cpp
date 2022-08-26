@@ -14,7 +14,6 @@ static ByteArray encode_data_block(const std::vector<uint16_t>& data_block, uint
     uint16_t current_chain_word = 0x0000;
     auto output_chain = [&]()
     {
-        // If we reach here, that means we broke the current chain if there was one
         while(current_chain_size > 1)
         {
             if(current_chain_word == default_value)
@@ -38,6 +37,13 @@ static ByteArray encode_data_block(const std::vector<uint16_t>& data_block, uint
 //                bytes.add_word(0xFFFF);
 //                current_chain_size -= effective_size;
 //            }
+//            else if(current_chain_word <= 0x3FF)
+//            {
+//                // "1110WWWW WWWWWWXX" case: repeat 2+X times word W
+//                uint16_t effective_size = std::min(current_chain_size, (uint32_t)5);
+//                bytes.add_word(0xE000 + (current_chain_word << 2) + (effective_size - 2));
+//                current_chain_size -= effective_size;
+//            }
             else if(current_chain_size > 2)
             {
                 // "1011AAAA AAAAAAAA" case: repeat next word A times
@@ -46,34 +52,17 @@ static ByteArray encode_data_block(const std::vector<uint16_t>& data_block, uint
                 bytes.add_word(current_chain_word);
                 current_chain_size -= effective_size;
             }
-            else
-            {
-                bytes.add_word(current_chain_word);
-                current_chain_size--;
-            }
+            else break;
 
-            // "1100" case: repeat word W 2 or 3 times (depending on X) while increasing on every go)
             // "1101" ???
-            // "1110" ???
+
             // "1111" ???
-            // put byte B, then byte A ?
         }
 
-        if(current_chain_size == 1)
+        while(current_chain_size > 0)
         {
-            uint16_t last_word = (bytes.size() >= 2) ? bytes.last_word() : 0x8000;
-            bool is_last_word_operand = (last_word & 0x8000);
-
-            if(!is_last_word_operand && current_chain_word <= 0x3F && last_word <= 0x3F)
-            {
-                // "1001AAAA AABBBBBB" case: place byte A then byte B as words
-                uint16_t new_word = 0x9000 + (last_word << 6) + current_chain_word;
-                bytes.word_at(bytes.size()-2, new_word);
-            }
-            else
-            {
-                bytes.add_word(current_chain_word);
-            }
+            bytes.add_word(current_chain_word);
+            current_chain_size--;
         }
     };
 
@@ -92,6 +81,52 @@ static ByteArray encode_data_block(const std::vector<uint16_t>& data_block, uint
 
     output_chain();
     bytes.add_word(0x8000);
+
+    // =========== Post processing ==============
+    // Pack successive increasing values, etc...
+
+    uint16_t last_word;
+    uint16_t current_word = bytes.word_at(0);
+    for(size_t i=2 ; i<bytes.size() ; i+=2)
+    {
+        last_word = current_word;
+        current_word = bytes.word_at(i);
+
+        bool is_last_word_operand = (last_word & 0x8000);
+        bool is_current_word_operand = (current_word & 0x8000);
+        if(is_current_word_operand || is_last_word_operand)
+            continue;
+
+/*        if(current_word == last_word + 1 && last_word <= 0x3FF)
+        {
+            // "1100WWWW WWWWWWXX" case: repeat word W 2+X times while incrementing value on every write
+            size_t x = 0;
+            size_t forward_cursor = i+2;
+            while(forward_cursor < bytes.size() && x < 3)
+            {
+                uint16_t next_byte = bytes.word_at(forward_cursor);
+                if(next_byte & 0x8000)
+                    break;
+                if(next_byte != current_word + 1 + x)
+                    break;
+                ++x;
+                bytes.remove_word(forward_cursor);
+            }
+            current_word = 0xC000 + (last_word << 2) + x;
+            bytes.remove_word(i);
+            i -= 2;
+            bytes.word_at(i, current_word);
+        }
+        else*/if(current_word <= 0x3F && last_word <= 0x3F)
+        {
+            // "1001AAAA AABBBBBB" case: place byte A then byte B as words
+            current_word = 0x9000 + (last_word << 6) + current_word;
+            bytes.remove_word(i);
+            i -= 2;
+            bytes.word_at(i, current_word);
+        }
+    }
+
     return bytes;
 }
 
@@ -108,6 +143,18 @@ ByteArray io::encode_map_layout(MapLayout* layout)
 
     data.add_bytes(encode_data_block(layout->foreground_tiles(), 0x0000));
     data.add_bytes(encode_data_block(layout->background_tiles(), 0x0000));
+
+//    std::vector<uint16_t> swapped_heightmap = layout->heightmap();
+//    for(size_t i=0 ; i<swapped_heightmap.size() ; ++i)
+//    {
+//        uint16_t value = swapped_heightmap[i];
+//        uint16_t flag = value & 0xF000;
+//        uint16_t height = value & 0x0F00;
+//        uint16_t floor_type = value & 0x00FF;
+//        swapped_heightmap[i] = (flag >> 8) + (height >> 8) + (floor_type << 16);
+//    }
+//    data.add_bytes(encode_data_block(swapped_heightmap, 0x0040));
+
     data.add_bytes(encode_data_block(layout->heightmap(), 0x4000));
 
     return data;

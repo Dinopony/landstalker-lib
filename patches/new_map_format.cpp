@@ -85,7 +85,7 @@ static uint32_t inject_func_load_data_block(md::ROM& rom)
     // Code block handling the case where we need to skip iterations
     func_load_data_block.label("skip");
     func_load_data_block.subiw(1, reg_D5);
-    func_load_data_block.adda(2, reg_A1);
+    func_load_data_block.addql(2, reg_A1);
     func_load_data_block.bra("next_loop_iteration");
 
     // Code block handling the case where we need to repeat data
@@ -202,7 +202,7 @@ static uint32_t inject_func_load_map(md::ROM& rom, uint32_t func_load_data_block
 
         // Make A0 point on the beginning of actual data
         func_load_map.movel(reg_A2, reg_A0);
-        func_load_map.adda(6, reg_A0);
+        func_load_map.addql(6, reg_A0);
 
         // Copy foreground
         func_load_map.lea(0xFF7C02, reg_A1);
@@ -237,46 +237,21 @@ static uint32_t inject_func_load_map(md::ROM& rom, uint32_t func_load_data_block
     return rom.inject_code(func_load_map);
 }
 
-static void evaluate_total_size(md::ROM& rom, World& world)
-{
-    std::map<uint32_t, MapLayout*> all_map_layouts;
-    for(auto it : world.maps())
-    {
-        Map* map = it.second;
-        uint32_t addr = map->address();
-        if(!all_map_layouts.count(addr))
-            all_map_layouts[addr] = io::decode_map_layout(rom, addr);
-    }
-
-    ByteArray full_data;
-    for(auto it : all_map_layouts)
-    {
-        MapLayout* layout = it.second;
-        full_data.add_bytes(io::encode_map_layout(layout));
-    }
-
-    std::cout << "Full map data for all " << all_map_layouts.size() << " layouts takes " << full_data.size()/1000 << "KB" << std::endl;
-
-//    std::ofstream dump("./map_enc_dump.bin", std::ios::binary);
-//    dump.write((const char*)&(full_data[0]), (long)full_data.size());
-//    dump.close();
-}
-
 void new_map_format(md::ROM& rom, World& world)
 {
-    evaluate_total_size(rom, world);
-
     // Read layouts from the ROM
     std::map<uint32_t, MapLayout*> unique_map_layouts;
-    for(uint16_t map_id = 601 ; map_id <= 609 ; ++map_id)
+    for(auto it : world.maps())
     {
-        uint32_t addr = world.map(map_id)->address();
+        uint32_t addr = it.second->address();
         if(!unique_map_layouts.count(addr))
             unique_map_layouts[addr] = io::decode_map_layout(rom, addr);
     }
 
     // Remove all vanilla map layouts from the ROM
     rom.mark_empty_chunk(0xA2392, 0x11C926);
+
+    uint32_t total_size = 0;
 
     // Re-encode map layouts inside the ROM
     for(auto it : unique_map_layouts)
@@ -285,9 +260,10 @@ void new_map_format(md::ROM& rom, World& world)
         MapLayout* layout = it.second;
 
         ByteArray bytes = io::encode_map_layout(layout);
+        total_size += bytes.size();
         uint32_t new_addr = rom.inject_bytes(bytes);
 
-        std::ofstream dump("./map_" + std::to_string(new_addr) + ".bin", std::ios::binary);
+        std::ofstream dump("./map_layouts/map_" + std::to_string(old_addr) + ".bin", std::ios::binary);
         dump.write((const char*)&(bytes[0]), (long)bytes.size());
         dump.close();
 
@@ -298,10 +274,12 @@ void new_map_format(md::ROM& rom, World& world)
             if(map->address() == old_addr)
             {
                 map->address(new_addr);
-                std::cout << "Map #" << map_id << " address is " << new_addr << std::endl;
+//                std::cout << "Map #" << map_id << " address is " << old_addr << std::endl;
             }
         }
     }
+
+    std::cout << "Full map data for all " << unique_map_layouts.size() << " layouts takes " << total_size/1000 << "KB" << std::endl;
 
     uint32_t func_set_longs = inject_func_set_longs(rom);
     uint32_t func_load_data_block = inject_func_load_data_block(rom);
