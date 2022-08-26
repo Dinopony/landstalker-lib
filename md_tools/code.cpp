@@ -253,8 +253,10 @@ Code& Code::moveq(uint8_t value, const DataRegister& dx)
 
 Code& Code::addq(uint8_t value, const Register& Rx, Size size)
 {
-    if(value >= 8)
+    if(value == 0 || value > 8)
         throw std::exception(); // Impossible
+    if(value == 8)
+        value = 0;
 
     uint16_t size_code = 0x0;
     if (size == Size::WORD)
