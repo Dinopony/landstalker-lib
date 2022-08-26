@@ -534,16 +534,16 @@ void Code::resolve_branches()
         if (_labels.count(label))
         {
             uint32_t label_address = _labels[label];
-            int32_t address_offset = static_cast<int32_t>(label_address - branch_address);
-            int16_t truncated_offset = static_cast<int16_t>(address_offset);
-            if ((int32_t)truncated_offset != address_offset)
+            int32_t offset = (int32_t)(label_address - branch_address);
+            if(offset > 0x7FFF || offset < -0x7FFF)
             {
                 throw LandstalkerException("Offset for branch at byte " + std::to_string(branch_address) +
                                            " is too big (cannot be expressed as word)");
             }
 
+            int16_t truncated_offset = (int16_t)(label_address - branch_address);
             uint16_t truncated_offset_as_word = static_cast<uint16_t>(truncated_offset);
-            if (truncated_offset_as_word > 0xFF)
+            if (truncated_offset > 0x7F || truncated_offset < -0x7F)
             {
                 // Branch offset is more than one byte long, we need to add an optional displacement
                 _bytes.insert(_bytes.begin() + branch_address, static_cast<uint8_t>(truncated_offset_as_word >> 8));
