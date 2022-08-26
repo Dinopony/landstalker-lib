@@ -43,10 +43,11 @@ Code& Code::bsr(uint16_t offset)
     return *this;
 }
 
-Code& Code::jsr(uint32_t address)
+Code& Code::jsr(const Param& target)
 {
-    this->add_opcode(0x4EB9);
-    this->add_long(address);
+    uint16_t opcode = 0x4E80 + target.getMXn();
+    this->add_opcode(opcode);
+    this->add_bytes(target.getAdditionnalData());
     return *this;
 }
 
@@ -55,13 +56,6 @@ Code& Code::jmp(const Param& target)
     uint16_t opcode = 0x4EC0 + target.getMXn();
     this->add_opcode(opcode);
     this->add_bytes(target.getAdditionnalData());
-    return *this;
-}
-
-Code& Code::jmp(uint32_t address)
-{
-    this->add_opcode(0x4EF9);
-    this->add_long(address);
     return *this;
 }
 
@@ -199,6 +193,14 @@ Code& Code::bcc(const std::string& label)
     return *this;
 }
 
+Code& Code::bcs(const std::string& label)
+{
+    this->add_opcode(0x6500);
+    _pending_branches[static_cast<uint32_t>(_bytes.size())] = label;
+    this->resolve_branches();
+    return *this;
+}
+
 Code& Code::dbra(const DataRegister& dx, const std::string& label)
 {
     this->add_opcode(0x51C8 + dx.getXn());
@@ -251,6 +253,9 @@ Code& Code::moveq(uint8_t value, const DataRegister& dx)
 
 Code& Code::addq(uint8_t value, const Register& Rx, Size size)
 {
+    if(value >= 8)
+        throw std::exception(); // Impossible
+
     uint16_t size_code = 0x0;
     if (size == Size::WORD)
         size_code = 0x1;
@@ -369,6 +374,40 @@ Code& Code::subi(const ImmediateValue& value, const Param& target, Size size)
     return *this;
 }
 
+Code& Code::add(const Param& param, const DataRegister& reg, Size size, bool store_in_param)
+{
+    uint16_t size_code = 0x0;
+    if (size == Size::WORD)
+        size_code = 0x1;
+    else if (size == Size::LONG)
+        size_code = 0x2;
+
+    uint16_t store_in_param_mask = (store_in_param) ? 1 : 0;
+
+    uint16_t opcode = 0xD000 + (reg.getXn() << 9) + (store_in_param_mask << 8) + (size_code << 6) + param.getMXn();
+    this->add_opcode(opcode);
+    this->add_bytes(param.getAdditionnalData());
+
+    return *this;
+}
+
+Code& Code::sub(const Param& param, const DataRegister& reg, Size size, bool param_minus_reg)
+{
+    uint16_t size_code = 0x0;
+    if (size == Size::WORD)
+        size_code = 0x1;
+    else if (size == Size::LONG)
+        size_code = 0x2;
+
+    uint16_t param_minus_reg_mask = (param_minus_reg) ? 1 : 0;
+
+    uint16_t opcode = 0x9000 + (reg.getXn() << 9) + (param_minus_reg_mask << 8) + (size_code << 6) + param.getMXn();
+    this->add_opcode(opcode);
+    this->add_bytes(param.getAdditionnalData());
+
+    return *this;
+}
+
 Code& Code::mulu(const Param& value, const DataRegister& dx)
 {
     uint16_t opcode = 0xC0C0 + (dx.getXn() << 9) + value.getMXn();
@@ -395,7 +434,15 @@ Code& Code::adda(const Param& value, const AddressRegister& ax)
     return *this;
 }
 
-Code& Code::lea(uint32_t value, const Register& ax)
+Code& Code::suba(const Param& value, const AddressRegister& ax)
+{
+    uint16_t opcode = 0x91C0 + (ax.getXn() << 9) + value.getMXn();
+    this->add_opcode(opcode);
+    this->add_bytes(value.getAdditionnalData());
+    return *this;
+}
+
+Code& Code::lea(uint32_t value, const AddressRegister& ax)
 {
     uint16_t opcode = 0x41F9 + (ax.getXn() << 9);
     this->add_opcode(opcode);
@@ -414,6 +461,38 @@ Code& Code::and_to_dx(const Param& from, const DataRegister& to, Size size)
     uint16_t opcode = 0xC000 + (to.getXn() << 9) + (size_code << 6) + from.getMXn();
     this->add_opcode(opcode);
     this->add_bytes(from.getAdditionnalData());
+
+    return *this;
+}
+
+Code& Code::or_to_dx(const Param& param, const DataRegister& reg, Size size, bool param_minus_reg)
+{
+    uint16_t size_code = 0x0;
+    if (size == Size::WORD)
+        size_code = 0x1;
+    else if (size == Size::LONG)
+        size_code = 0x2;
+
+    uint16_t param_minus_reg_mask = ((param_minus_reg) ? 1 : 0) << 8;
+
+    uint16_t opcode = 0x8000 + (reg.getXn() << 9) + param_minus_reg_mask + (size_code << 6) + param.getMXn();
+    this->add_opcode(opcode);
+    this->add_bytes(param.getAdditionnalData());
+
+    return *this;
+}
+
+Code& Code::not_to_dx(const DataRegister& reg, Size size)
+{
+    uint16_t size_code = 0x0;
+    if (size == Size::WORD)
+        size_code = 0x1;
+    else if (size == Size::LONG)
+        size_code = 0x2;
+
+    uint16_t opcode = 0x4600 + (size_code << 6) + reg.getMXn();
+    this->add_opcode(opcode);
+    this->add_bytes(reg.getAdditionnalData());
 
     return *this;
 }
@@ -506,9 +585,21 @@ Code& Code::extl(const DataRegister& reg)
     return *this;
 }
 
+Code& Code::swap(const DataRegister& reg)
+{
+    this->add_opcode(0x4840 + reg.getXn());
+    return *this;
+}
+
 Code& Code::rts()
 {
     this->add_word(0x4E75);
+    return *this;
+}
+
+Code& Code::rte()
+{
+    this->add_opcode(0x4E73);
     return *this;
 }
 
