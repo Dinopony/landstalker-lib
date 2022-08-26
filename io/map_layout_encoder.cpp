@@ -525,7 +525,7 @@ static void encode_heightmap(const std::vector<uint16_t>& heightmap_data, Bitstr
     }
 }
 
-ByteArray io::encode_map_layout(MapLayout* map_layout)
+ByteArray encode_map_layout_old(MapLayout* map_layout)
 {
     // -----------------------------------------------
     //      Setup phase
