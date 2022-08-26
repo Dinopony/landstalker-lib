@@ -121,6 +121,7 @@ namespace md
 
         Code& ori_to_ccr(uint8_t value);
 
+        Code& lsx(const DataRegister& bitcount_reg, const DataRegister& reg, bool direction_left, md::Size size);
         Code& lsx(uint8_t bitcount, const DataRegister& reg, bool direction_left, md::Size size);
 
         Code& lsl(uint8_t bitcount, const DataRegister& reg, md::Size size) { return this->lsx(bitcount, reg, true, size); }

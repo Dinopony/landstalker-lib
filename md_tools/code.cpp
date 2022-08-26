@@ -458,23 +458,39 @@ Code& Code::ori_to_ccr(uint8_t value)
     return *this;
 }
 
+Code& Code::lsx(const DataRegister& bitcount_reg, const DataRegister& reg, bool direction_left, md::Size size)
+{
+    uint16_t size_code = 0x0;
+    if (size == Size::WORD)
+        size_code = 0x1;
+    else if (size == Size::LONG)
+        size_code = 0x2;
+
+    uint16_t direction_mask = (direction_left) ? 1 : 0;
+
+    uint16_t opcode = 0xE028 + (bitcount_reg.getXn() << 9) + (direction_mask << 8) + (size_code << 6) + reg.getXn();
+    this->add_opcode(opcode);
+    return *this;
+}
+
 Code& Code::lsx(uint8_t bitcount, const DataRegister& reg, bool direction_left, md::Size size)
 {
-    if(bitcount <= 7)
-    {
-        uint16_t size_code = 0x0;
-        if (size == Size::WORD)
-            size_code = 0x1;
-        else if (size == Size::LONG)
-            size_code = 0x2;
+    if(bitcount > 8 || bitcount == 0)
+        throw std::exception(); // Impossible
 
-        uint16_t direction_mask = (direction_left) ? 1 : 0;
+    if(bitcount == 8)
+        bitcount = 0;
 
-        uint16_t opcode = 0xE008 + (bitcount << 9) + (direction_mask << 8) + (size_code << 6) + reg.getXn();
-        this->add_opcode(opcode);
-    }
-    else throw std::exception(); // Unsupported yet
+    uint16_t size_code = 0x0;
+    if (size == Size::WORD)
+        size_code = 0x1;
+    else if (size == Size::LONG)
+        size_code = 0x2;
 
+    uint16_t direction_mask = (direction_left) ? 1 : 0;
+
+    uint16_t opcode = 0xE008 + (bitcount << 9) + (direction_mask << 8) + (size_code << 6) + reg.getXn();
+    this->add_opcode(opcode);
     return *this;
 }
 
