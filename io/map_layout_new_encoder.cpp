@@ -31,6 +31,13 @@ static ByteArray encode_data_block(const std::vector<uint16_t>& data_block, uint
                 bytes.add_word(0xA000 + (effective_size << 8) + current_chain_word);
                 current_chain_size -= effective_size;
             }
+//            else if((current_chain_word & 0xFF00) == current_chain_word)
+//            {
+//                // "1xxxAAAA BBBBBBBB" case: repeat A times byte B as an inverted word (0x26 >>> 0x2600)
+//                uint16_t effective_size = std::min(current_chain_size, (uint32_t)0x000F);
+//                bytes.add_word(0xFFFF);
+//                current_chain_size -= effective_size;
+//            }
             else if(current_chain_size > 2)
             {
                 // "1011AAAA AAAAAAAA" case: repeat next word A times
@@ -45,19 +52,29 @@ static ByteArray encode_data_block(const std::vector<uint16_t>& data_block, uint
                 current_chain_size--;
             }
 
-            // "1001XWWW WWWWWWWW" case: repeat word W 2 or 3 times (depending on X) while increasing on every go)
-
-            // "1001" ???
-            // "1100" ???
+            // "1100" case: repeat word W 2 or 3 times (depending on X) while increasing on every go)
             // "1101" ???
             // "1110" ???
             // "1111" ???
             // put byte B, then byte A ?
         }
 
-        // If the word is "lonely", just write it
         if(current_chain_size == 1)
-            bytes.add_word(current_chain_word);
+        {
+            uint16_t last_word = (bytes.size() >= 2) ? bytes.last_word() : 0x8000;
+            bool is_last_word_operand = (last_word & 0x8000);
+
+            if(!is_last_word_operand && current_chain_word <= 0x3F && last_word <= 0x3F)
+            {
+                // "1001AAAA AABBBBBB" case: place byte A then byte B as words
+                uint16_t new_word = 0x9000 + (last_word << 6) + current_chain_word;
+                bytes.word_at(bytes.size()-2, new_word);
+            }
+            else
+            {
+                bytes.add_word(current_chain_word);
+            }
+        }
     };
 
     for(uint16_t tile : tile_values)

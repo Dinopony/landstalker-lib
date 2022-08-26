@@ -135,6 +135,22 @@ static uint32_t inject_func_load_data_block(md::ROM& rom)
         func_load_data_block.bra("repeat");            // Start the repeat loop
     }
     func_load_data_block.label("not_repeat_word");
+    func_load_data_block.cmpib(0x1, reg_D7);
+    func_load_data_block.bne("not_packed_bytes");
+    {
+        // "1001AAAA AABBBBBB" case: place byte A then byte B as words
+        func_load_data_block.movew(reg_D6, reg_D7);
+        func_load_data_block.lsrw(6, reg_D6);
+        func_load_data_block.movew(reg_D6, addr_postinc_(reg_A1));
+        // Setup a 1 occurence repeat to make the whole process handle line changes correctly
+        func_load_data_block.movew(1, reg_D4); // 1 repeat
+        func_load_data_block.movew(reg_D7, reg_D6);
+        func_load_data_block.andiw(0x003F, reg_D6);
+        func_load_data_block.bra("next_loop_iteration");
+    }
+    func_load_data_block.label("not_packed_bytes");
+
+
 
     return rom.inject_code(func_load_data_block);
 }
@@ -241,30 +257,9 @@ static void evaluate_total_size(md::ROM& rom, World& world)
 
     std::cout << "Full map data for all " << all_map_layouts.size() << " layouts takes " << full_data.size()/1000 << "KB" << std::endl;
 
-    size_t repeating_words = 0;
-    size_t saveable_words = 0;
-    uint16_t current_word = full_data[0];
-    size_t current_chain_size = 0;
-    for(size_t i=1 ; i<full_data.size() ; i++)
-    {
-        if(full_data[i] == current_word)
-            current_chain_size++;
-        else
-        {
-            if(current_chain_size)
-            {
-                repeating_words++;
-                saveable_words += current_chain_size;
-            }
-            current_chain_size = 0;
-            current_word = full_data[i];
-        }
-    }
-    std::cout << saveable_words << " savable words scattered in " <<  repeating_words  << "chains" << std::endl;
-
-    std::ofstream dump("./map_enc_dump.bin", std::ios::binary);
-    dump.write((const char*)&(full_data[0]), (long)full_data.size());
-    dump.close();
+//    std::ofstream dump("./map_enc_dump.bin", std::ios::binary);
+//    dump.write((const char*)&(full_data[0]), (long)full_data.size());
+//    dump.close();
 }
 
 void new_map_format(md::ROM& rom, World& world)
