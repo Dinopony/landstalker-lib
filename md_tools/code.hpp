@@ -79,8 +79,16 @@ namespace md
         Code& addqw(uint8_t value, const Register& Rx) { return this->addq(value, Rx, Size::WORD); }
         Code& addql(uint8_t value, const Register& Rx) { return this->addq(value, Rx, Size::LONG); }
 
-        Code& movem_to_stack(const std::vector<DataRegister>& data_regs, const std::vector<AddressRegister>& addr_regs);
-        Code& movem_from_stack(const std::vector<DataRegister>& data_regs, const std::vector<AddressRegister>& addr_regs);
+        Code& movem(const std::vector<DataRegister>& data_regs, const std::vector<AddressRegister>& addr_regs,
+                    bool direction_store_to_ea, const AddressRegister& destination = reg_A7, md::Size size = md::Size::LONG);
+        Code& movem_to_stack(const std::vector<DataRegister>& data_regs, const std::vector<AddressRegister>& addr_regs)
+        {
+            return this->movem(data_regs, addr_regs, true, reg_A7, md::Size::LONG);
+        }
+        Code& movem_from_stack(const std::vector<DataRegister>& data_regs, const std::vector<AddressRegister>& addr_regs)
+        {
+            return this->movem(data_regs, addr_regs, false, reg_A7, md::Size::LONG);
+        }
 
         Code& bset(uint8_t bit_id, const Param& target);
         Code& bset(const DataRegister& dx, const Param& target);

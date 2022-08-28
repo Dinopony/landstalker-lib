@@ -269,29 +269,35 @@ Code& Code::addq(uint8_t value, const Register& Rx, Size size)
     return *this;
 }
 
-Code& Code::movem_to_stack(const std::vector<DataRegister>& data_regs, const std::vector<AddressRegister>& addr_regs)
+Code& Code::movem(const std::vector<DataRegister>& data_regs, const std::vector<AddressRegister>& addr_regs, bool direction_storage, const AddressRegister& destination, md::Size size)
 {
-    uint16_t registersToStore = 0x0000;
-    for (const DataRegister& r : data_regs)
-        registersToStore |= (0x8000 >> r.getXn());
-    for (const AddressRegister& r : addr_regs)
-        registersToStore |= (0x0080 >> r.getXn());
+    uint8_t size_bit = (size == md::Size::LONG) ? 1 : 0;
+    uint8_t direction_bit = (direction_storage) ? 0 : 1;
 
-    this->add_opcode(0x48E7);
+    uint8_t dest_m = (direction_storage) ? 0x4 : 0x3;
+    uint8_t dest_xn = destination.getXn();
+    uint8_t dest_mxn = (dest_m << 3) + dest_xn;
+
+    uint16_t registersToStore = 0x0000;
+    if(direction_storage)
+    {
+        for(const DataRegister& r : data_regs)
+            registersToStore |= (0x8000 >> r.getXn());
+        for(const AddressRegister& r : addr_regs)
+            registersToStore |= (0x0080 >> r.getXn());
+    }
+    else
+    {
+        for (const DataRegister& r : data_regs)
+            registersToStore |= (0x0001 << r.getXn());
+        for (const AddressRegister& r : addr_regs)
+            registersToStore |= (0x0100 << r.getXn());
+    }
+
+    uint16_t opcode = 0x4880 + (direction_bit << 10) + (size_bit << 6) + dest_mxn;
+
+    this->add_opcode(opcode);
     this->add_word(registersToStore); // 0xFFFE = D0-D7 and A0-A6
-    return *this;
-}
-
-Code& Code::movem_from_stack(const std::vector<DataRegister>& data_regs, const std::vector<AddressRegister>& addr_regs)
-{
-    uint16_t registersToStore = 0x0000;
-    for (const DataRegister& r : data_regs)
-        registersToStore |= (0x0001 << r.getXn());
-    for (const AddressRegister& r : addr_regs)
-        registersToStore |= (0x0100 << r.getXn());
-
-    this->add_opcode(0x4CDF);
-    this->add_word(registersToStore); // 0x7FFF = A6-A0 and D7-D0
     return *this;
 }
 
