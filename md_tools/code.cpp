@@ -450,11 +450,12 @@ Code& Code::suba(const Param& value, const AddressRegister& ax)
     return *this;
 }
 
-Code& Code::lea(uint32_t value, const AddressRegister& ax)
+Code& Code::lea(const Param& value, const AddressRegister& to)
 {
-    uint16_t opcode = 0x41F9 + (ax.getXn() << 9);
+    uint16_t opcode = 0x41C0 + (to.getXn() << 9) + (value.getMXn());
+
     this->add_opcode(opcode);
-    this->add_long(value);
+    this->add_bytes(value.getAdditionnalData());
     return *this;
 }
 
