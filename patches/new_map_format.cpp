@@ -146,18 +146,18 @@ static uint32_t inject_func_load_data_block(md::ROM& rom)
         func.swap(reg_D7);
 
         // Branch depending on the operand type
-        func.beq("init_skip");
+        func.beq("init_skip");                  // 0 --> 68710 usages
         func.cmpib(2, reg_D7);
-        func.beq("init_repeat_byte");
-        func.cmpib(3, reg_D7);
-        func.beq("init_repeat_word");
+        func.beq("init_repeat_byte");           // 2 --> 40787 usages
+        func.cmpib(1, reg_D7);
+        func.beq("unpack_bytes");               // 1 --> 30821 usages
         func.cmpib(5, reg_D7);
-        func.beq("init_repeat_inverted_word");
+        func.beq("init_repeat_inverted_word");  // 5 --> 20744 usages
         func.cmpib(6, reg_D7);
-        func.beq("init_repeat_small_word");
-//        func.cmpib(1, reg_D7);
-//        func.beq("unpack_bytes");
-        func.bra("unpack_bytes");
+        func.beq("init_repeat_small_word");     // 6 --> 16096 usages
+        func.bra("init_repeat_word");           // 3 --> 114 usages
+        //func.cmpib(3, reg_D7);
+        //func.beq("init_repeat_word");
     }
 
     // -----------------------------------------------

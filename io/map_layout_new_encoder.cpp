@@ -36,7 +36,6 @@ static ByteArray encode_data_block(const std::vector<uint16_t>& data_block, uint
                 uint16_t effective_size = std::min(current_chain_size, (uint32_t)17);
                 bytes.add_word(0xD000 + (current_chain_word >> 4) + (effective_size - 2));
                 current_chain_size -= effective_size;
-                COUNTS[5]++;
             }
             else if(current_chain_word <= 0x3FF)
             {
