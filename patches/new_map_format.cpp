@@ -113,40 +113,61 @@ static uint32_t inject_func_load_data_block(md::ROM& rom)
     func.movem_from_stack({ reg_D0_D7 }, { reg_A3 });
     func.rts();
 
+    // -----------------------------------------------
     // Code block handling the case where we need to skip iterations
     func.label("skip");
-    func.subiw(1, reg_D5);
-    func.addql(2, reg_A1);
-    func.bra("next_loop_iteration");
+    {
+        func.subqw(1, reg_D5);
+        func.addql(2, reg_A1);
+        func.bra("next_loop_iteration");
+    }
 
+    // -----------------------------------------------
     // Code block handling the case where we need to repeat data
     func.label("repeat");
-    func.subiw(1, reg_D4);
-    func.movew(reg_D6, addr_postinc_(reg_A1));
-    func.bra("next_loop_iteration");
+    {
+        func.subqw(1, reg_D4);
+        func.movew(reg_D6, addr_postinc_(reg_A1));
+        func.bra("next_loop_iteration");
+    }
 
+    // -----------------------------------------------
     // Code block handling the case where the msb is set
     func.label("minus_case");
-    // "10000000 00000000" case: block ending
-    func.andiw(0x7FFF, reg_D7);
-    func.beq("ret");
-
-    // Split the operand (D7) from the data (D6)
-    func.movew(reg_D7, reg_D6);
-    func.andiw(0x0FFF, reg_D6);
-    func.lsrw(8, reg_D7);
-    func.lsrw(4, reg_D7);
-    func.bne("not_skip");
     {
-        // "1000AAAA AAAAAAAA" case: skip A words
+        func.andiw(0x7FFF, reg_D7); // Remove the topmost bit which is always set
+        func.beq("ret");            // "10000000 00000000" case: end of block
+
+        // Split the operand (D7) from the data (D6)
+        func.movew(reg_D7, reg_D6);
+        func.andiw(0x0FFF, reg_D6);
+        func.lsll(4, reg_D7);
+        func.clrw(reg_D7);
+        func.swap(reg_D7);
+
+        // Branch depending on the operand type
+        func.beq("init_skip");
+        func.cmpib(2, reg_D7);
+        func.beq("init_repeat_byte");
+        func.cmpib(3, reg_D7);
+        func.beq("init_repeat_word");
+//        func.cmpib(1, reg_D7);
+//        func.beq("unpack_bytes");
+        func.bra("unpack_bytes");
+    }
+
+    // -----------------------------------------------
+    // 0 -> "1000AAAA AAAAAAAA" case: skip A words
+    func.label("init_skip");
+    {
         func.movew(reg_D6, reg_D5);  // Setup the amount of words to skip
         func.bra("skip");            // Start the skipping loop
     }
-    func.label("not_skip");
-    func.cmpib(0x2, reg_D7);
-    func.bne("not_repeat_byte");
+
+    // -----------------------------------------------
+    // 2 -> "1010AAAA BBBBBBBB" case: repeat A times byte B
+    func.label("init_repeat_byte");
     {
-        // "1010AAAA BBBBBBBB" case: repeat A times byte B
         // Setup amount of repeats (D4)
         func.movew(reg_D6, reg_D4);
         func.lsrw(8, reg_D4);
@@ -154,33 +175,31 @@ static uint32_t inject_func_load_data_block(md::ROM& rom)
         func.andiw(0x00FF, reg_D6);
         func.bra("repeat");            // Start the repeat loop
     }
-    func.label("not_repeat_byte");
-    func.cmpib(0x3, reg_D7);
-    func.bne("not_repeat_word");
+
+    // -----------------------------------------------
+    // 3 -> "1011AAAA AAAAAAAA" case: repeat next word A times
+    func.label("init_repeat_word");
     {
-        // "1011AAAA AAAAAAAA" case: repeat next word A times
         // Setup amount of repeats (D4)
         func.movew(reg_D6, reg_D4);
         // Setup word to repeat (D6)
         func.movew(addr_postinc_(reg_A0), reg_D6);
         func.bra("repeat");            // Start the repeat loop
     }
-    func.label("not_repeat_word");
-    func.cmpib(0x1, reg_D7);
-    func.bne("not_packed_bytes");
+
+    // -----------------------------------------------
+    // 4 -> "1001AAAA AABBBBBB" case: place byte A then byte B as words
+    func.label("unpack_bytes");
     {
-        // "1001AAAA AABBBBBB" case: place byte A then byte B as words
         func.movew(reg_D6, reg_D7);
         func.lsrw(6, reg_D6);
         func.movew(reg_D6, addr_postinc_(reg_A1));
         // Setup a 1 occurence repeat to make the whole process handle line changes correctly
-        func.movew(1, reg_D4); // 1 repeat
+        func.moveq(1, reg_D4); // 1 repeat
         func.movew(reg_D7, reg_D6);
         func.andiw(0x003F, reg_D6);
         func.bra("next_loop_iteration");
     }
-    func.label("not_packed_bytes");
-    func.rts();
 
     return rom.inject_code(func);
 }
@@ -211,7 +230,7 @@ static uint32_t inject_func_load_map(md::ROM& rom, uint32_t func_load_data_block
         func_load_map.lslw(1, reg_D2); // D2 = offset to apply from chunk start to first non-empty data in chunk
 
         func_load_map.moveb(addr_(reg_A2, 2), reg_D3); // = layout->width() = 14 = words to copy for each line (before going to next chunk)
-        func_load_map.subib(1, reg_D3);
+        func_load_map.subqb(1, reg_D3);
 
         // Make A0 point on the beginning of actual data
         func_load_map.movel(reg_A2, reg_A0);
@@ -238,7 +257,7 @@ static uint32_t inject_func_load_map(md::ROM& rom, uint32_t func_load_data_block
         func_load_map.lslw(1, reg_D2); // D2 = offset to apply from chunk start to first non-empty data in chunk
 
         func_load_map.moveb(addr_(reg_A2, 5), reg_D3); // = layout->heightmap_width()
-        func_load_map.subib(1, reg_D3);
+        func_load_map.subqb(1, reg_D3);
 
         // Copy heightmap
         func_load_map.lea(0xFFD192, reg_A1);
