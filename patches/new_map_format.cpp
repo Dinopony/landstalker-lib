@@ -151,6 +151,8 @@ static uint32_t inject_func_load_data_block(md::ROM& rom)
         func.beq("init_repeat_byte");
         func.cmpib(3, reg_D7);
         func.beq("init_repeat_word");
+        func.cmpib(6, reg_D7);
+        func.beq("init_repeat_small_word");
 //        func.cmpib(1, reg_D7);
 //        func.beq("unpack_bytes");
         func.bra("unpack_bytes");
@@ -185,6 +187,19 @@ static uint32_t inject_func_load_data_block(md::ROM& rom)
         // Setup word to repeat (D6)
         func.movew(addr_postinc_(reg_A0), reg_D6);
         func.bra("repeat");            // Start the repeat loop
+    }
+
+    // -----------------------------------------------
+    // 6 -> "1110WWWW WWWWWWXX" case: repeat 2+X times small word W
+    func.label("init_repeat_small_word");
+    {
+        // Setup amount of repeats (D4)
+        func.movew(reg_D6, reg_D4);
+        func.andiw(0x0003, reg_D4);
+        func.addqb(2, reg_D4);
+        // Setup word to repeat (D6)
+        func.lsrw(2, reg_D6);
+        func.bra("repeat");     // Start the repeat loop
     }
 
     // -----------------------------------------------

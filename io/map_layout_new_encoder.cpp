@@ -18,14 +18,14 @@ static ByteArray encode_data_block(const std::vector<uint16_t>& data_block, uint
         {
             if(current_chain_word == default_value)
             {
-                // "1000AAAA AAAAAAAA" case: skip A words
+                // 0 -> "1000AAAA AAAAAAAA" case: skip A words
                 uint16_t effective_size = std::min(current_chain_size, (uint32_t)0x0FFF);
                 bytes.add_word(0x8000 + effective_size);
                 current_chain_size -= effective_size;
             }
             else if(current_chain_word <= 0x00FF)
             {
-                // "1010AAAA BBBBBBBB" case: repeat A times byte B
+                // 2 -> "1010AAAA BBBBBBBB" case: repeat A times byte B
                 uint16_t effective_size = std::min(current_chain_size, (uint32_t)0x000F);
                 bytes.add_word(0xA000 + (effective_size << 8) + current_chain_word);
                 current_chain_size -= effective_size;
@@ -37,16 +37,16 @@ static ByteArray encode_data_block(const std::vector<uint16_t>& data_block, uint
 //                bytes.add_word(0xFFFF);
 //                current_chain_size -= effective_size;
 //            }
-//            else if(current_chain_word <= 0x3FF)
-//            {
-//                // "1110WWWW WWWWWWXX" case: repeat 2+X times word W
-//                uint16_t effective_size = std::min(current_chain_size, (uint32_t)5);
-//                bytes.add_word(0xE000 + (current_chain_word << 2) + (effective_size - 2));
-//                current_chain_size -= effective_size;
-//            }
+            else if(current_chain_word <= 0x3FF)
+            {
+                // 6 -> "1110WWWW WWWWWWXX" case: repeat 2+X times word W
+                uint16_t effective_size = std::min(current_chain_size, (uint32_t)5);
+                bytes.add_word(0xE000 + (current_chain_word << 2) + (effective_size - 2));
+                current_chain_size -= effective_size;
+            }
             else if(current_chain_size > 2)
             {
-                // "1011AAAA AAAAAAAA" case: repeat next word A times
+                // 3 -> "1011AAAA AAAAAAAA" case: repeat next word A times
                 uint16_t effective_size = std::min(current_chain_size, (uint32_t)0x0FFF);
                 bytes.add_word(0xB000 + effective_size);
                 bytes.add_word(current_chain_word);
@@ -54,9 +54,8 @@ static ByteArray encode_data_block(const std::vector<uint16_t>& data_block, uint
             }
             else break;
 
-            // "1101" ???
-
-            // "1111" ???
+            // 4, 5, 7 are free
+            // 1100, 1101, 1111
         }
 
         while(current_chain_size > 0)
@@ -119,7 +118,7 @@ static ByteArray encode_data_block(const std::vector<uint16_t>& data_block, uint
         }
         else*/if(current_word <= 0x3F && last_word <= 0x3F)
         {
-            // "1001AAAA AABBBBBB" case: place byte A then byte B as words
+            // 1 -> "1001AAAA AABBBBBB" case: place byte A then byte B as words
             current_word = 0x9000 + (last_word << 6) + current_word;
             bytes.remove_word(i);
             i -= 2;
