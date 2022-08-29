@@ -79,6 +79,12 @@ namespace md
         Code& addqw(uint8_t value, const Register& Rx) { return this->addq(value, Rx, Size::WORD); }
         Code& addql(uint8_t value, const Register& Rx) { return this->addq(value, Rx, Size::LONG); }
 
+        Code& subq(uint8_t value, const Register& Rx, Size size);
+        Code& subqb(uint8_t value, const Register& Rx) { return this->subq(value, Rx, Size::BYTE); }
+        Code& subqw(uint8_t value, const Register& Rx) { return this->subq(value, Rx, Size::WORD); }
+        Code& subql(uint8_t value, const Register& Rx) { return this->subq(value, Rx, Size::LONG); }
+
+
         Code& movem(const std::vector<DataRegister>& data_regs, const std::vector<AddressRegister>& addr_regs,
                     bool direction_store_to_ea, const AddressRegister& destination = reg_A7, md::Size size = md::Size::LONG);
         Code& movem_to_stack(const std::vector<DataRegister>& data_regs, const std::vector<AddressRegister>& addr_regs)

@@ -269,6 +269,24 @@ Code& Code::addq(uint8_t value, const Register& Rx, Size size)
     return *this;
 }
 
+Code& Code::subq(uint8_t value, const Register& Rx, Size size)
+{
+    if(value == 0 || value > 8)
+        throw std::exception(); // Impossible
+    if(value == 8)
+        value = 0;
+
+    uint16_t size_code = 0x0;
+    if (size == Size::WORD)
+        size_code = 0x1;
+    else if (size == Size::LONG)
+        size_code = 0x2;
+
+    uint16_t opcode = 0x5100 + ((uint16_t)(value & 0x7) << 9) + (size_code << 6) + Rx.getMXn();
+    this->add_opcode(opcode);
+    return *this;
+}
+
 Code& Code::movem(const std::vector<DataRegister>& data_regs, const std::vector<AddressRegister>& addr_regs, bool direction_storage, const AddressRegister& destination, md::Size size)
 {
     uint8_t size_bit = (size == md::Size::LONG) ? 1 : 0;
