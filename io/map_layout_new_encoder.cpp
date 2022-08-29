@@ -30,13 +30,14 @@ static ByteArray encode_data_block(const std::vector<uint16_t>& data_block, uint
                 bytes.add_word(0xA000 + (effective_size << 8) + current_chain_word);
                 current_chain_size -= effective_size;
             }
-//            else if((current_chain_word & 0xFF00) == current_chain_word)
-//            {
-//                // "1xxxAAAA BBBBBBBB" case: repeat A times byte B as an inverted word (0x26 >>> 0x2600)
-//                uint16_t effective_size = std::min(current_chain_size, (uint32_t)0x000F);
-//                bytes.add_word(0xFFFF);
-//                current_chain_size -= effective_size;
-//            }
+            else if((current_chain_word & 0xFF00) == current_chain_word)
+            {
+                // 5 -> "1101BBBB BBBBAAAA" case: repeat A+2 times byte B as an inverted word (0x26 >>> 0x2600)
+                uint16_t effective_size = std::min(current_chain_size, (uint32_t)17);
+                bytes.add_word(0xD000 + (current_chain_word >> 4) + (effective_size - 2));
+                current_chain_size -= effective_size;
+                COUNTS[5]++;
+            }
             else if(current_chain_word <= 0x3FF)
             {
                 // 6 -> "1110WWWW WWWWWWXX" case: repeat 2+X times word W
