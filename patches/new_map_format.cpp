@@ -265,7 +265,7 @@ static uint32_t inject_func_load_map(md::ROM& rom, uint32_t func_load_data_block
 
         // Make A0 point on the beginning of actual data
         func_load_map.movel(reg_A2, reg_A0);
-        func_load_map.addql(6, reg_A0);
+        func_load_map.addql(4, reg_A0);
 
         // Copy foreground
         func_load_map.lea(0xFF7C02, reg_A1);
@@ -278,16 +278,9 @@ static uint32_t inject_func_load_map(md::ROM& rom, uint32_t func_load_data_block
         // --------------------------------------------------------------------------------------------------------
 
         // Read metadata for heightmap
-        func_load_map.clrl(reg_D1);
-        func_load_map.moveb(addr_(reg_A2, 3), reg_D1); // = heightmap_top
-        func_load_map.lslw(1, reg_D1);
-        func_load_map.mulu(bval_(LINE_SIZE_IN_WORDS), reg_D1); // D1 = offset from block start to reach first non-empty line in heightmap
-
-        func_load_map.clrl(reg_D2);
-        func_load_map.moveb(addr_(reg_A2, 4), reg_D2); // = heightmap_left
-        func_load_map.lslw(1, reg_D2); // D2 = offset to apply from chunk start to first non-empty data in chunk
-
-        func_load_map.moveb(addr_(reg_A2, 5), reg_D3); // = layout->heightmap_width()
+        func_load_map.movel(0x6F0, reg_D1); // top offset is always = (0xC << 1) * LINE_SIZE_IN_WORDS
+        func_load_map.moveq(0x18, reg_D2); // left offset is always = 0xC << 1
+        func_load_map.moveb(addr_(reg_A2, 3), reg_D3); // = layout->heightmap_width()
         func_load_map.subqb(1, reg_D3);
 
         // Copy heightmap

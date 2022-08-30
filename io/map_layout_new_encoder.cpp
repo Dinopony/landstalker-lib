@@ -54,8 +54,8 @@ static ByteArray encode_data_block(const std::vector<uint16_t>& data_block, uint
             }
             else break;
 
-            // 4, 5, 7 are free
-            // 1100, 1101, 1111
+            // 4, 7 are free
+            // 1100, 1111
         }
 
         while(current_chain_size > 0)
@@ -136,8 +136,6 @@ ByteArray io::encode_map_layout(MapLayout* layout)
     data.add_byte(layout->top()); // = 9 = amount of big chunks to skip
     data.add_byte(layout->left()); // = 8 = amount of small words to skip
     data.add_byte(layout->width()); // = 14 = words to copy for each line (before going to next chunk)
-    data.add_byte(0xc); // heightmap top        // TODO: Remove, useless (fixed value)
-    data.add_byte(0xc); // heightmap left       // TODO: Remove, useless (fixed value)
     data.add_byte(layout->heightmap_width());
 
     data.add_bytes(encode_data_block(layout->foreground_tiles(), 0x0000));
