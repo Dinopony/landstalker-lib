@@ -331,13 +331,37 @@ static void write_blocksets(const World& world, md::ROM& rom)
     rom.set_long(offsets::BLOCKSETS_GROUPS_TABLE_POINTER, blockset_groups_table_addr);
 }
 
+static std::map<MapLayout*, uint32_t> write_map_layouts(const World& world, md::ROM& rom)
+{
+    // Remove all vanilla map layouts from the ROM
+    rom.mark_empty_chunk(offsets::MAP_LAYOUTS_START, offsets::MAP_LAYOUTS_END);
+
+//    uint32_t total_size = 0;
+
+    std::map<MapLayout*, uint32_t> layout_addresses;
+
+    for(MapLayout* layout : world.map_layouts())
+    {
+        ByteArray bytes = io::encode_map_layout(layout);
+//        total_size += bytes.size();
+
+        uint32_t addr = rom.inject_bytes(bytes);
+        layout_addresses[layout] = addr;
+    }
+
+//    std::cout << "Full map data for all " << world.map_layouts().size() << " layouts takes " << total_size/1000 << "KB" << std::endl;
+
+    return layout_addresses;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 
-static void write_maps_data(const World& world, md::ROM& rom)
+static void write_maps_data(const World& world, md::ROM& rom, const std::map<MapLayout*, uint32_t>& map_layout_adresses)
 {
     ByteArray map_data_table;
 
-    for(auto& [map_id, map] : world.maps())
+    for(const auto& [map_id, map] : world.maps())
     {
         std::pair<uint8_t, uint8_t> blockset_id = world.blockset_id(map->blockset());
 
@@ -353,7 +377,11 @@ static void write_maps_data(const World& world, md::ROM& rom)
         byte7 = map->background_music() & 0x1F;
         byte7 |= ((blockset_id.second-1) & 0x07) << 5;
 
-        map_data_table.add_long(map->address());
+        uint32_t map_layout_addr = 0xFFFFFFFF;
+        if(map_layout_adresses.count(map->layout()))
+            map_layout_addr = map_layout_adresses.at(map->layout());
+
+        map_data_table.add_long(map_layout_addr);
         map_data_table.add_byte(byte4);
         map_data_table.add_byte(byte5);
         map_data_table.add_byte(map->room_height());
@@ -726,9 +754,9 @@ static void write_maps_entity_persistence_flags(const World& world, md::ROM& rom
     rom.mark_empty_chunk(addr, offsets::SACRED_TREES_PERSISTENCE_FLAGS_TABLE_END);
 }
 
-static void write_maps(const World& world, md::ROM& rom)
+static void write_maps(const World& world, md::ROM& rom, const std::map<MapLayout*, uint32_t>& map_layout_adresses)
 {
-    write_maps_data(world, rom);
+    write_maps_data(world, rom, map_layout_adresses);
     write_maps_visited_flag(world, rom);
     write_maps_base_chest_id(world, rom);
     write_maps_climb_destination(world, rom);
@@ -746,6 +774,7 @@ static void write_maps(const World& world, md::ROM& rom)
 
 void io::write_world_to_rom(const World& world, md::ROM& rom)
 {
+    std::map<MapLayout*, uint32_t> map_layout_addresses = write_map_layouts(world, rom);
     write_blocksets(world, rom);
     write_items(world, rom);
     write_item_sources(world, rom);
@@ -755,5 +784,5 @@ void io::write_world_to_rom(const World& world, md::ROM& rom)
     write_fahl_enemies(world, rom);
     write_map_connections(world, rom);
     write_map_palettes(world, rom);
-    write_maps(world, rom);
+    write_maps(world, rom, map_layout_addresses);
 }

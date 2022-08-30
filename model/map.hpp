@@ -10,6 +10,7 @@
 class Entity;
 class World;
 class Blockset;
+class MapLayout;
 
 struct GlobalEntityMaskFlag : public Flag
 {
@@ -55,11 +56,11 @@ class Map
 {
 private:
     uint16_t _id;
-    uint32_t _address;
+    MapLayout* _layout = nullptr;
 
-    Blockset* _blockset;
+    Blockset* _blockset = nullptr;
 
-    MapPalette* _palette;
+    MapPalette* _palette = nullptr;
     uint8_t _room_height;
     uint8_t _background_music;
 
@@ -67,13 +68,13 @@ private:
     uint8_t _unknown_param_2;
 
     uint8_t _base_chest_id;
-    uint16_t _fall_destination;
-    uint16_t _climb_destination;
+    uint16_t _fall_destination = 0xFFFF;
+    uint16_t _climb_destination = 0xFFFF;
     
     std::vector<Entity*> _entities;
     
     std::map<Map*, Flag> _variants;
-    Map* _parent_map;
+    Map* _parent_map = nullptr;
 
     std::vector<uint16_t> _speaker_ids;
 
@@ -91,8 +92,8 @@ public:
     [[nodiscard]] uint16_t id() const { return _id; }
     void id(uint16_t id) { _id = id; }
 
-    [[nodiscard]] uint32_t address() const { return _address; }
-    void address(uint32_t value) { _address = value; }
+    [[nodiscard]] MapLayout* layout() const { return _layout; }
+    void layout(MapLayout* layout) { _layout = layout; }
 
     [[nodiscard]] bool is_variant() const { return _parent_map != nullptr; }
     [[nodiscard]] Map* parent_map() const { return _parent_map; }

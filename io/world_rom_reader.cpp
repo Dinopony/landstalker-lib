@@ -32,6 +32,8 @@ static void read_map_palettes(const md::ROM& rom, World& world)
 
 static void read_maps_data(const md::ROM& rom, World& world)
 {
+    std::map<uint32_t, MapLayout*> map_layout_addresses;
+
     constexpr uint16_t MAP_COUNT = 816;
     for(uint16_t map_id = 0 ; map_id < MAP_COUNT ; ++map_id)
     {
@@ -39,7 +41,14 @@ static void read_maps_data(const md::ROM& rom, World& world)
 
         uint32_t addr = offsets::MAP_DATA_TABLE + (map_id * 8);
 
-        map->address(rom.get_long(addr));
+        uint32_t map_layout_addr = rom.get_long(addr);
+        if(!map_layout_addresses.count(map_layout_addr))
+        {
+            MapLayout* layout = io::decode_map_layout(rom, map_layout_addr);
+            world.add_map_layout(layout);
+            map_layout_addresses[map_layout_addr] = layout;
+        }
+        map->layout(map_layout_addresses.at(map_layout_addr));
 
         uint8_t primary_blockset_id = rom.get_byte(addr+4) & 0x3F;
         map->unknown_param_1((rom.get_byte(addr+4) >> 6));

@@ -7,16 +7,12 @@
 #include "../exceptions.hpp"
 
 Map::Map(uint16_t map_id) :
-    _id                 (map_id),
-    _fall_destination   (0xFFFF),
-    _climb_destination  (0xFFFF),
-    _parent_map         (nullptr),
-    _palette            (nullptr)
+    _id                 (map_id)
 {}
 
 Map::Map(const Map& map) :
     _id                         (map._id),
-    _address                    (map._address),
+    _layout                     (map._layout),
     _blockset                   (map._blockset),
     _palette                    (map._palette),
     _room_height                (map._room_height),
@@ -45,7 +41,7 @@ void Map::clear()
     _base_chest_id = 0x00;
     _fall_destination = 0xFFFF;
     _climb_destination = 0xFFFF;
-    _address = 0;
+    _layout = nullptr;
     _entities.clear();
     _variants.clear();
     _global_entity_mask_flags.clear();
@@ -166,7 +162,6 @@ Json Map::to_json(const World& world) const
 {
     Json json;
 
-    json["address"] = _address;
     json["blocksetId"] = world.blockset_id(_blockset);
 
     json["paletteId"] = world.map_palette_id(_palette);

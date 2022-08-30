@@ -295,55 +295,12 @@ static uint32_t inject_func_load_map(md::ROM& rom, uint32_t func_load_data_block
 
 void new_map_format(md::ROM& rom, World& world)
 {
-    // Read layouts from the ROM
-    std::map<uint32_t, MapLayout*> unique_map_layouts;
-    for(auto it : world.maps())
-    {
-        uint32_t addr = it.second->address();
-        if(!unique_map_layouts.count(addr))
-            unique_map_layouts[addr] = io::decode_map_layout(rom, addr);
-    }
-
-    // Remove all vanilla map layouts from the ROM
-    rom.mark_empty_chunk(0xA2392, 0x11C926);
-
-    uint32_t total_size = 0;
-
-    // Re-encode map layouts inside the ROM
-    for(auto it : unique_map_layouts)
-    {
-        uint32_t old_addr = it.first;
-        MapLayout* layout = it.second;
-
-        ByteArray bytes = io::encode_map_layout(layout);
-        total_size += bytes.size();
-        uint32_t new_addr = rom.inject_bytes(bytes);
-
-        std::ofstream dump("./map_layouts/map_" + std::to_string(old_addr) + ".bin", std::ios::binary);
-        dump.write((const char*)&(bytes[0]), (long)bytes.size());
-        dump.close();
-
-        for(auto it2 : world.maps())
-        {
-            uint16_t map_id = it2.first;
-            Map* map = it2.second;
-            if(map->address() == old_addr)
-            {
-                map->address(new_addr);
-//                std::cout << "Map #" << map_id << " address is " << old_addr << std::endl;
-            }
-        }
-    }
-
-    std::cout << "Full map data for all " << unique_map_layouts.size() << " layouts takes " << total_size/1000 << "KB" << std::endl;
+    rom.mark_empty_chunk(0x2BCE, 0x2CA2); // GetTilemap & ExtractMap functions
+    rom.mark_empty_chunk(0xCDB2, 0xD09C); // DecompressMap1 function
 
     uint32_t func_clear_map_data = inject_func_clear_map_data(rom);
     uint32_t func_load_data_block = inject_func_load_data_block(rom);
 
     uint32_t func_load_map = inject_func_load_map(rom, func_load_data_block, func_clear_map_data);
-
-    std::cout << "func_load_map = 0x" << std::hex << func_load_map << std::dec << std::endl;
-    std::cout << "func_load_data_block = 0x" << std::hex << func_load_data_block << std::dec << std::endl;
-
     rom.set_code(0x2BC8, md::Code().jmp(func_load_map));
 }

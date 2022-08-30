@@ -97,6 +97,9 @@ namespace offsets
     constexpr uint32_t MAP_DATA_TABLE = 0x0A0A12;
     constexpr uint32_t MAP_DATA_TABLE_END = 0x0A2392;
 
+    constexpr uint32_t MAP_LAYOUTS_START = MAP_DATA_TABLE_END;
+    constexpr uint32_t MAP_LAYOUTS_END = 0x11C926;
+
     constexpr uint32_t KNL_LIT_ROOM_PALETTE = 0x11CD1C;
     constexpr uint32_t KNL_DARK_ROOM_PALETTE = 0x11CD36;
 

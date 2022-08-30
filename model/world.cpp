@@ -65,6 +65,7 @@ void World::write_to_rom(md::ROM& rom)
 {
     this->clean_unused_palettes();
     this->clean_unused_blocksets();
+    this->clean_unused_layouts();
     io::write_world_to_rom(*this, rom);
 }
 
@@ -326,6 +327,24 @@ void World::clean_unused_blocksets()
             delete blockset_group[0];
             blockset_group.clear();
         }
+    }
+}
+
+void World::clean_unused_layouts()
+{
+    std::set<MapLayout*> used_layouts;
+    for(auto& [map_id, map] : _maps)
+        used_layouts.insert(map->layout());
+
+    for(auto it = _map_layouts.begin() ; it != _map_layouts.end() ; )
+    {
+        MapLayout* layout = *it;
+        if(!used_layouts.count(layout))
+        {
+            delete layout;
+            it = _map_layouts.erase(it);
+        }
+        else ++it;
     }
 }
 

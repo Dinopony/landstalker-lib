@@ -7,6 +7,7 @@
 #include "../tools/flag.hpp"
 #include "../tools/json.hpp"
 #include "../tools/color_palette.hpp"
+#include "map_layout.hpp"
 
 #include <map>
 #include <vector>
@@ -36,6 +37,7 @@ private:
     uint8_t _custom_starting_life = 0;
 
     std::vector<std::vector<Blockset*>> _blockset_groups;
+    std::vector<MapLayout*> _map_layouts;
 
     /// Used by the "alter_lantern_handling" patch
     std::vector<uint16_t> _dark_maps;
@@ -108,6 +110,10 @@ public:
     [[nodiscard]] Blockset* blockset(uint8_t primary_id, uint8_t secondary_id) const { return _blockset_groups[primary_id][secondary_id]; }
     [[nodiscard]] std::pair<uint8_t, uint8_t> blockset_id(Blockset* blockset) const;
     void clean_unused_blocksets();
+
+    [[nodiscard]] const std::vector<MapLayout*>& map_layouts() const { return _map_layouts; }
+    void add_map_layout(MapLayout* layout) { _map_layouts.emplace_back(layout); }
+    void clean_unused_layouts();
 
 private:
     void load_item_sources();
