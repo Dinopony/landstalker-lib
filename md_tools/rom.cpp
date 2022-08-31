@@ -23,6 +23,15 @@ void ROM::set_byte(uint32_t address, uint8_t byte)
     if (address >= _byte_array.size())
         return;
 
+#ifdef DEBUG
+    if(_written_addresses.count(address))
+    {
+        std::cerr << "Address 0x" << std::hex << address << std::dec << " of ROM was overwritten twice!" << std::endl;
+        throw std::exception();
+    }
+    _written_addresses.insert(address);
+#endif
+
     _byte_array[address] = byte;
 }
 
@@ -164,6 +173,12 @@ void ROM::mark_empty_chunk(uint32_t begin, uint32_t end)
     if(begin % 2 != 0)
         begin++;
 
+    if(end > _byte_array.size())
+    {
+        std::cerr << "Attempting to mark an empty chunk outside of ROM space" << std::endl;
+        end = _byte_array.size();
+    }
+
     if(begin >= end)
         return;
 
@@ -177,7 +192,18 @@ void ROM::mark_empty_chunk(uint32_t begin, uint32_t end)
     }
 
     for(uint32_t addr=begin ; addr < end ; ++addr)
-        this->set_byte(addr, 0xFF);
+    {
+        // Don't use set_byte() to bypass the "written_addresses" debug mechanism
+        _byte_array[addr] = 0xFF;
+
+#ifdef DEBUG
+        if(_written_addresses.count(addr))
+        {
+            std::cerr << "Address 0x" << std::hex << addr << std::dec << " of ROM is being cleared after having been overwritten!" << std::endl;
+            throw std::exception();
+        }
+#endif
+    }
 
     _empty_chunks.emplace_back(std::make_pair(begin, end));
 }

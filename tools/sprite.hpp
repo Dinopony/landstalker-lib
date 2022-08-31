@@ -42,6 +42,8 @@ private:
     std::vector<SubSpriteMetadata> _subsprites;
 
 public:
+    Sprite() = default;
+
     Sprite(std::vector<uint8_t> data, std::vector<SubSpriteMetadata> subsprites) :
             _data       (std::move(data)),
             _subsprites (std::move(subsprites))

@@ -67,7 +67,7 @@ static void read_maps_data(const md::ROM& rom, World& world)
 
         // Read visited flag from its dedicated table
         uint16_t flag_description = rom.get_word(offsets::MAP_VISITED_FLAG_TABLE + (map_id * 2));
-        uint16_t byte = (flag_description >> 3) + 0xC0;
+        uint16_t byte = (flag_description >> 3);
         uint8_t bit = flag_description & 0x7;
         map->visited_flag(Flag(byte, bit));
 
@@ -436,7 +436,6 @@ void io::read_blocksets(const md::ROM& rom, World& world)
 
 void io::read_items(const md::ROM& rom, World& world)
 {
-    // Read item names
     std::vector<std::string> item_names;
     item_names.reserve(0x40);
     for(uint32_t addr = offsets::ITEM_NAMES_TABLE ; addr < offsets::ITEM_NAMES_TABLE_END ; )

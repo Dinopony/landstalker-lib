@@ -30,19 +30,13 @@ endmacro()
 # Wrap JSON model files and assets into automated .hxx headers
 wrapped_dependency(TEXT     model/data/entity_type.json             ENTITIES_JSON)
 wrapped_dependency(TEXT     model/data/item_source.json             ITEM_SOURCES_JSON)
-wrapped_dependency(RAW      patches/assets/fixed_hud_tilemap.bin    FIXED_HUD_TILEMAP)
-wrapped_dependency(RAW      patches/assets/blue_jewel.bin           BLUE_JEWEL_SPRITE)
-wrapped_dependency(RAW      patches/assets/green_jewel.bin          GREEN_JEWEL_SPRITE)
-wrapped_dependency(RAW      patches/assets/yellow_jewel.bin         YELLOW_JEWEL_SPRITE)
+wrapped_dependency(RAW      assets/fixed_hud_tilemap.bin            FIXED_HUD_TILEMAP)
 
 set(SOURCES
         # --- Auto-generated dependencies----------------------------------------
         "model/data/entity_type.json.hxx"
         "model/data/item_source.json.hxx"
-        "patches/assets/fixed_hud_tilemap.bin.hxx"
-        "patches/assets/blue_jewel.bin.hxx"
-        "patches/assets/green_jewel.bin.hxx"
-        "patches/assets/yellow_jewel.bin.hxx"
+        "assets/fixed_hud_tilemap.bin.hxx"
 
         # --- Global includes ----------------------------------------
         "md_tools.hpp"
@@ -122,28 +116,34 @@ set(SOURCES
         "model/world.cpp"
 
         # --- Patches ----------------------------------------
-        "patches/add_function_to_items_on_use.cpp"
-        "patches/add_statue_of_jypta_effect.cpp"
-        "patches/alter_fahl_challenge.cpp"
-        "patches/alter_gold_rewards_handling.cpp"
-        "patches/alter_items_consumability.cpp"
-        "patches/alter_lantern_handling.cpp"
-        "patches/alter_nigel_colors.cpp"
-        "patches/alter_ui_color.cpp"
-        "patches/fix_hud_tilemap.cpp"
-        "patches/fix_item_checks.cpp"
-        "patches/game_init.cpp"
-        "patches/gameplay_tweaks.cpp"
-        "patches/handle_additional_jewels.cpp"
-        "patches/handle_armor_upgrades.cpp"
-        "patches/handle_items_renaming.cpp"
-        "patches/improve_engine.cpp"
-        "patches/make_sword_of_gaia_work_in_volcano.cpp"
-        "patches/normalize_special_enemies_hp.cpp"
-        "patches/quality_of_life.cpp"
-        "patches/story_dependencies.cpp"
-        "patches/new_map_format.cpp"
-        "patches/extend_rom.cpp"
+        "patches/engine_improvements/patch_add_soft_reset.hpp"
+        "patches/engine_improvements/patch_extend_visited_flag_range.hpp"
+        "patches/engine_improvements/patch_extend_tile_swap_flag_range.hpp"
+        "patches/engine_improvements/patch_improve_ingame_timer.hpp"
+        "patches/engine_improvements/patch_improve_item_use_handling.hpp"
+        "patches/engine_improvements/patch_new_map_format.hpp"
+        "patches/engine_improvements/patch_normalize_bosses_hp.hpp"
+        "patches/engine_improvements/patch_faster_transitions.hpp"
+        "patches/engine_improvements/patch_improve_lantern_handling.hpp"
+        "patches/engine_improvements/patch_disable_region_check.hpp"
+        "patches/engine_improvements/patch_new_game.hpp"
+        "patches/engine_improvements/patch_improve_gold_rewards_handling.hpp"
+
+        "patches/edit_vanilla_content/patch_sword_of_gaia_in_volcano.hpp"
+        "patches/edit_vanilla_content/patch_fix_item_checks.hpp"
+        "patches/edit_vanilla_content/patch_remove_tree_cutting_glitch_drops.hpp"
+
+        "patches/gameplay_tweaks/patch_consumable_pawn_ticket.hpp"
+        "patches/gameplay_tweaks/patch_faster_pawn_ticket.hpp"
+        "patches/gameplay_tweaks/patch_faster_gaia_effect.hpp"
+        "patches/gameplay_tweaks/patch_armor_upgrades.hpp"
+        "patches/gameplay_tweaks/patch_set_lifestocks_health.hpp"
+
+        "patches/cosmetic/patch_alter_nigel_colors.hpp"
+        "patches/cosmetic/patch_alter_ui_color.hpp"
+        "patches/cosmetic/patch_alter_inventory_order.hpp"
+
+        "patches/game_patch.hpp"
         )
 
 add_library(landstalker_lib STATIC "${SOURCES}")

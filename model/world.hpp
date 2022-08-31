@@ -39,7 +39,7 @@ private:
     std::vector<std::vector<Blockset*>> _blockset_groups;
     std::vector<MapLayout*> _map_layouts;
 
-    /// Used by the "alter_lantern_handling" patch
+    /// Requires PatchImproveLanternHandling to be handled
     std::vector<uint16_t> _dark_maps;
 
 public:

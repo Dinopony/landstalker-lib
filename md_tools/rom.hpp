@@ -5,6 +5,10 @@
 #include <map>
 #include <fstream>
 
+#ifdef DEBUG
+#include <set>
+#endif
+
 namespace md {
 
     class Code;
@@ -16,6 +20,9 @@ namespace md {
         std::vector<uint8_t> _byte_array;
         std::map<std::string, uint32_t> _stored_addresses;
         std::vector<std::pair<uint32_t, uint32_t>> _empty_chunks;
+#ifdef DEBUG
+        std::set<uint32_t> _written_addresses;
+#endif
 
     public:
         explicit ROM(const std::string& input_path);

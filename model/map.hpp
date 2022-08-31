@@ -61,13 +61,13 @@ private:
     Blockset* _blockset = nullptr;
 
     MapPalette* _palette = nullptr;
-    uint8_t _room_height;
-    uint8_t _background_music;
+    uint8_t _room_height = 0;
+    uint8_t _background_music = 0;
 
-    uint8_t _unknown_param_1;
-    uint8_t _unknown_param_2;
+    uint8_t _unknown_param_1 = 0;
+    uint8_t _unknown_param_2 = 0;
 
-    uint8_t _base_chest_id;
+    uint8_t _base_chest_id = 0;
     uint16_t _fall_destination = 0xFFFF;
     uint16_t _climb_destination = 0xFFFF;
     

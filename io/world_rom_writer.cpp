@@ -9,11 +9,84 @@
 #include "../constants/offsets.hpp"
 #include "../constants/entity_type_codes.hpp"
 #include "../tools/huffman_tree.hpp"
+#include "../tools/stringtools.hpp"
 
 #include <cstdint>
 #include <set>
 
 ///////////////////////////////////////////////////////////////////////////////
+
+static ByteArray item_name_as_bytes(Item* item)
+{
+    // Compute item name
+    ByteArray item_name_bytes;
+    std::vector<std::string> item_name_words = stringtools::split(item->name(), " ");
+    uint8_t current_line_length = 0;
+    for(std::string word : item_name_words)
+    {
+        if(current_line_length == 7 || current_line_length == 8)
+        {
+            current_line_length = 0;
+            item_name_bytes.add_byte(0x6A);
+        }
+
+        uint8_t line_length_with_word = current_line_length + word.length();
+        // If this isn't the first word on the line, adding a space before the word is required
+        if(current_line_length > 0)
+            line_length_with_word += 1;
+
+
+        if(line_length_with_word <= 8)
+        {
+            if(current_line_length > 0)
+                word = " " + word;
+
+            current_line_length = line_length_with_word;
+            item_name_bytes.add_bytes(Symbols::bytes_for_symbols(word));
+        }
+        else if(word.length() <= 8)
+        {
+            item_name_bytes.add_byte(0x6A); // Line break without hyphen in inventory, space in textboxes
+            current_line_length = word.length();
+            item_name_bytes.add_bytes(Symbols::bytes_for_symbols(word));
+        }
+        else
+        {
+            uint8_t symbols_on_current_line = 7 - current_line_length;
+            item_name_bytes.add_bytes(Symbols::bytes_for_symbols(word.substr(0, symbols_on_current_line)));
+            item_name_bytes.add_byte(0x69); // Line break without hyphen in inventory, space in textboxes
+            std::string remainder = word.substr(symbols_on_current_line);
+            item_name_bytes.add_bytes(Symbols::bytes_for_symbols(remainder));
+            current_line_length = remainder.length();
+        }
+    }
+
+    return item_name_bytes;
+}
+
+static void write_item_names(const World& world, md::ROM& rom)
+{
+    rom.mark_empty_chunk(offsets::ITEM_NAMES_TABLE, offsets::ITEM_NAMES_TABLE_END);
+
+    ByteArray item_names_table_bytes;
+
+    for(auto& [id, item] : world.items())
+    {
+        ByteArray item_name_bytes = item_name_as_bytes(item);
+        item_names_table_bytes.add_byte(item_name_bytes.size());
+        item_names_table_bytes.add_bytes(item_name_bytes);
+    }
+
+    uint32_t name_table_addr = rom.inject_bytes(item_names_table_bytes);
+
+    md::Code lea_item_name_table_pointer;
+    {
+        lea_item_name_table_pointer.lea(name_table_addr, reg_A2);
+        lea_item_name_table_pointer.jmp(0x294B0);
+    }
+    uint32_t injected_proc_addr = rom.inject_code(lea_item_name_table_pointer);
+    rom.set_code(0x294A2, md::Code().jmp(injected_proc_addr));
+}
 
 static void write_items(const World& world, md::ROM& rom)
 {
@@ -776,6 +849,7 @@ void io::write_world_to_rom(const World& world, md::ROM& rom)
 {
     std::map<MapLayout*, uint32_t> map_layout_addresses = write_map_layouts(world, rom);
     write_blocksets(world, rom);
+    write_item_names(world, rom);
     write_items(world, rom);
     write_item_sources(world, rom);
     write_entity_types(world, rom);

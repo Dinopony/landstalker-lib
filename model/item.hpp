@@ -12,8 +12,10 @@ private:
     uint8_t     _max_quantity = 0;
     uint8_t     _starting_quantity = 0;
     uint16_t    _gold_value = 0;
-    uint32_t    _pre_use_address = 0;
-    uint32_t    _post_use_address = 0;
+
+    // Both the following attributes require the `PatchImproveItemUseHandling` patch to be edited inside the ROM
+    uint32_t    _pre_use_address = 0;   ///< Address of the "pre-use" function called when trying to use this item
+    uint32_t    _post_use_address = 0;  ///< Address of the "post-use" function called after successfully using this item
 
 public:
     Item() = default;

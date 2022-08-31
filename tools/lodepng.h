@@ -731,10 +731,6 @@ typedef struct LodePNGDecoderSettings {
   unsigned ignore_crc; /*ignore CRC checksums*/
   unsigned ignore_critical; /*ignore unknown critical chunks*/
   unsigned ignore_end; /*ignore issues at end of file if possible (missing IEND chunk, too large chunk, ...)*/
-  /* TODO: make a system involving warnings with levels and a strict mode instead. Other potentially recoverable
-     errors: srgb rendering intent value, size of content of ancillary chunks, more than 79 characters for some
-     strings, placement/combination rules for ancillary chunks, crc of unknown chunks, allowed characters
-     in string keys, etc... */
 
   unsigned color_convert; /*whether to convert the PNG to the color type you want. Default: yes*/
 
@@ -1162,28 +1158,6 @@ unsigned compress(std::vector<unsigned char>& out, const std::vector<unsigned ch
 #endif /* LODEPNG_COMPILE_ZLIB */
 } /* namespace lodepng */
 #endif /*LODEPNG_COMPILE_CPP*/
-
-/*
-TODO:
-[.] test if there are no memory leaks or security exploits - done a lot but needs to be checked often
-[.] check compatibility with various compilers  - done but needs to be redone for every newer version
-[X] converting color to 16-bit per channel types
-[X] support color profile chunk types (but never let them touch RGB values by default)
-[ ] support all public PNG chunk types (almost done except sPLT and hIST)
-[ ] make sure encoder generates no chunks with size > (2^31)-1
-[ ] partial decoding (stream processing)
-[X] let the "isFullyOpaque" function check color keys and transparent palettes too
-[X] better name for the variables "codes", "codesD", "codelengthcodes", "clcl" and "lldl"
-[ ] allow treating some errors like warnings, when image is recoverable (e.g. 69, 57, 58)
-[ ] make warnings like: oob palette, checksum fail, data after iend, wrong/unknown crit chunk, no null terminator in text, ...
-[ ] error messages with line numbers (and version)
-[ ] errors in state instead of as return code?
-[ ] new errors/warnings like suspiciously big decompressed ztxt or iccp chunk
-[ ] let the C++ wrapper catch exceptions coming from the standard library and return LodePNG error codes
-[ ] allow user to provide custom color conversion functions, e.g. for premultiplied alpha, padding bits or not, ...
-[ ] allow user to give data (void*) to custom allocator
-[X] provide alternatives for C library functions not present on some platforms (memcpy, ...)
-*/
 
 #endif /*LODEPNG_H inclusion guard*/
 
