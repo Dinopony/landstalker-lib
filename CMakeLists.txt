@@ -124,20 +124,8 @@ set(SOURCES
         "patches/engine_improvements/patch_new_map_format.hpp"
         "patches/engine_improvements/patch_normalize_bosses_hp.hpp"
         "patches/engine_improvements/patch_faster_transitions.hpp"
-        "patches/engine_improvements/patch_improve_lantern_handling.hpp"
         "patches/engine_improvements/patch_disable_region_check.hpp"
         "patches/engine_improvements/patch_new_game.hpp"
-        "patches/engine_improvements/patch_improve_gold_rewards_handling.hpp"
-
-        "patches/edit_vanilla_content/patch_sword_of_gaia_in_volcano.hpp"
-        "patches/edit_vanilla_content/patch_fix_item_checks.hpp"
-        "patches/edit_vanilla_content/patch_remove_tree_cutting_glitch_drops.hpp"
-
-        "patches/gameplay_tweaks/patch_consumable_pawn_ticket.hpp"
-        "patches/gameplay_tweaks/patch_faster_pawn_ticket.hpp"
-        "patches/gameplay_tweaks/patch_faster_gaia_effect.hpp"
-        "patches/gameplay_tweaks/patch_armor_upgrades.hpp"
-        "patches/gameplay_tweaks/patch_set_lifestocks_health.hpp"
 
         "patches/cosmetic/patch_alter_nigel_colors.hpp"
         "patches/cosmetic/patch_alter_ui_color.hpp"

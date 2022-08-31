@@ -20,6 +20,7 @@ class EntityType;
 class Map;
 class Blockset;
 
+// TODO: Make const accessors which return const pointers (ensuring there is no edition whatsoever)
 class World
 {
 private:
