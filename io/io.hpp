@@ -27,13 +27,6 @@ namespace io {
     ByteArray encode_huffman_trees(const std::vector<HuffmanTree*>& huffman_trees);
     std::vector<ByteArray> encode_textbanks(const std::vector<std::string>& strings, const std::vector<HuffmanTree*>& huffman_trees);
 
-    // world_rom_reader.cpp
-    void read_maps(const md::ROM& rom, World& world);
-    void read_game_strings(const md::ROM& rom, World& world);
-    void read_entity_types(const md::ROM& rom, World& world);
-    void read_blocksets(const md::ROM& rom, World& world);
-    void read_items(const md::ROM& rom, World& world);
-
     // exports.cpp
     void export_item_sources_as_json(const World& world, const std::string& file_path);
     void export_items_as_json(const World& world, const std::string& file_path);
@@ -43,6 +36,8 @@ namespace io {
     void export_map_palettes_as_json(const World& world, const std::string& file_path);
     void export_game_strings_as_json(const World& world, const std::string& file_path);
 
+    // world_rom_reader.cpp
+    void read_world_from_rom(const md::ROM& rom, World& world);
     // world_rom_writer.cpp
-    void write_world_to_rom(const World& world, md::ROM& rom);
+    void write_world_to_rom(World& world, md::ROM& rom);
 }

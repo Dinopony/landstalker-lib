@@ -35,7 +35,7 @@ public:
 
         for(const std::string& boss_name : bosses)
         {
-            EntityEnemy* enemy = reinterpret_cast<EntityEnemy*>(world.entity_type(boss_name));
+            EnemyType* enemy = reinterpret_cast<EnemyType*>(world.entity_type(boss_name));
             enemy->unkillable(true);
             enemy->health(enemy->health() - 100);
         }

@@ -88,6 +88,10 @@ namespace offsets
 
     constexpr uint32_t MAP_BASE_CHEST_ID_TABLE = 0x09E78E;
     constexpr uint32_t MAP_BASE_CHEST_ID_TABLE_END = 0x09EABE;
+
+    constexpr uint32_t CHEST_CONTENTS_TABLE = MAP_BASE_CHEST_ID_TABLE_END;
+    constexpr uint32_t CHEST_CONTENTS_TABLE_END = 0x09EB9C;
+
     constexpr uint32_t CREDITS_TEXT = 0x09ED1A;
     constexpr uint32_t CREDITS_TEXT_END = 0x09F644;
 

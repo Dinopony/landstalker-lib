@@ -1,13 +1,15 @@
 #include "io.hpp"
 
 #include "../model/entity_type.hpp"
-#include "../model/item_source.hpp"
+#include "../../../src/logic_model/item_source.hpp"
 #include "../model/map.hpp"
 #include "../model/world.hpp"
 #include "../model/blockset.hpp"
 
 #include "../constants/offsets.hpp"
 #include "../constants/entity_type_codes.hpp"
+
+#include "../assets/entity_type_names.json.hxx"
 
 #include "../tools/vectools.hpp"
 #include "../tools/huffman_tree.hpp"
@@ -281,7 +283,7 @@ static void read_map_connections(const md::ROM& rom, World& world)
     }
 }
 
-void io::read_maps(const md::ROM& rom, World& world)
+static void read_maps(const md::ROM& rom, World& world)
 {
     read_map_palettes(rom, world);
     read_maps_data(rom, world);
@@ -297,7 +299,7 @@ void io::read_maps(const md::ROM& rom, World& world)
     read_map_connections(rom, world);
 }
 
-void io::read_game_strings(const md::ROM& rom, World& world)
+static void read_game_strings(const md::ROM& rom, World& world)
 {
     uint32_t huffman_trees_base_addr = offsets::HUFFMAN_TREE_OFFSETS + (SYMBOL_COUNT * 2);
 
@@ -331,7 +333,7 @@ static void read_entity_type_palettes(const md::ROM& rom, World& world)
         uint8_t palette_id = rom.get_byte(addr+1);
 
         if(!world.entity_types().count(entity_id))
-            world.add_entity_type(new EntityType(entity_id, "No" + std::to_string(entity_id)));
+            world.add_entity_type(new EntityType(entity_id));
 
         EntityType* entity_type = world.entity_type(entity_id);
         if(palette_id & 0x80)
@@ -352,7 +354,18 @@ static void read_entity_type_palettes(const md::ROM& rom, World& world)
     }
 }
 
-void io::read_entity_types(const md::ROM& rom, World& world)
+static void load_entity_type_names_from_json(World& world)
+{
+    // Apply the randomizer model changes to the model loaded from ROM
+    Json entity_type_names_json = Json::parse(ENTITY_TYPE_NAMES_JSON);
+    for(size_t i=0 ; i<entity_type_names_json.size() ; ++i)
+    {
+        std::string type_name = entity_type_names_json.at(i);
+        world.entity_type(i)->name(type_name);
+    }
+}
+
+static void read_entity_types(const md::ROM& rom, World& world)
 {
     // Init ground item pseudo entity types
     for(auto& [item_id, item] : world.items())
@@ -384,15 +397,20 @@ void io::read_entity_types(const md::ROM& rom, World& world)
         uint8_t probability_id = ((rom.get_byte(addr+4) & 0x80) >> 5) | (rom.get_byte(addr+5) >> 6);
         uint16_t drop_probability = probability_table.at(probability_id);
 
-        world.add_entity_type(new EntityEnemy(id, name,
-                                              health, attack, defence,
-                                              dropped_golds, dropped_item, drop_probability));
+        world.add_entity_type(new EnemyType(id, name,
+                                            health, attack, defence,
+                                            dropped_golds, dropped_item, drop_probability));
     }
 
     read_entity_type_palettes(rom, world);
+
+    // Add the invisible cube entity type which has no palette, so isn't listed anywhere
+    world.add_entity_type(new EntityType(0x51));
+
+    load_entity_type_names_from_json(world);
 }
 
-void io::read_blocksets(const md::ROM& rom, World& world)
+static void read_blocksets(const md::ROM& rom, World& world)
 {
     // A blockset group is a table of blocksets where the first one is a "primary blockset", and other ones are "secondary".
     // A map always uses the primary blockset concatenated with one of the secondary blocksets in the group.
@@ -421,7 +439,7 @@ void io::read_blocksets(const md::ROM& rom, World& world)
     for(const auto& [group_addr, blocksets_in_group] : blocksets_in_groups)
     {
         for(uint32_t blockset_addr : blocksets_in_group)
-            blockset_groups_by_addr[group_addr].push_back(decode_blockset(rom, blockset_addr));
+            blockset_groups_by_addr[group_addr].push_back(io::decode_blockset(rom, blockset_addr));
     }
 
     std::vector<std::vector<Blockset*>>& blockset_groups = world.blockset_groups();
@@ -434,7 +452,7 @@ void io::read_blocksets(const md::ROM& rom, World& world)
             blockset_groups[i].clear();
 }
 
-void io::read_items(const md::ROM& rom, World& world)
+static void read_items(const md::ROM& rom, World& world)
 {
     std::vector<std::string> item_names;
     item_names.reserve(0x40);
@@ -487,4 +505,28 @@ void io::read_items(const md::ROM& rom, World& world)
 
         items[id] = new Item(id, name, max_quantity, 0, gold_value, pre_use_addr, post_use_addr);
     }
+}
+
+static void read_chest_contents(const md::ROM& rom, World& world)
+{
+    world.chest_contents().reserve(0x100);
+
+    for(uint32_t addr = offsets::CHEST_CONTENTS_TABLE ; addr < offsets::CHEST_CONTENTS_TABLE_END ; ++addr)
+    {
+        uint8_t item_id = rom.get_byte(addr);
+        world.chest_contents().emplace_back(world.item(item_id));
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+void io::read_world_from_rom(const md::ROM& rom, World& world)
+{
+    read_items(rom, world);
+    read_chest_contents(rom, world);
+    read_game_strings(rom, world);
+    read_blocksets(rom, world);
+    read_entity_types(rom, world);
+    read_maps(rom, world);
 }

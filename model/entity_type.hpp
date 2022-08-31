@@ -15,6 +15,11 @@ private:
     EntityHighPalette _high_palette {};
 
 public:
+    explicit EntityType(uint8_t id) :
+        _id     (id),
+        _name   ("No" + std::to_string(id))
+    {}
+
     EntityType(uint8_t id, std::string name) :
         _id     (id),
         _name   (std::move(name))
@@ -62,7 +67,7 @@ public:
     }
 };
 
-class EntityEnemy : public EntityType
+class EnemyType : public EntityType
 {
 private :
     uint8_t _health;
@@ -74,9 +79,9 @@ private :
     bool _unkillable;
 
 public:
-    EntityEnemy(uint8_t id, const std::string& name,
-                uint8_t health, uint8_t attack, uint8_t defence,
-                uint8_t dropped_golds, Item* dropped_item, uint16_t drop_probability);
+    EnemyType(uint8_t id, const std::string& name,
+              uint8_t health, uint8_t attack, uint8_t defence,
+              uint8_t dropped_golds, Item* dropped_item, uint16_t drop_probability);
 
     [[nodiscard]] std::string type_name() const override { return "enemy"; };
 

@@ -25,12 +25,12 @@ class World
 {
 private:
     std::map<uint8_t, Item*> _items;
-    std::vector<ItemSource*> _item_sources;
     std::vector<std::string> _game_strings;
     std::map<uint8_t, EntityType*> _entity_types;
     std::map<uint16_t, Map*> _maps;
     std::vector<MapConnection> _map_connections;
     std::vector<MapPalette*> _map_palettes;
+    std::vector<Item*> _chest_contents;
     std::vector<EntityType*> _fahl_enemies;
     SpawnLocation _spawn_location;
     std::vector<Flag> _starting_flags;
@@ -44,10 +44,8 @@ private:
     std::vector<uint16_t> _dark_maps;
 
 public:
-    explicit World(const md::ROM& rom);
+    World() = default;
     ~World();
-
-    void write_to_rom(md::ROM& rom);
 
     [[nodiscard]] const std::map<uint8_t, Item*>& items() const { return _items; }
     std::map<uint8_t, Item*>& items() { return _items; }
@@ -56,11 +54,6 @@ public:
     Item* add_item(Item* item);
     Item* add_gold_item(uint8_t worth);
     [[nodiscard]] std::vector<Item*> starting_inventory() const;
-
-    [[nodiscard]] const std::vector<ItemSource*>& item_sources() const { return _item_sources; }
-    [[nodiscard]] std::vector<ItemSource*>& item_sources() { return _item_sources; }
-    [[nodiscard]] ItemSource* item_source(const std::string& name) const;
-    [[nodiscard]] std::vector<ItemSource*> item_sources_with_item(Item* item);
 
     [[nodiscard]] const std::vector<std::string>& game_strings() const { return _game_strings; }
     std::vector<std::string>& game_strings() { return _game_strings; }
@@ -102,6 +95,12 @@ public:
     [[nodiscard]] MapPalette* map_palette(uint8_t id) { return _map_palettes.at(id); }
     [[nodiscard]] uint8_t map_palette_id(MapPalette* palette) const;
     void add_map_palette(MapPalette* palette);
+    void clean_unused_map_palettes();
+
+    [[nodiscard]] const std::vector<Item*>& chest_contents() const { return _chest_contents; }
+    [[nodiscard]] std::vector<Item*>& chest_contents() { return _chest_contents; }
+    [[nodiscard]] Item* chest_contents(size_t chest_id) const { return _chest_contents.at(chest_id); }
+    void chest_contents(size_t chest_id, Item* item) { _chest_contents[chest_id] = item; }
 
     [[nodiscard]] const std::vector<EntityType*>& fahl_enemies() const { return _fahl_enemies; }
     void add_fahl_enemy(EntityType* enemy) { _fahl_enemies.emplace_back(enemy); }
@@ -115,10 +114,4 @@ public:
     [[nodiscard]] const std::vector<MapLayout*>& map_layouts() const { return _map_layouts; }
     void add_map_layout(MapLayout* layout) { _map_layouts.emplace_back(layout); }
     void clean_unused_layouts();
-
-private:
-    void load_item_sources();
-    void load_entity_types();
-
-    void clean_unused_palettes();
 };

@@ -25,8 +25,8 @@ EntityType* EntityType::from_json(uint8_t id, const Json& json, const World& wor
 
         uint16_t drop_probability = json.value("dropProbability", 0);
 
-        entity_type = new EntityEnemy(id, name, health, attack, defence,
-                                      dropped_golds, dropped_item, drop_probability);
+        entity_type = new EnemyType(id, name, health, attack, defence,
+                                    dropped_golds, dropped_item, drop_probability);
     }
     else
     {
@@ -49,9 +49,9 @@ EntityType* EntityType::from_json(uint8_t id, const Json& json, const World& wor
     return entity_type;
 }
 
-EntityEnemy::EntityEnemy(uint8_t id, const std::string& name,
-                         uint8_t health, uint8_t attack, uint8_t defence,
-                         uint8_t dropped_golds, Item* dropped_item, uint16_t drop_probability) :
+EnemyType::EnemyType(uint8_t id, const std::string& name,
+                     uint8_t health, uint8_t attack, uint8_t defence,
+                     uint8_t dropped_golds, Item* dropped_item, uint16_t drop_probability) :
     EntityType          (id, name),
     _health             (health),
     _attack             (attack),
@@ -62,7 +62,7 @@ EntityEnemy::EntityEnemy(uint8_t id, const std::string& name,
     _unkillable         (false)
 {}
 
-void EntityEnemy::apply_health_factor(double factor)
+void EnemyType::apply_health_factor(double factor)
 {
     if(_health < 255)
     {
@@ -73,7 +73,7 @@ void EntityEnemy::apply_health_factor(double factor)
     }
 }
 
-void EntityEnemy::apply_armor_factor(double factor)
+void EnemyType::apply_armor_factor(double factor)
 {
     if(_defence < 99)
     {
@@ -84,7 +84,7 @@ void EntityEnemy::apply_armor_factor(double factor)
     }
 }
 
-void EntityEnemy::apply_damage_factor(double factor)
+void EnemyType::apply_damage_factor(double factor)
 {
     if(_attack < 127)
     {
@@ -95,7 +95,7 @@ void EntityEnemy::apply_damage_factor(double factor)
     }
 }
 
-void EntityEnemy::apply_golds_factor(double factor)
+void EnemyType::apply_golds_factor(double factor)
 {
     double factored_golds = static_cast<uint16_t>(_dropped_golds) * factor;
     if (factored_golds > 255)
@@ -103,7 +103,7 @@ void EntityEnemy::apply_golds_factor(double factor)
     _dropped_golds = static_cast<uint8_t>(factored_golds);
 }
 
-void EntityEnemy::apply_drop_chance_factor(double factor)
+void EnemyType::apply_drop_chance_factor(double factor)
 {
     if(_drop_probability > 0 && _dropped_item->id() != 1)
     {
@@ -114,7 +114,7 @@ void EntityEnemy::apply_drop_chance_factor(double factor)
     }
 }
 
-Json EntityEnemy::to_json() const
+Json EnemyType::to_json() const
 {
     Json json = EntityType::to_json();
 
@@ -134,7 +134,7 @@ Json EntityEnemy::to_json() const
     return json;
 }
 
-void EntityEnemy::apply_json(const Json& json, const World& world)
+void EnemyType::apply_json(const Json& json, const World& world)
 {
     EntityType::apply_json(json, world);
 

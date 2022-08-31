@@ -3,7 +3,7 @@
 #include "entity_type.hpp"
 #include "map.hpp"
 #include "item.hpp"
-#include "item_source.hpp"
+#include "../../../src/logic_model/item_source.hpp"
 #include "spawn_location.hpp"
 #include "blockset.hpp"
 
@@ -12,36 +12,13 @@
 
 #include "../exceptions.hpp"
 
-// Include headers automatically generated from model json files
-#include "data/entity_type.json.hxx"
-#include "data/item_source.json.hxx"
-
 #include <iostream>
 #include <set>
-
-World::World(const md::ROM& rom)
-{
-    // No requirements
-    io::read_items(rom, *this);
-    io::read_game_strings(rom, *this);
-    io::read_blocksets(rom, *this);
-
-    io::read_entity_types(rom, *this);
-    this->load_entity_types();
-
-    // Reading map entities might actually require items
-    io::read_maps(rom, *this);
-
-    // Require maps & entities
-    this->load_item_sources();
-}
 
 World::~World()
 {
     for (auto& [key, item] : _items)
         delete item;
-    for (ItemSource* source : _item_sources)
-        delete source;
     for (auto& [id, entity] : _entity_types)
         delete entity;
     for (MapPalette* palette : _map_palettes)
@@ -59,14 +36,6 @@ World::~World()
             }
         }
     }
-}
-
-void World::write_to_rom(md::ROM& rom)
-{
-    this->clean_unused_palettes();
-    this->clean_unused_blocksets();
-    this->clean_unused_layouts();
-    io::write_world_to_rom(*this, rom);
 }
 
 Item* World::item(const std::string& name) const
@@ -113,26 +82,6 @@ std::vector<Item*> World::starting_inventory() const
             starting_inventory.emplace_back(item);
     }
     return starting_inventory;
-}
-
-ItemSource* World::item_source(const std::string& name) const
-{
-    for (ItemSource* source : _item_sources)
-        if (source->name() == name)
-            return source;
-
-    throw std::out_of_range("No source with given name");
-}
-
-std::vector<ItemSource*> World::item_sources_with_item(Item* item)
-{
-    std::vector<ItemSource*> sources_with_item;
-
-    for (ItemSource* source : _item_sources)
-        if (source->item() == item)
-            sources_with_item.emplace_back(source);
-
-    return sources_with_item;
 }
 
 uint8_t World::starting_life() const
@@ -252,7 +201,7 @@ uint16_t World::first_empty_game_string_id(uint16_t initial_index) const
     return _game_strings.size();
 }
 
-void World::clean_unused_palettes()
+void World::clean_unused_map_palettes()
 {
    std::set<MapPalette*> used_palettes;
     for(auto& [map_id, map] : _maps)
@@ -346,56 +295,6 @@ void World::clean_unused_layouts()
         }
         else ++it;
     }
-}
-
-void World::load_item_sources()
-{
-    Json item_sources_json = Json::parse(ITEM_SOURCES_JSON);
-    for(const Json& source_json : item_sources_json)
-    {
-        _item_sources.emplace_back(ItemSource::from_json(source_json, *this));
-    }
-
-#ifdef DEBUG
-    std::cout << _item_sources.size() << " item sources loaded." << std::endl;
-#endif
-
-    // The following chests are absent from the game on release or modded out of the game for the rando, and their IDs are therefore free:
-    // 0x0E (14): Mercator Kitchen (variant?)
-    // 0x1E (30): King Nole's Cave spiral staircase (variant with enemies?) ---> 29 is the one used in rando
-    // 0x20 (32): Boulder chase hallway (variant with enemies?) ---> 31 is the one used in rando
-    // 0x25 (37): Thieves Hideout entrance (variant with water)
-    // 0x27 (39): Thieves Hideout entrance (waterless variant)
-    // 0x28 (40): Thieves Hideout entrance (waterless variant)
-    // 0x33 (51): Thieves Hideout second room (waterless variant)
-    // 0x3D (61): Thieves Hideout reward room (Kayla cutscene variant)
-    // 0x3E (62): Thieves Hideout reward room (Kayla cutscene variant)
-    // 0x3F (63): Thieves Hideout reward room (Kayla cutscene variant)
-    // 0x40 (64): Thieves Hideout reward room (Kayla cutscene variant)
-    // 0x41 (65): Thieves Hideout reward room (Kayla cutscene variant)
-    // 0xBB (187): Crypt (Larson. E room)
-    // 0xBC (188): Crypt (Larson. E room)
-    // 0xBD (189): Crypt (Larson. E room)
-    // 0xBE (190): Crypt (Larson. E room)
-    // 0xC3 (195): Map 712 / 0x2C8 ???
-}
-
-void World::load_entity_types()
-{
-    // Apply the randomizer model changes to the model loaded from ROM
-    Json entities_json = Json::parse(ENTITIES_JSON);
-    for(auto& [id_string, entity_json] : entities_json.items())
-    {
-        uint8_t id = std::stoi(id_string);
-        if(!_entity_types.count(id))
-            _entity_types[id] = EntityType::from_json(id, entity_json, *this);
-        else
-            _entity_types[id]->apply_json(entity_json, *this);
-    }
-
-#ifdef DEBUG
-    std::cout << _entity_types.size()  << " entities loaded." << std::endl;
-#endif
 }
 
 void World::add_entity_type(EntityType* entity_type)

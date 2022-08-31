@@ -1,18 +1,10 @@
 #include "io.hpp"
 
-#include "../model/item_source.hpp"
+#include "../../../src/logic_model/item_source.hpp"
 #include "../model/entity_type.hpp"
 #include "../model/map.hpp"
 #include "../model/map_connection.hpp"
 #include "../model/world.hpp"
-
-void io::export_item_sources_as_json(const World& world, const std::string& file_path)
-{
-    Json item_sources_json = Json::array();
-    for(ItemSource* source : world.item_sources())
-        item_sources_json.emplace_back(source->to_json());
-    dump_json_to_file(item_sources_json, file_path);
-}
 
 void io::export_items_as_json(const World& world, const std::string& file_path)
 {

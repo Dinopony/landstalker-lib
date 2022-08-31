@@ -1,7 +1,7 @@
 #include "io.hpp"
 
 #include "../model/entity_type.hpp"
-#include "../model/item_source.hpp"
+#include "../../../src/logic_model/item_source.hpp"
 #include "../model/map.hpp"
 #include "../model/world.hpp"
 
@@ -119,37 +119,39 @@ static void write_items(const World& world, md::ROM& rom)
     }
 }
 
-static void write_item_sources(const World& world, md::ROM& rom)
+static void write_chest_contents(const World& world, md::ROM& rom)
 {
-    for(ItemSource* source : world.item_sources())
+    if(world.chest_contents().size() > 0x100)
+        throw LandstalkerException("Cannot declare more than 256 chests");
+
+    rom.mark_empty_chunk(offsets::CHEST_CONTENTS_TABLE, offsets::CHEST_CONTENTS_TABLE_END);
+
+    ByteArray chest_contents_bytes;
+    for(Item* item : world.chest_contents())
     {
-        if(source->type_name() == "chest")
-        {
-            uint8_t chest_id = reinterpret_cast<ItemSourceChest*>(source)->chest_id();
-            rom.set_byte(0x9EABE + chest_id, source->item_id());
-        }
-        else if(source->type_name() == "reward")
-        {
-            uint32_t address_in_rom = reinterpret_cast<ItemSourceReward*>(source)->address_in_rom();
-            rom.set_byte(address_in_rom, source->item_id());
-        }
-        else
-        {
-            // Ground & shop item sources are tied to map entities that are updated as their contents change.
-            // Therefore those types of item sources will effectively be written when map entities are written.
-            ItemSourceOnGround* ground_source = reinterpret_cast<ItemSourceOnGround*>(source);
-            for (Entity* entity : ground_source->entities())
-                entity->entity_type_id(ground_source->item_id() + 0xC0);
-        }
+        uint8_t item_id = (item) ? item->id() : ITEM_NONE;
+        chest_contents_bytes.add_byte(item_id);
     }
+
+    uint32_t chest_contents_table_addr = rom.inject_bytes(chest_contents_bytes);
+
+    // Extend the appropriate function to go get the new table instead of the old one
+    md::Code func;
+    {
+        func.lea(chest_contents_table_addr, reg_A0);
+        func.moveb(addrw_(reg_A0, reg_D1), reg_D0);
+        func.rts();
+    }
+    uint32_t extended_chest_contents_handler = rom.inject_code(func);
+    rom.set_code(0x9E776, md::Code().jsr(extended_chest_contents_handler));
 }
 
 static void write_entity_types(const World& world, md::ROM& rom)
 {
-    std::vector<EntityEnemy*> enemy_types;
+    std::vector<EnemyType*> enemy_types;
     std::set<uint16_t> drop_probabilities;
     std::map<uint16_t, uint8_t> drop_probability_lookup;
-    std::map<EntityEnemy*, uint16_t> instances_in_game;
+    std::map<EnemyType*, uint16_t> instances_in_game;
 
     // List all different enemy types and different drop probabilities
     // Also count the number of instances for each enemy in the game to optimize
@@ -158,7 +160,7 @@ static void write_entity_types(const World& world, md::ROM& rom)
     {
         if(entity_type->type_name() != "enemy")
             continue;
-        EntityEnemy* enemy_type = reinterpret_cast<EntityEnemy*>(entity_type);
+        EnemyType* enemy_type = reinterpret_cast<EnemyType*>(entity_type);
 
         enemy_types.emplace_back(enemy_type);
         drop_probabilities.insert(enemy_type->drop_probability());
@@ -177,7 +179,7 @@ static void write_entity_types(const World& world, md::ROM& rom)
 
     // Sort the enemy types by number of instances in game (descending)
     std::sort(enemy_types.begin(), enemy_types.end(), 
-        [instances_in_game](EntityEnemy* a, EntityEnemy* b) -> bool {
+        [instances_in_game](EnemyType* a, EnemyType* b) -> bool {
             return instances_in_game.at(a) > instances_in_game.at(b);
         }
     );
@@ -197,7 +199,7 @@ static void write_entity_types(const World& world, md::ROM& rom)
 
     // Write the actual enemy stats
     addr = offsets::ENEMY_STATS_TABLE;
-    for(EntityEnemy* enemy_type : enemy_types)
+    for(EnemyType* enemy_type : enemy_types)
     {
         uint8_t byte5 = enemy_type->attack() & 0x7F;
         uint8_t byte6 = enemy_type->dropped_item_id() & 0x3F;
@@ -845,13 +847,17 @@ static void write_maps(const World& world, md::ROM& rom, const std::map<MapLayou
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void io::write_world_to_rom(const World& world, md::ROM& rom)
+void io::write_world_to_rom(World& world, md::ROM& rom)
 {
+    world.clean_unused_map_palettes();
+    world.clean_unused_blocksets();
+    world.clean_unused_layouts();
+
     std::map<MapLayout*, uint32_t> map_layout_addresses = write_map_layouts(world, rom);
     write_blocksets(world, rom);
     write_item_names(world, rom);
     write_items(world, rom);
-    write_item_sources(world, rom);
+    write_chest_contents(world, rom);
     write_entity_types(world, rom);
     write_entity_type_palettes(world, rom);
     write_game_strings(world, rom);

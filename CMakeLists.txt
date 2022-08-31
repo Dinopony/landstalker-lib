@@ -28,14 +28,12 @@ macro(WRAPPED_DEPENDENCY)
 endmacro()
 
 # Wrap JSON model files and assets into automated .hxx headers
-wrapped_dependency(TEXT     model/data/entity_type.json             ENTITIES_JSON)
-wrapped_dependency(TEXT     model/data/item_source.json             ITEM_SOURCES_JSON)
+wrapped_dependency(TEXT     assets/entity_type_names.json           ENTITY_TYPE_NAMES_JSON)
 wrapped_dependency(RAW      assets/fixed_hud_tilemap.bin            FIXED_HUD_TILEMAP)
 
 set(SOURCES
         # --- Auto-generated dependencies----------------------------------------
-        "model/data/entity_type.json.hxx"
-        "model/data/item_source.json.hxx"
+        "assets/entity_type_names.json.hxx"
         "assets/fixed_hud_tilemap.bin.hxx"
 
         # --- Global includes ----------------------------------------
@@ -102,8 +100,6 @@ set(SOURCES
         "model/entity_type.cpp"
         "model/entity.hpp"
         "model/entity.cpp"
-        "model/item_source.hpp"
-        "model/item_source.cpp"
         "model/item.hpp"
         "model/item.cpp"
         "model/map_connection.hpp"
