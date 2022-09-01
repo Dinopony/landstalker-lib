@@ -1,13 +1,14 @@
 #include "io.hpp"
 
 #include "../model/entity_type.hpp"
-#include "../../../src/logic_model/item_source.hpp"
 #include "../model/map.hpp"
 #include "../model/world.hpp"
+#include "../model/entity.hpp"
 
-#include "../exceptions.hpp"
 #include "../constants/offsets.hpp"
+#include "../constants/item_codes.hpp"
 #include "../constants/entity_type_codes.hpp"
+
 #include "../tools/huffman_tree.hpp"
 #include "../tools/stringtools.hpp"
 
@@ -228,7 +229,6 @@ static void write_entity_type_palettes(const World& world, md::ROM& rom)
     std::vector<EntityLowPalette> low_palettes;
     std::vector<EntityHighPalette> high_palettes;
 
-    uint32_t addr = offsets::ENTITY_PALETTES_TABLE;
     ByteArray entity_palette_uses;
     for(auto& [id, entity_type] : world.entity_types())
     {
@@ -322,18 +322,6 @@ static void write_game_strings(const World& world, md::ROM& rom)
 
     for(HuffmanTree* tree : huffman_trees)
         delete tree;
-}
-
-static void write_fahl_enemies(const World& world, md::ROM& rom)
-{
-    if(world.fahl_enemies().size() > 50)
-        throw LandstalkerException("Cannot put more than 50 enemies for Fahl challenge");
-
-    ByteArray fahl_enemies_bytes;
-    for(EntityType* entity_type : world.fahl_enemies())
-        fahl_enemies_bytes.add_byte(entity_type->id());
-
-    rom.set_bytes(offsets::FAHL_ENEMIES_TABLE, fahl_enemies_bytes);
 }
 
 static void write_map_connections(const World& world, md::ROM& rom)
@@ -906,7 +894,6 @@ void io::write_world_to_rom(World& world, md::ROM& rom)
     write_entity_types(world, rom);
     write_entity_type_palettes(world, rom);
     write_game_strings(world, rom);
-    write_fahl_enemies(world, rom);
     write_map_connections(world, rom);
     write_map_palettes(world, rom);
     write_maps(world, rom, map_layout_addresses);

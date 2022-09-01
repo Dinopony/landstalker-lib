@@ -1,9 +1,9 @@
 #include "io.hpp"
 
 #include "../model/entity_type.hpp"
-#include "../../../src/logic_model/item_source.hpp"
 #include "../model/map.hpp"
 #include "../model/world.hpp"
+#include "../model/entity.hpp"
 #include "../model/blockset.hpp"
 
 #include "../constants/offsets.hpp"

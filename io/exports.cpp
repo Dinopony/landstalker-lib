@@ -1,6 +1,5 @@
 #include "io.hpp"
 
-#include "../../../src/logic_model/item_source.hpp"
 #include "../model/entity_type.hpp"
 #include "../model/map.hpp"
 #include "../model/map_connection.hpp"

@@ -31,7 +31,6 @@ private:
     std::vector<MapConnection> _map_connections;
     std::vector<MapPalette*> _map_palettes;
     std::vector<Item*> _chest_contents;
-    std::vector<EntityType*> _fahl_enemies; // TODO: Move over to randomizer
     SpawnLocation _spawn_location;
     std::vector<Flag> _starting_flags;
     uint16_t _starting_golds = 0;
@@ -101,9 +100,6 @@ public:
     [[nodiscard]] std::vector<Item*>& chest_contents() { return _chest_contents; }
     [[nodiscard]] Item* chest_contents(size_t chest_id) const { return _chest_contents.at(chest_id); }
     void chest_contents(size_t chest_id, Item* item) { _chest_contents[chest_id] = item; }
-
-    [[nodiscard]] const std::vector<EntityType*>& fahl_enemies() const { return _fahl_enemies; }
-    void add_fahl_enemy(EntityType* enemy) { _fahl_enemies.emplace_back(enemy); }
 
     [[nodiscard]] const std::vector<std::vector<Blockset*>>& blockset_groups() const { return _blockset_groups; }
     [[nodiscard]] std::vector<std::vector<Blockset*>>& blockset_groups() { return _blockset_groups; }

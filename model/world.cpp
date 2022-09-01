@@ -3,16 +3,9 @@
 #include "entity_type.hpp"
 #include "map.hpp"
 #include "item.hpp"
-#include "../../../src/logic_model/item_source.hpp"
-#include "spawn_location.hpp"
 #include "blockset.hpp"
 
-#include "../constants/offsets.hpp"
-#include "../io/io.hpp"
-
-#include "../exceptions.hpp"
-
-#include <iostream>
+#include "../constants/item_codes.hpp"
 #include <set>
 
 World::~World()
