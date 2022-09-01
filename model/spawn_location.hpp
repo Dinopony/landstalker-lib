@@ -9,6 +9,8 @@
 #define ORIENTATION_SW 0x88
 #define ORIENTATION_NW 0xC8
 
+// TODO: SpawnLocation are a class from the randomizer, obviously.
+//       The fact that it contains a node_id is pretty much the proof, as well as the JSON data already being in the rando
 class SpawnLocation
 {
 private:

@@ -156,6 +156,25 @@ void Map::add_variant(Map* variant_map, uint8_t flag_byte, uint8_t flag_bit)
     variant_map->_parent_map = this;
 }
 
+std::set<Map*> Map::all_recursive_variants() const
+{
+    std::set<Map*> previous_variants;
+    std::set<Map*> current_variants;
+    for(auto& [variant, _] : _variants)
+        current_variants.insert(variant);
+
+    do {
+        previous_variants = current_variants;
+        for(Map* map : previous_variants)
+        {
+            for(auto& [variant, _] : map->_variants)
+                current_variants.insert(variant);
+        }
+    } while(current_variants.size() > previous_variants.size());
+
+    return current_variants;
+}
+
 ////////////////////////////////////////////////////////////////
 
 Json Map::to_json(const World& world) const

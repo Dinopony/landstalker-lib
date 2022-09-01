@@ -31,7 +31,7 @@ private:
     std::vector<MapConnection> _map_connections;
     std::vector<MapPalette*> _map_palettes;
     std::vector<Item*> _chest_contents;
-    std::vector<EntityType*> _fahl_enemies;
+    std::vector<EntityType*> _fahl_enemies; // TODO: Move over to randomizer
     SpawnLocation _spawn_location;
     std::vector<Flag> _starting_flags;
     uint16_t _starting_golds = 0;

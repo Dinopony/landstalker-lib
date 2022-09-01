@@ -283,6 +283,69 @@ static void read_map_connections(const md::ROM& rom, World& world)
     }
 }
 
+static void read_custom_map_setups(const md::ROM& rom, World& world)
+{
+    uint32_t addr = 0x19B62; // DoCustomRoomActionsStart
+
+    while(addr < 0x1A306)
+    {
+        uint16_t first_opcode = rom.get_word(addr);
+        uint32_t map_setup_addr = addr + 10;
+
+        uint16_t offset = rom.get_byte(addr + 9);
+        if(offset == 0)
+        {
+            offset = rom.get_word(addr + 10);
+            map_setup_addr += 2;
+        }
+        uint32_t next_addr = addr + 10 + offset;
+
+        if(first_opcode == 0x0C79) // Regular map ID test (cmpi.w)
+        {
+            uint16_t map_id = rom.get_word(addr + 2);
+            uint32_t tested_addr = rom.get_long(addr + 4);
+            if(tested_addr == 0xFF1206)
+            {
+                // Specific variant: only apply to variant
+                world.map(map_id)->map_setup_addr(map_setup_addr);
+            }
+            else if(tested_addr == 0xFF1204)
+            {
+                // Parent map: apply to parent & variants
+                Map* parent_map = world.map(map_id);
+                std::set<Map*> maps_to_process = parent_map->all_recursive_variants();
+                maps_to_process.insert(parent_map);
+
+                for(Map* map : maps_to_process)
+                    map->map_setup_addr(map_setup_addr);
+            }
+            else
+            {
+                // Shouldn't happen!
+                throw std::exception();
+            }
+        }
+        else if(first_opcode == 0x0C39) // MusicTreeWarp test (cmpi.b)
+        {
+            // All Tibor maps
+            std::set<Map*> maps_to_process = {
+                world.map(808), world.map(809), world.map(810), world.map(811),
+                world.map(812), world.map(813), world.map(814), world.map(815)
+            };
+            map_setup_addr = 0x1A06C;
+            for(Map* map : maps_to_process)
+                map->map_setup_addr(map_setup_addr);
+        }
+        else
+        {
+            // Shouldn't happen!
+            throw std::exception();
+        }
+
+        addr = next_addr;
+    }
+}
+
 static void read_maps(const md::ROM& rom, World& world)
 {
     read_map_palettes(rom, world);
@@ -297,6 +360,7 @@ static void read_maps(const md::ROM& rom, World& world)
     read_maps_dialogue_table(rom, world);
     read_maps_persistence_flags(rom, world);
     read_map_connections(rom, world);
+    read_custom_map_setups(rom, world);
 }
 
 static void read_game_strings(const md::ROM& rom, World& world)

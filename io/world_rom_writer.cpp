@@ -829,6 +829,50 @@ static void write_maps_entity_persistence_flags(const World& world, md::ROM& rom
     rom.mark_empty_chunk(addr, offsets::SACRED_TREES_PERSISTENCE_FLAGS_TABLE_END);
 }
 
+static void write_custom_map_setups(const World& world, md::ROM& rom)
+{
+    ByteArray custom_map_setup_bytes;
+    for(const auto& [map_id, map] : world.maps())
+    {
+        if(map->map_setup_addr() == 0xFFFFFFFF)
+            continue;
+
+        custom_map_setup_bytes.add_word(map_id);
+        custom_map_setup_bytes.add_long(map->map_setup_addr());
+    }
+    custom_map_setup_bytes.add_word(0xFFFF);
+
+    uint32_t map_setup_table_addr = rom.inject_bytes(custom_map_setup_bytes);
+
+    // Inject a function capable of reading that table
+    md::Code func;
+    func.movem_to_stack({ reg_D0, reg_D1 }, { reg_A0 });
+    {
+        func.lea(map_setup_table_addr, reg_A0); // Setup the table cursor in A0
+        func.movew(addr_(0xFF1206), reg_D0);    // Store current map ID in D0
+        func.label("loop");
+        {
+            func.movew(addr_postinc_(reg_A0), reg_D1);  // Read map ID from table
+            func.bmi("ret");                            // If it was 0xFFFF, it means we reached table end
+            func.cmpw(reg_D0, reg_D1);                  // If it matches with current map ID, jump to "found"
+            func.beq("found");
+            func.addql(4, reg_A0);                      // Otherwise, go to next table element
+        }
+        func.bra("loop");
+
+        func.label("found");
+        func.movel(addr_(reg_A0), reg_A0);
+        func.jsr(addr_(reg_A0));    // Execute the map setup, then fallthrough to return
+    }
+    func.label("ret");
+    func.movem_from_stack({ reg_D0, reg_D1 }, { reg_A0 });
+    func.jsr(0x1A37C);  // CheckRoomFlagsToHideSprites which was scrapped when injecting the JSR leading to this function
+    func.rts();
+
+    uint32_t reading_func_addr = rom.inject_code(func);
+    rom.set_code(0x19B4A, md::Code().jsr(reading_func_addr));
+}
+
 static void write_maps(const World& world, md::ROM& rom, const std::map<MapLayout*, uint32_t>& map_layout_adresses)
 {
     write_maps_data(world, rom, map_layout_adresses);
@@ -843,6 +887,7 @@ static void write_maps(const World& world, md::ROM& rom, const std::map<MapLayou
     write_maps_dialogue_table(world, rom);
     write_maps_entities(world, rom);
     write_maps_entity_persistence_flags(world, rom);
+    write_custom_map_setups(world, rom);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

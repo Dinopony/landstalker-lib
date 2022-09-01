@@ -82,6 +82,8 @@ private:
     std::vector<GlobalEntityMaskFlag> _key_door_mask_flags;
     Flag _visited_flag;
 
+    uint32_t _map_setup_addr = 0xFFFFFFFF;
+
 public:
     explicit Map(uint16_t map_id);
     Map(const Map& map);
@@ -131,6 +133,7 @@ public:
     [[nodiscard]] const Flag& variant(Map* variant_map) const { return _variants.at(variant_map); }
     [[nodiscard]] Flag& variant(Map* variant_map) { return _variants.at(variant_map); }
     void add_variant(Map* variant_map, uint8_t flag_byte, uint8_t flag_bit);
+    [[nodiscard]] std::set<Map*> all_recursive_variants() const;
 
     [[nodiscard]] const std::vector<uint16_t>& speaker_ids() const { return _speaker_ids; }
     [[nodiscard]] std::vector<uint16_t>& speaker_ids() { return _speaker_ids; }
@@ -144,6 +147,9 @@ public:
 
     [[nodiscard]] const Flag& visited_flag() const { return _visited_flag; }
     void visited_flag(const Flag& flag) { _visited_flag = flag; }
+
+    [[nodiscard]] uint32_t map_setup_addr() const { return _map_setup_addr; }
+    void map_setup_addr(uint32_t addr) { _map_setup_addr = addr; }
 
     [[nodiscard]] uint8_t unknown_param_1() const { return _unknown_param_1; }
     void unknown_param_1(uint8_t value) { _unknown_param_1 = value; }
