@@ -16,6 +16,7 @@ public:
         add_bankswitching_when_checking_sram(rom);
         add_bankswitching_when_erasing_save(rom);
         add_bankswitching_when_writing_save(rom);
+        add_bankswitching_when_writing_save_checksum(rom);
         add_bankswitching_when_checking_save_checksum(rom);
         add_bankswitching_when_loading_save(rom);
         add_bankswitching_when_copying_save(rom);
@@ -96,6 +97,20 @@ private:
         rom.set_code(0x15AE, md::Code().jsr(func_write_sram).nop());
     }
 
+    static void add_bankswitching_when_writing_save_checksum(md::ROM& rom)
+    {
+        md::Code proc;
+        proc.moveb(BANK_SRAM, addr_(0xA130F1)); // switch to SRAM
+        proc.moveb(reg_D1, addr_(reg_A0));
+        proc.moveb(BANK_ROM, addr_(0xA130F1)); // switch to ROM
+        proc.movem_from_stack({ reg_D0, reg_D1, reg_D7 }, { reg_A0, reg_A1, reg_A2 });
+        proc.rts();
+
+        uint32_t proc_write_checksum = rom.inject_code(proc);
+
+        rom.set_code(0x15BA, md::Code().jmp(proc_write_checksum));
+    }
+
     static void add_bankswitching_when_checking_save_checksum(md::ROM& rom)
     {
         md::Code func;
@@ -114,7 +129,7 @@ private:
 
         uint32_t func_check_save_checkum = rom.inject_code(func);
 
-        rom.set_code(0x1574, md::Code().jsr(func_check_save_checkum).nop());
+        rom.set_code(0x1574, md::Code().jsr(func_check_save_checkum).nop(2));
     }
 
     static void add_bankswitching_when_loading_save(md::ROM& rom)
