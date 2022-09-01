@@ -9,9 +9,6 @@ if (CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif ()
 
-add_compile_definitions(RELEASE="${PROJECT_VERSION}")
-add_compile_definitions(MAJOR_RELEASE="${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
-
 if(DEBUG)
     add_compile_definitions(DEBUG)
 endif()
