@@ -28,9 +28,9 @@ public:
     void inject_code(md::ROM& rom, World& world) override
     {
         // Edit spawn map and position
-        rom.set_word(0x0027F4, world.spawn_location().map_id());
-        rom.set_byte(0x0027FD, world.spawn_location().position_x());
-        rom.set_byte(0x002805, world.spawn_location().position_y());
+        rom.set_word(0x0027F4, world.spawn_map_id());
+        rom.set_byte(0x0027FD, world.spawn_position_x());
+        rom.set_byte(0x002805, world.spawn_position_y());
 
         // Edit starting life
         uint8_t starting_life = world.starting_life();
@@ -107,9 +107,9 @@ private:
             }
 
             // Set the "parent map" value to the same value as "current map" so that dialogues work on spawn map
-            func_init_game.movew(world.spawn_location().map_id(), addr_(0xFF1206));
+            func_init_game.movew(world.spawn_map_id(), addr_(0xFF1206));
             // Set the orientation byte of Nigel depending on spawn location on game start
-            func_init_game.moveb(world.spawn_location().orientation(), addr_(0xFF5404));
+            func_init_game.moveb(world.spawn_orientation(), addr_(0xFF5404));
             // Set the appropriate starting golds
             func_init_game.movew(world.starting_golds(), addr_(0xFF120E));
         }

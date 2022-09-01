@@ -77,13 +77,6 @@ std::vector<Item*> World::starting_inventory() const
     return starting_inventory;
 }
 
-uint8_t World::starting_life() const
-{
-    if(_custom_starting_life)
-        return _custom_starting_life;
-    return _spawn_location.starting_life();
-}
-
 EntityType* World::entity_type(const std::string& name) const
 {
     for(auto& [id, enemy] : _entity_types)

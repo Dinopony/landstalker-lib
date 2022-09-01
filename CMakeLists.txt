@@ -106,7 +106,6 @@ set(SOURCES
         "model/map_layout.hpp"
         "model/map.hpp"
         "model/map.cpp"
-        "model/spawn_location.hpp"
         "model/tile.hpp"
         "model/world.hpp"
         "model/world.cpp"

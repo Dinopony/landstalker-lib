@@ -1,6 +1,5 @@
 #pragma once
 
-#include "spawn_location.hpp"
 #include "map_connection.hpp"
 #include "../constants/values.hpp"
 #include "../md_tools.hpp"
@@ -31,10 +30,14 @@ private:
     std::vector<MapConnection> _map_connections;
     std::vector<MapPalette*> _map_palettes;
     std::vector<Item*> _chest_contents;
-    SpawnLocation _spawn_location;
     std::vector<Flag> _starting_flags;
+
+    uint16_t _spawn_map_id = 0;
+    uint8_t _spawn_position_x = 0x15;
+    uint8_t _spawn_position_y = 0x15;
+    uint8_t _spawn_orientation = 0;
     uint16_t _starting_golds = 0;
-    uint8_t _custom_starting_life = 0;
+    uint8_t _starting_life = 0;
 
     std::vector<std::vector<Blockset*>> _blockset_groups;
     std::vector<MapLayout*> _map_layouts;
@@ -61,8 +64,17 @@ public:
     [[nodiscard]] const std::vector<uint16_t>& dark_maps() const { return _dark_maps; }
     void dark_maps(const std::vector<uint16_t>& dark_maps) { _dark_maps = dark_maps; }
 
-    [[nodiscard]] virtual const SpawnLocation& spawn_location() const { return _spawn_location; }
-    virtual void spawn_location(const SpawnLocation& spawn) { _spawn_location = spawn; }
+    [[nodiscard]] uint16_t spawn_map_id() const { return _spawn_map_id; }
+    void spawn_map_id(uint16_t value) { _spawn_map_id = value; }
+
+    [[nodiscard]] uint8_t spawn_position_x() const { return _spawn_position_x; }
+    void spawn_position_x(uint8_t value) { _spawn_position_x = value; }
+
+    [[nodiscard]] uint8_t spawn_position_y() const { return _spawn_position_y; }
+    void spawn_position_y(uint8_t value) { _spawn_position_y = value; }
+
+    [[nodiscard]] uint8_t spawn_orientation() const { return _spawn_orientation; }
+    void spawn_orientation(uint8_t value) { _spawn_orientation = value; }
 
     [[nodiscard]] const std::vector<Flag>& starting_flags() const { return _starting_flags; }
     std::vector<Flag>& starting_flags() { return _starting_flags; }
@@ -70,9 +82,8 @@ public:
     [[nodiscard]] uint16_t starting_golds() const { return _starting_golds; }
     void starting_golds(uint16_t golds) { _starting_golds = golds; }
 
-    [[nodiscard]] uint8_t starting_life() const;
-    [[nodiscard]] uint8_t custom_starting_life() const { return _custom_starting_life; }
-    void custom_starting_life(uint8_t life) { _custom_starting_life = life; }
+    [[nodiscard]] uint8_t starting_life() const { return _starting_life; }
+    void starting_life(uint8_t life) { _starting_life = life; }
 
     [[nodiscard]] const std::map<uint8_t, EntityType*>& entity_types() const { return _entity_types; }
     [[nodiscard]] EntityType* entity_type(uint8_t id) const { return _entity_types.at(id); }
