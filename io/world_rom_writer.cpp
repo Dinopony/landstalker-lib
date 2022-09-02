@@ -837,7 +837,7 @@ static void write_custom_map_setups(const World& world, md::ROM& rom)
     func.movem_to_stack({ reg_D0, reg_D1 }, { reg_A0 });
     {
         func.lea(map_setup_table_addr, reg_A0); // Setup the table cursor in A0
-        func.movew(addr_(0xFF1206), reg_D0);    // Store current map ID in D0
+        func.movew(addr_(0xFF1204), reg_D0);    // Store current map ID in D0
         func.label("loop");
         {
             func.movew(addr_postinc_(reg_A0), reg_D1);  // Read map ID from table
@@ -861,6 +861,57 @@ static void write_custom_map_setups(const World& world, md::ROM& rom)
     rom.set_code(0x19B4A, md::Code().jsr(reading_func_addr));
 }
 
+static void write_custom_map_updates(const World& world, md::ROM& rom)
+{
+    ByteArray custom_map_update_bytes;
+    for(const auto& [map_id, map] : world.maps())
+    {
+        if(map->map_update_addr() == 0xFFFFFFFF)
+            continue;
+
+        custom_map_update_bytes.add_word(map_id);
+        custom_map_update_bytes.add_long(map->map_update_addr());
+    }
+    custom_map_update_bytes.add_word(0xFFFF);
+
+    uint32_t map_update_table_addr = rom.inject_bytes(custom_map_update_bytes);
+
+    // Inject a function capable of reading that table
+    md::Code func;
+    func.movem_to_stack({ reg_D0, reg_D1 }, { reg_A0 });
+    {
+        func.lea(map_update_table_addr, reg_A0);    // Setup the table cursor in A0
+        func.movew(addr_(0xFF1204), reg_D0);        // Store current map ID in D0
+        func.label("loop");
+        {
+            func.movew(addr_postinc_(reg_A0), reg_D1);  // Read map ID from table
+            func.bmi("not_found");                      // If it was 0xFFFF, it means we reached table end
+            func.cmpw(reg_D0, reg_D1);                  // If it matches with current map ID, jump to "found"
+            func.beq("found");
+            func.addql(4, reg_A0);                      // Otherwise, go to next table element
+        }
+        func.bra("loop");
+
+        func.label("found");
+        func.movew(0x4EF9, addr_(0xFF0012));            // Put a JMP opcode at FF0012
+        func.movel(addr_(reg_A0), addr_(0xFF0014));     // Put the address of the update handler where to jump
+        func.bra("ret");
+    }
+    func.label("not_found");
+    func.movew(0x4E75, addr_(0xFF0012)); // Put a RET opcode at FF0012
+    func.label("ret");
+    func.movem_from_stack({ reg_D0, reg_D1 }, { reg_A0 });
+    func.jmp(0x10388);  // Call the function that was erased by the injection
+    func.rts();
+
+    uint32_t reading_func_addr = rom.inject_code(func);
+    // On map loading, call that function to load a potential map update handler
+    rom.set_code(0x285E, md::Code().jsr(reading_func_addr));
+
+    // On every frame, execute the map update function stored in FF0012
+    rom.set_code(0x1758, md::Code().jsr(0xFF0012).nop(3));
+}
+
 static void write_maps(const World& world, md::ROM& rom, const std::map<MapLayout*, uint32_t>& map_layout_adresses)
 {
     write_maps_data(world, rom, map_layout_adresses);
@@ -876,6 +927,7 @@ static void write_maps(const World& world, md::ROM& rom, const std::map<MapLayou
     write_maps_entities(world, rom);
     write_maps_entity_persistence_flags(world, rom);
     write_custom_map_setups(world, rom);
+    write_custom_map_updates(world, rom);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

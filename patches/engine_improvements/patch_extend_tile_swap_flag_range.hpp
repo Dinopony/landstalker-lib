@@ -3,7 +3,7 @@
 #include "../game_patch.hpp"
 
 /**
- * In the vanilla game, tile swaps (dynamic map changes reacting to flags, such as Mercator fountain or Tibor entrance)
+ * In the vanilla game, tile swaps (dynamic map changes reacting to flags, such as opened doors or teleporters appearing)
  * can only check flags up to 0xFF1080. This patch extends this range to 0xFF10FE.
  */
 class PatchExtendTileSwapFlagRange : public GamePatch

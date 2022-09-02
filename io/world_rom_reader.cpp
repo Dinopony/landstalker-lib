@@ -8,6 +8,7 @@
 
 #include "../constants/offsets.hpp"
 #include "../constants/entity_type_codes.hpp"
+#include "../constants/map_codes.hpp"
 
 #include "../assets/entity_type_names.json.hxx"
 
@@ -346,6 +347,19 @@ static void read_custom_map_setups(const md::ROM& rom, World& world)
     }
 }
 
+static void read_custom_map_updates(const md::ROM& rom, World& world)
+{
+    // Use "CheckAndDoLavaPaletteFx" in magma room
+    world.map(MAP_LAKE_SHRINE_EXTERIOR_WITH_MAGMA)->map_update_addr(0x25D0);
+
+    // Use "CheckAndDisplayIntroString" only in intro maps
+    world.map(MAP_INTRO_139)->map_update_addr(0xC46A);
+    world.map(MAP_INTRO_140)->map_update_addr(0xC46A);
+    world.map(MAP_INTRO_141)->map_update_addr(0xC46A);
+    world.map(MAP_INTRO_142)->map_update_addr(0xC46A);
+    world.map(MAP_INTRO_143)->map_update_addr(0xC46A);
+}
+
 static void read_maps(const md::ROM& rom, World& world)
 {
     read_map_palettes(rom, world);
@@ -361,6 +375,7 @@ static void read_maps(const md::ROM& rom, World& world)
     read_maps_persistence_flags(rom, world);
     read_map_connections(rom, world);
     read_custom_map_setups(rom, world);
+    read_custom_map_updates(rom, world);
 }
 
 static void read_game_strings(const md::ROM& rom, World& world)

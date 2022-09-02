@@ -84,6 +84,7 @@ private:
     Flag _visited_flag;
 
     uint32_t _map_setup_addr = 0xFFFFFFFF;
+    uint32_t _map_update_addr = 0xFFFFFFFF;
 
 public:
     explicit Map(uint16_t map_id);
@@ -151,6 +152,9 @@ public:
 
     [[nodiscard]] uint32_t map_setup_addr() const { return _map_setup_addr; }
     void map_setup_addr(uint32_t addr) { _map_setup_addr = addr; }
+    
+    [[nodiscard]] uint32_t map_update_addr() const { return _map_update_addr; }
+    void map_update_addr(uint32_t addr) { _map_update_addr = addr; }
 
     [[nodiscard]] uint8_t unknown_param_1() const { return _unknown_param_1; }
     void unknown_param_1(uint8_t value) { _unknown_param_1 = value; }
