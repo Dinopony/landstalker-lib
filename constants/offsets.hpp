@@ -121,6 +121,11 @@ namespace offsets
     constexpr uint32_t ENTITY_PALETTES_TABLE_HIGH = ENTITY_PALETTES_TABLE_LOW_END;
     constexpr uint32_t ENTITY_PALETTES_TABLE_HIGH_END = 0x1A4C8E;
 
+    constexpr uint32_t ENEMY_AI_TABLE = 0x1A8418;
+    constexpr uint32_t ENEMY_AI_TABLE_END = 0x1A84A6;
+    constexpr uint32_t ENEMY_AI_JUMP_TABLE = ENEMY_AI_TABLE_END;
+    constexpr uint32_t ENEMY_AI_JUMP_TABLE_END = 0x1A86D6;
+
     constexpr uint32_t BLOCKSETS_GROUPS_TABLE_POINTER = 0x1AF800;
     constexpr uint32_t BLOCKSETS_GROUPS_TABLE = 0x1AF804;
     constexpr uint32_t BLOCKSETS_GROUPS_TABLE_END = 0x1AF8C8;

@@ -15,13 +15,12 @@
 #include "engine_improvements/patch_extend_tile_swap_flag_range.hpp"
 #include "engine_improvements/patch_extend_visited_flag_range.hpp"
 #include "engine_improvements/patch_faster_transitions.hpp"
-
 #include "engine_improvements/patch_improve_ingame_timer.hpp"
 #include "engine_improvements/patch_improve_item_use_handling.hpp"
-
 #include "engine_improvements/patch_new_game.hpp"
 #include "engine_improvements/patch_new_map_format.hpp"
 #include "engine_improvements/patch_normalize_bosses_hp.hpp"
+#include "engine_improvements/patch_optimize_ai_lookup.hpp"
 
 void execute_patches(const std::vector<GamePatch*>& patches, md::ROM& rom, World& world)
 {

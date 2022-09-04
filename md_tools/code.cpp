@@ -177,6 +177,14 @@ Code& Code::ble(const std::string& label)
     return *this;
 }
 
+Code& Code::bls(const std::string& label)
+{
+    this->add_opcode(0x6300);
+    _pending_branches[static_cast<uint32_t>(_bytes.size())] = label;
+    this->resolve_branches();
+    return *this;
+}
+
 Code& Code::bge(const std::string& label)
 {
     this->add_opcode(0x6C00);

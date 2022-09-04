@@ -118,6 +118,7 @@ set(SOURCES
         "patches/engine_improvements/patch_faster_transitions.hpp"
         "patches/engine_improvements/patch_disable_region_check.hpp"
         "patches/engine_improvements/patch_new_game.hpp"
+        "patches/engine_improvements/patch_optimize_ai_lookup.hpp"
 
         "patches/cosmetic/patch_alter_nigel_colors.hpp"
         "patches/cosmetic/patch_alter_ui_color.hpp"

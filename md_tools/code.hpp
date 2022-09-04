@@ -54,6 +54,7 @@ namespace md
         Code& bmi(const std::string& label);
         Code& bpl(const std::string& label);
         Code& ble(const std::string& label);
+        Code& bls(const std::string& label);
         Code& bge(const std::string& label);
         Code& bcc(const std::string& label);
         Code& bcs(const std::string& label);
