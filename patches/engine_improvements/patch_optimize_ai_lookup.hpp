@@ -3,6 +3,15 @@
 #include "../game_patch.hpp"
 #include "../../constants/offsets.hpp"
 
+/**
+ * In the vanilla engine, the game performs a lookup for EVERY ENTITY on EVERY FRAME to get its AI function address.
+ * This lookup is very CPU-intensive since it is called in such a repeated fashion, and is one of the main causes
+ * the game lags in some maps packed with many entities.
+ *
+ * This patch uses a much bigger table, which enables performing a direct jump on the right offset of that jump
+ * table directly instead of first checking inside the LUT what the jump offset for this entity is (if there is
+ * one).
+ */
 class PatchOptimizeAILookup : public GamePatch
 {
 private:
@@ -68,6 +77,7 @@ public:
             {
                 // Put the address back in an address register, and jump on it
                 func.movel(reg_D0, reg_A0);
+                func.moveq(0, reg_D0);
                 func.jmp(addr_(reg_A0));
             }
             func.label("default_address");
@@ -78,5 +88,7 @@ public:
         }
 
         rom.set_code(0x1A83F0, func);
+        if(0x1A83F0 + func.get_bytes().size() > offsets::ENEMY_AI_TABLE)
+            throw std::exception("Replacement function is too large and is overlapping other code!");
     }
 };
