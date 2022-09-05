@@ -56,6 +56,7 @@ namespace md
         Code& ble(const std::string& label);
         Code& bls(const std::string& label);
         Code& bge(const std::string& label);
+        Code& bhi(const std::string& label);
         Code& bcc(const std::string& label);
         Code& bcs(const std::string& label);
         Code& dbra(const DataRegister& dx, const std::string& label);

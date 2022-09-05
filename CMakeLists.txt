@@ -119,6 +119,8 @@ set(SOURCES
         "patches/engine_improvements/patch_disable_region_check.hpp"
         "patches/engine_improvements/patch_new_game.hpp"
         "patches/engine_improvements/patch_optimize_ai_lookup.hpp"
+        "patches/engine_improvements/patch_optimize_reorder_draw_order_list.hpp"
+        "patches/engine_improvements/patch_optimize_collision_detect.hpp"
 
         "patches/cosmetic/patch_alter_nigel_colors.hpp"
         "patches/cosmetic/patch_alter_ui_color.hpp"

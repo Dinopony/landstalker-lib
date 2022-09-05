@@ -21,6 +21,8 @@
 #include "engine_improvements/patch_new_map_format.hpp"
 #include "engine_improvements/patch_normalize_bosses_hp.hpp"
 #include "engine_improvements/patch_optimize_ai_lookup.hpp"
+#include "engine_improvements/patch_optimize_reorder_draw_order_list.hpp"
+#include "engine_improvements/patch_optimize_collision_detect.hpp"
 
 void execute_patches(const std::vector<GamePatch*>& patches, md::ROM& rom, World& world)
 {
