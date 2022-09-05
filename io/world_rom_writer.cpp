@@ -737,6 +737,11 @@ static void write_maps_entities(const World& world, md::ROM& rom)
             continue;
         }
 
+        if(map->entities().size() > 15)
+        {
+            throw LandstalkerException("Map " + std::to_string(map_id) + " has more than 15 entities, which is not supported by the game.");
+        }
+
         entities_offsets_table.add_word(entities_table.size() + 1);
 
         for(Entity* entity : map->entities())
