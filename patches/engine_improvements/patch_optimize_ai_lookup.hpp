@@ -89,6 +89,6 @@ public:
 
         rom.set_code(0x1A83F0, func);
         if(0x1A83F0 + func.get_bytes().size() > offsets::ENEMY_AI_TABLE)
-            throw std::exception("Replacement function is too large and is overlapping other code!");
+            throw LandstalkerException("Replacement function is too large and is overlapping other code!");
     }
 };

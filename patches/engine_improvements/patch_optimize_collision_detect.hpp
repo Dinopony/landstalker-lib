@@ -88,6 +88,6 @@ public:
 
         rom.set_code(0x2F76, func); // Replace original CollisionDetect function
         if(0x2F76 + func.get_bytes().size() > 0x2FEA)
-            throw std::exception("Replacement function is too large and is overlapping other code!");
+            throw LandstalkerException("Replacement function is too large and is overlapping other code!");
     }
 };
