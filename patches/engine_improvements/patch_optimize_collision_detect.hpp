@@ -20,7 +20,7 @@ public:
             func.movem_to_stack({}, { reg_A2 });
             func.lea(0xFF5400, reg_A0);                     // A0 points on currently tested entity (starts on first entity)
             func.lea(addrw_(reg_A0, reg_D0), reg_A2);       // A2 points on input entity
-<
+
             // Setup values in registers
             func.lea(addr_(reg_A2, HitBoxXStart), reg_A1);
             func.movew(addr_postinc_(reg_A1), reg_D1);                  // Bounding box min X
