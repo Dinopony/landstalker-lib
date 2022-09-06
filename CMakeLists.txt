@@ -51,7 +51,6 @@ set(SOURCES
         "constants/map_codes.hpp"
         "constants/offsets.hpp"
         "constants/symbols.hpp"
-        "constants/values.hpp"
 
         # --- I/O ----------------------------------------
         "io/io.hpp"

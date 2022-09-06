@@ -1,8 +1,11 @@
 #include "io.hpp"
 
 #include "../constants/offsets.hpp"
-#include "../constants/values.hpp"
 #include "../tools/huffman_tree.hpp"
+
+constexpr uint16_t STRINGS_PER_TEXTBANK = 256;
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 
 HuffmanTree* io::decode_huffman_tree(const md::ROM& rom, uint32_t addr)
 {

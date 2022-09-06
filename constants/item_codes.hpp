@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+constexpr uint8_t ITEM_COUNT = 0x40;
+
 constexpr uint8_t ITEM_EKEEKE = 0x00;
 constexpr uint8_t ITEM_MAGIC_SWORD = 0x01;
 constexpr uint8_t ITEM_ICE_SWORD = 0x02;
@@ -19,7 +21,7 @@ constexpr uint8_t ITEM_MARS_STONE = 0x0D;
 constexpr uint8_t ITEM_MOON_STONE = 0x0E;
 constexpr uint8_t ITEM_SATURN_STONE = 0x0F;
 constexpr uint8_t ITEM_VENUS_STONE = 0x10;
-constexpr uint8_t ITEM_AWAKENING_BOOK = 0x11; // Fake item
+constexpr uint8_t ITEM_AWAKENING_BOOK = 0x11;
 constexpr uint8_t ITEM_DETOX_GRASS = 0x12;
 constexpr uint8_t ITEM_GAIA_STATUE = 0x13;
 constexpr uint8_t ITEM_GOLDEN_STATUE = 0x14;
@@ -39,8 +41,8 @@ constexpr uint8_t ITEM_BLUE_JEWEL = 0x21; // Detox Book in base game
 constexpr uint8_t ITEM_YELLOW_JEWEL = 0x22; // AntiCurse Book in base game
 constexpr uint8_t ITEM_RECORD_BOOK = 0x23;
 constexpr uint8_t ITEM_SPELL_BOOK = 0x24;
-constexpr uint8_t ITEM_HOTEL_REGISTER = 0x25; // Fake item
-constexpr uint8_t ITEM_ISLAND_MAP = 0x26; // Fake item
+constexpr uint8_t ITEM_HOTEL_REGISTER = 0x25;
+constexpr uint8_t ITEM_ISLAND_MAP = 0x26;
 constexpr uint8_t ITEM_LITHOGRAPH = 0x27;
 constexpr uint8_t ITEM_RED_JEWEL = 0x28;
 constexpr uint8_t ITEM_PAWN_TICKET = 0x29;
@@ -66,4 +68,4 @@ constexpr uint8_t ITEM_NO_BOOTS = 0x3C;
 constexpr uint8_t ITEM_NO_RING = 0x3D;
 constexpr uint8_t ITEM_LIFESTOCK = 0x3E;
 constexpr uint8_t ITEM_NONE = 0x3F;
-constexpr uint8_t ITEM_GOLDS_START = 0x40;
+constexpr uint8_t ITEM_GOLDS_START = ITEM_COUNT;

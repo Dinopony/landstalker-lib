@@ -58,14 +58,14 @@ private:
     [[nodiscard]] std::vector<uint8_t> build_flag_array(const World& world) const
     {
         std::vector<uint8_t> flag_array;
-        flag_array.resize(0x60, 0x00);
+        flag_array.resize(0x80, 0x00);
 
         // Apply starting flags
         for(const Flag& flag : world.starting_flags())
             flag_array[flag.byte] |= (1 << flag.bit);
 
         // Apply starting inventory
-        for(uint8_t item_id=0 ; item_id < ITEM_GOLDS_START ; item_id += 0x2)
+        for(uint8_t item_id=0 ; item_id < ITEM_COUNT ; item_id += 0x2)
         {
             uint8_t inventory_flag_value = 0x00;
 
@@ -77,7 +77,7 @@ private:
             if(msh_quantity)
                 inventory_flag_value |= ((msh_quantity+1) & 0x0F) << 4;
 
-            flag_array[0x40+(item_id/2)] = inventory_flag_value;
+            flag_array[0x40 + (item_id / 2)] = inventory_flag_value;
         }
 
         if(_add_ingame_tracker)
