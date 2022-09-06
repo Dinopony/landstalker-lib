@@ -42,6 +42,8 @@ void Map::clear()
     _fall_destination = 0xFFFF;
     _climb_destination = 0xFFFF;
     _layout = nullptr;
+    _blockset = nullptr;
+    _palette = nullptr;
     _entities.clear();
     _variants.clear();
     _global_entity_mask_flags.clear();
@@ -183,9 +185,11 @@ Json Map::to_json(const World& world) const
 {
     Json json;
 
-    json["blocksetId"] = world.blockset_id(_blockset);
+    if(_blockset)
+        json["blocksetId"] = world.blockset_id(_blockset);
+    if(_palette)
+        json["paletteId"] = world.map_palette_id(_palette);
 
-    json["paletteId"] = world.map_palette_id(_palette);
     json["roomHeight"] = _room_height;
     json["backgroundMusic"] = _background_music;
     json["baseChestId"] = _base_chest_id;

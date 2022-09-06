@@ -426,14 +426,20 @@ static void write_maps_data(const World& world, md::ROM& rom, const std::map<Map
 
     for(const auto& [map_id, map] : world.maps())
     {
-        std::pair<uint8_t, uint8_t> blockset_id = world.blockset_id(map->blockset());
+        std::pair<uint8_t, uint8_t> blockset_id { 0, 0 };
+        if(map->blockset())
+            blockset_id = world.blockset_id(map->blockset());
+
+        uint8_t map_palette_id = 0;
+        if(map->palette())
+            map_palette_id = world.map_palette_id(map->palette());
 
         uint8_t byte4;
         byte4 = blockset_id.first & 0x3F;
         byte4 |= (map->unknown_param_1() & 0x03) << 6;
 
         uint8_t byte5;
-        byte5 = world.map_palette_id(map->palette()) & 0x3F;
+        byte5 = map_palette_id & 0x3F;
         byte5 |= (map->unknown_param_2() & 0x03) << 6;
 
         uint8_t byte7;
