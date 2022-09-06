@@ -23,6 +23,14 @@ public:
         // let the intro roll without allowing the player to move or pause, or do anything at all.
         // We need to remove that cutscene flag to enable the player actually playing the game.
         rom.set_code(0x281A, md::Code().nop(4));
+
+        // Loading a save inside the map having the intro ID triggers the intro. That's not the kind
+        // of behavior we want.
+        rom.set_code(0x8DDA, md::Code().nop(5));
+
+        // Load HUD tiles properly when loading inside intro map
+        rom.set_code(0x8F6E, md::Code().nop(4));
+        rom.set_byte(0x8F76, 0x60);
     }
 
     void inject_code(md::ROM& rom, World& world) override
