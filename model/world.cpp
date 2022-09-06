@@ -44,7 +44,10 @@ Item* World::item(const std::string& name) const
 }
 
 Item* World::add_item(Item* item)
-{ 
+{
+    if(_items.count(item->id()))
+        throw LandstalkerException("Cannot add item #" + std::to_string(item->id()) + " since there is already one with the same ID (" + _items[item->id()]->name() + ")");
+
     _items[item->id()] = item;
     return item;
 }

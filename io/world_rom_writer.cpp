@@ -91,34 +91,29 @@ static void write_item_names(const World& world, md::ROM& rom)
 
 static void write_items(const World& world, md::ROM& rom)
 {
-    // Prepare a data block for gold values
-    uint8_t highest_item_id = world.items().rbegin()->first;
-    uint8_t gold_items_count = (highest_item_id - ITEM_GOLDS_START) + 1;
-    uint32_t gold_values_table_addr = rom.reserve_data_block(gold_items_count, "data_gold_values");
+    ByteArray item_properties_bytes;
 
     // Write actual items
     for(auto& [item_id, item] : world.items())
     {
-        // Special treatment for gold items (only write their value in the previously prepared data block)
-        if(item->id() >= ITEM_GOLDS_START)
-        {
-            uint32_t addr = gold_values_table_addr + (item_id - ITEM_GOLDS_START);
-            rom.set_byte(addr, static_cast<uint8_t>(world.items().at(item_id)->gold_value()));
-            continue;
-        }
-
-        uint32_t item_base_addr = offsets::ITEM_DATA_TABLE + item_id * 0x04;
-
-        // Set max quantity
-        uint8_t verb_and_max_qty = rom.get_byte(item_base_addr);
-        verb_and_max_qty &= 0xF0;
-        verb_and_max_qty += item->max_quantity();
-        rom.set_byte(item_base_addr, verb_and_max_qty);
-
-        // Set gold value
-        rom.set_word(item_base_addr + 0x2, item->gold_value());
+        item_properties_bytes.add_byte((item->verb_on_use() << 4) + item->max_quantity());
+        item_properties_bytes.add_byte(0xFF); // EquipIdx is unused in the game anyway
+        item_properties_bytes.add_word(item->gold_value());
     }
+
+    uint32_t item_properties_addr = rom.inject_bytes(item_properties_bytes);
+
+    md::Code proc_redirect_pointer;
+    proc_redirect_pointer.lea(item_properties_addr, reg_A0);
+    proc_redirect_pointer.lea(addrw_(reg_A0, reg_D0), reg_A0);
+    proc_redirect_pointer.add_word(0x201F); // movel (sp)+,a0
+    proc_redirect_pointer.rts();
+    uint32_t proc_addr = rom.inject_code(proc_redirect_pointer);
+
+    rom.set_code(0x292FC, md::Code().jmp(proc_addr));
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 static void write_chest_contents(const World& world, md::ROM& rom)
 {

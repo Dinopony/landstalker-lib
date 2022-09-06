@@ -378,6 +378,8 @@ static void read_maps(const md::ROM& rom, World& world)
     read_custom_map_updates(rom, world);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 static void read_game_strings(const md::ROM& rom, World& world)
 {
     uint32_t huffman_trees_base_addr = offsets::HUFFMAN_TREE_OFFSETS + (SYMBOL_COUNT * 2);
@@ -531,10 +533,9 @@ static void read_blocksets(const md::ROM& rom, World& world)
             blockset_groups[i].clear();
 }
 
-static void read_items(const md::ROM& rom, World& world)
+static void read_item_names(const md::ROM& rom, World& world)
 {
-    std::vector<std::string> item_names;
-    item_names.reserve(0x40);
+    uint8_t item_id = 0;
     for(uint32_t addr = offsets::ITEM_NAMES_TABLE ; addr < offsets::ITEM_NAMES_TABLE_END ; )
     {
         uint8_t length = rom.get_byte(addr);
@@ -543,12 +544,15 @@ static void read_items(const md::ROM& rom, World& world)
             break;
 
         std::vector<uint8_t> string_bytes = rom.get_bytes(addr, addr + length);
-        item_names.emplace_back(Symbols::parse_from_bytes(string_bytes));
-        addr += length;
-    }
+        world.item(item_id)->name(Symbols::parse_from_bytes(string_bytes));
 
-    std::array<uint32_t, 0x40> pre_uses_functions {};
-    pre_uses_functions.fill(0);
+        addr += length;
+        ++item_id;
+    }
+}
+
+static void read_item_pre_uses(const md::ROM& rom, World& world)
+{
     for(uint32_t addr = offsets::ITEM_PRE_USE_TABLE ; addr < offsets::ITEM_PRE_USE_TABLE_END ; addr += 0x6)
     {
         uint8_t item_id = rom.get_byte(addr + 0x4);
@@ -556,11 +560,12 @@ static void read_items(const md::ROM& rom, World& world)
             break;
 
         uint16_t branch_offset = rom.get_word(addr + 0x02);
-        pre_uses_functions[item_id] = addr + 0x02 + branch_offset;
+        world.item(item_id)->pre_use_address(addr + 0x02 + branch_offset);
     }
+}
 
-    std::array<uint32_t, 0x40> post_uses_functions {};
-    post_uses_functions.fill(0);
+static void read_item_post_uses(const md::ROM& rom, World& world)
+{
     for(uint32_t addr = offsets::ITEM_POST_USE_TABLE ; addr < offsets::ITEM_POST_USE_TABLE_END ; addr += 0x6)
     {
         uint8_t item_id = rom.get_byte(addr + 0x4) & 0x7F;
@@ -568,22 +573,30 @@ static void read_items(const md::ROM& rom, World& world)
             break;
 
         uint16_t branch_offset = rom.get_word(addr + 0x02);
-        post_uses_functions[item_id] = addr + 0x02 + branch_offset;
+        world.item(item_id)->post_use_address(addr + 0x02 + branch_offset);
     }
+}
 
+static void read_items(const md::ROM& rom, World& world)
+{
     std::map<uint8_t, Item*>& items = world.items();
     for(uint8_t id=0 ; id<0x40 ; ++id)
     {
-        std::string name = item_names[id];
-
         uint32_t item_base_addr = offsets::ITEM_DATA_TABLE + id * 0x04;
-        uint8_t max_quantity = rom.get_byte(item_base_addr) & 0x0F;
-        uint16_t gold_value = rom.get_word(item_base_addr + 0x2);
-        uint32_t pre_use_addr = pre_uses_functions[id];
-        uint32_t post_use_addr = post_uses_functions[id];
 
-        items[id] = new Item(id, name, max_quantity, 0, gold_value, pre_use_addr, post_use_addr);
+        Item* item = new Item();
+
+        item->id(id);
+        item->max_quantity(rom.get_byte(item_base_addr) & 0x0F);
+        item->verb_on_use((rom.get_byte(item_base_addr) & 0xF0) >> 4);
+        item->gold_value(rom.get_word(item_base_addr + 0x2));
+
+        world.add_item(item);
     }
+
+    read_item_names(rom, world);
+    read_item_pre_uses(rom, world);
+    read_item_post_uses(rom, world);
 }
 
 static void read_chest_contents(const md::ROM& rom, World& world)
@@ -596,7 +609,6 @@ static void read_chest_contents(const md::ROM& rom, World& world)
         world.chest_contents().emplace_back(world.item(item_id));
     }
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 
