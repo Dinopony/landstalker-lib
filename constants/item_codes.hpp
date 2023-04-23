@@ -68,4 +68,7 @@ constexpr uint8_t ITEM_NO_BOOTS = 0x3C;
 constexpr uint8_t ITEM_NO_RING = 0x3D;
 constexpr uint8_t ITEM_LIFESTOCK = 0x3E;
 constexpr uint8_t ITEM_NONE = 0x3F;
-constexpr uint8_t ITEM_GOLDS_START = ITEM_COUNT;
+
+constexpr uint8_t ITEM_GOLDS_START = 0x40;
+constexpr uint8_t ITEM_GOLDS_END = 0x70;
+constexpr uint8_t ITEM_ARCHIPELAGO = 0x7F;

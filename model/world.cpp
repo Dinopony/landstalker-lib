@@ -54,18 +54,24 @@ Item* World::add_item(Item* item)
 
 Item* World::add_gold_item(uint8_t worth)
 {
-    uint8_t highest_item_id = _items.rbegin()->first;
+    uint8_t first_available_id = ITEM_GOLDS_START;
 
     // Try to find an item with the same worth
-    for(uint8_t i=ITEM_GOLDS_START ; i<=highest_item_id ; ++i)
+    for(uint8_t i=ITEM_GOLDS_START ; i<ITEM_GOLDS_END ; ++i)
+    {
+        if(_items.count(i) == 0)
+            break;
+
+        first_available_id = i+1;
         if(_items[i]->gold_value() == worth)
             return _items[i];
+    }
 
     // If we consumed all item IDs, don't add it you fool!
-    if(highest_item_id == 0xFF)
+    if(first_available_id == ITEM_GOLDS_END)
         return nullptr;
 
-    return this->add_item(new ItemGolds(highest_item_id+1, worth));
+    return this->add_item(new ItemGolds(first_available_id, worth));
 }
 
 std::vector<Item*> World::starting_inventory() const
