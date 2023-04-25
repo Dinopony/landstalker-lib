@@ -392,6 +392,9 @@ Code& Code::addi(const ImmediateValue& value, const Param& target, Size size)
     else if (size == Size::LONG)
         size_code = 0x2;
 
+    if(target.getM() == 0x01)
+        throw LandstalkerException("Using addi.x on an address register will crash. Use adda instead.");
+
     uint16_t opcode = 0x0600 + (size_code << 6) + target.getMXn();
     this->add_opcode(opcode);
     this->add_bytes(value.getAdditionnalData());
