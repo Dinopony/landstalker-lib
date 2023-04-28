@@ -1,7 +1,7 @@
 #pragma once
 
-#include <landstalker_lib/md_tools.hpp>
-#include <landstalker_lib/model/world.hpp>
+#include "../md_tools.hpp"
+#include "../model/world.hpp"
 #include "../tools/color.hpp"
 
 #include "cosmetic/patch_alter_inventory_order.hpp"

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "landstalker_lib/patches/game_patch.hpp"
-#include "landstalker_lib/model/entity_type.hpp"
+#include "../game_patch.hpp"
+#include "../../model/entity_type.hpp"
 
 /**
  * In original game, bosses have way higher HP than their real HP pool, and the game checks regularly

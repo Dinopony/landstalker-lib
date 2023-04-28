@@ -1,4 +1,4 @@
-#include "landstalker_lib/patches/game_patch.hpp"
+#include "../game_patch.hpp"
 
 /**
  * This patch enables handling of the new map layout encoding which is much more simple than the one from vanilla game.
