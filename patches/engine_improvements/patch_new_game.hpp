@@ -62,7 +62,7 @@ private:
 
         // Apply starting flags
         for(const Flag& flag : world.starting_flags())
-            flag_array[flag.byte] |= (1 << flag.bit);
+            flag_array[(uint8_t)flag.byte] |= (1 << flag.bit);
 
         // Apply starting inventory
         for(uint8_t item_id=0 ; item_id < ITEM_COUNT ; item_id += 0x2)
