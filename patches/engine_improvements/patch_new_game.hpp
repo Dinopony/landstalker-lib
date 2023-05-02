@@ -65,7 +65,7 @@ private:
             flag_array[(uint8_t)flag.byte] |= (1 << flag.bit);
 
         // Apply starting inventory
-        for(uint8_t item_id=0 ; item_id < ITEM_COUNT ; item_id += 0x2)
+        for(uint8_t item_id=0 ; item_id < ITEM_LIFESTOCK ; item_id += 0x2)
         {
             uint8_t inventory_flag_value = 0x00;
 

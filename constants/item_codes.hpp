@@ -2,8 +2,6 @@
 
 #include <cstdint>
 
-constexpr uint8_t ITEM_COUNT = 0x40;
-
 constexpr uint8_t ITEM_EKEEKE = 0x00;
 constexpr uint8_t ITEM_MAGIC_SWORD = 0x01;
 constexpr uint8_t ITEM_ICE_SWORD = 0x02;
@@ -68,6 +66,14 @@ constexpr uint8_t ITEM_NO_BOOTS = 0x3C;
 constexpr uint8_t ITEM_NO_RING = 0x3D;
 constexpr uint8_t ITEM_LIFESTOCK = 0x3E;
 constexpr uint8_t ITEM_NONE = 0x3F;
+
+constexpr uint8_t ITEM_1_GOLD = 0x40;
+constexpr uint8_t ITEM_20_GOLDS = 0x41;
+constexpr uint8_t ITEM_50_GOLDS = 0x42;
+constexpr uint8_t ITEM_100_GOLDS = 0x43;
+constexpr uint8_t ITEM_200_GOLDS = 0x44;
+
+constexpr uint8_t ITEM_COUNT = ITEM_200_GOLDS + 1;
 
 constexpr uint8_t ITEM_GOLDS_START = 0x40;
 constexpr uint8_t ITEM_GOLDS_END = 0x70;

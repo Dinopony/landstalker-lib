@@ -68,12 +68,23 @@ class ItemGolds : public Item
 {
 public:
     ItemGolds(uint8_t id, uint16_t gold_value) : 
-        Item(id, std::to_string(gold_value) + " golds", 0, 0, gold_value, 0)
+        Item(id, format_gold_name(gold_value), 0, 0, gold_value, 0)
     {}
 
     Item& gold_value(uint16_t value) override
     {
         this->name(std::to_string(value) + " golds");
         return Item::gold_value(value);
+    }
+
+private:
+    static std::string format_gold_name(uint16_t value)
+    {
+        std::string name = std::to_string(value);
+        if(value > 1)
+            name += " Golds";
+        else
+            name += " Gold";
+        return name;
     }
 };
