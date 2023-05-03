@@ -46,6 +46,7 @@ void Map::clear()
     _palette = nullptr;
     _entities.clear();
     _variants.clear();
+    _parent_map = nullptr;
     _global_entity_mask_flags.clear();
     _speaker_ids.clear();
     _map_setup_addr = 0xFFFFFFFF;

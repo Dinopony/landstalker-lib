@@ -24,7 +24,7 @@ public:
     void add_character(const std::string& text, size_t i);
     void add_character(char character);
 
-    [[nodiscard]] const std::string& getOutput() const { return _output_text; }
+    [[nodiscard]] const std::string& get_output() const { return _output_text; }
 
     static uint8_t character_width(char character);
 };

@@ -5,7 +5,7 @@
 
 struct Flag
 {
-    uint16_t byte;
+    uint8_t byte;
     uint8_t bit;
 
     Flag() : byte(0), bit(0)
