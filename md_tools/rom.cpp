@@ -8,7 +8,6 @@ namespace md {
 ROM::ROM(const std::string& input_path) : _was_open(false)
 {
     _byte_array.resize(0x200000);
-
     std::ifstream file(input_path, std::ios::binary);
     if (file.is_open())
     {
@@ -16,6 +15,9 @@ ROM::ROM(const std::string& input_path) : _was_open(false)
         file.close();
         _was_open = true;
     }
+
+    // Keep an original copy of the ROM contents to check for double overwrites
+    _original_byte_array = _byte_array;
 }
 
 void ROM::set_byte(uint32_t address, uint8_t byte)
@@ -23,14 +25,11 @@ void ROM::set_byte(uint32_t address, uint8_t byte)
     if (address >= _byte_array.size())
         return;
 
-#ifdef DEBUG
-    if(_written_addresses.count(address))
+    if(_original_byte_array[address] != _byte_array[address] && _byte_array[address] != 0xFF)
     {
         std::cerr << "Address 0x" << std::hex << address << std::dec << " of ROM was overwritten twice!" << std::endl;
         throw std::exception();
     }
-    _written_addresses.insert(address);
-#endif
 
     _byte_array[address] = byte;
 }
@@ -193,16 +192,13 @@ void ROM::mark_empty_chunk(uint32_t begin, uint32_t end)
 
     for(uint32_t addr=begin ; addr < end ; ++addr)
     {
-        // Don't use set_byte() to bypass the "written_addresses" debug mechanism
-        _byte_array[addr] = 0xFF;
-
-#ifdef DEBUG
-        if(_written_addresses.count(addr))
+        if(_original_byte_array[addr] != _byte_array[addr])
         {
             std::cerr << "Address 0x" << std::hex << addr << std::dec << " of ROM is being cleared after having been overwritten!" << std::endl;
             throw std::exception();
         }
-#endif
+
+        _byte_array[addr] = 0xFF;
     }
 
     _empty_chunks.emplace_back(std::make_pair(begin, end));
@@ -220,6 +216,7 @@ void ROM::extend(size_t new_size)
 {
     size_t old_size = _byte_array.size();
     _byte_array.resize(new_size, 0);
+    _original_byte_array.resize(new_size, 0);
     this->mark_empty_chunk(old_size, new_size);
 
     this->set_long(0x1A4, new_size-1);
