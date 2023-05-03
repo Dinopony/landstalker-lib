@@ -115,4 +115,12 @@ public:
             this->pack(character);
         this->pack((uint8_t) '\0');
     }
+
+    template<typename T>
+    void pack_if(bool condition, T value)
+    {
+        this->pack(condition);
+        if(condition)
+            this->pack(value);
+    }
 };
