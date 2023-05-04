@@ -123,4 +123,12 @@ public:
         if(condition)
             this->pack(value);
     }
+
+    template<typename T>
+    void pack_vector_if(bool condition, const std::vector<T>& vector)
+    {
+        this->pack(condition);
+        if(condition)
+            this->pack_vector(vector);
+    }
 };
