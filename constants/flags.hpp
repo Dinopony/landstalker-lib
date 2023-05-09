@@ -55,10 +55,12 @@ constexpr Flag FLAG_SAW_DUKE_MERCATOR_ON_RAFT_NEAR_DESTEL (0x28, 7);
 constexpr Flag FLAG_SAW_DEXTER_DIE_IN_CRYPT               (0x28, 6);
 constexpr Flag FLAG_SAW_KAYLA_CUTSCENE_IN_GREENMAZE       (0x28, 5);
 constexpr Flag FLAG_TOOK_BOAT_TO_VERLA                    (0x28, 4);
+constexpr Flag FLAG_MARLEY_KILLED                         (0x28, 0);
 
 constexpr Flag FLAG_FRIDAY_TALKED_AFTER_GETTING_LANTERN (0x29, 6);
 
 constexpr Flag FLAG_SAW_ZAK_ON_BRIDGE             (0x2A, 7);
+constexpr Flag FLAG_FINISHED_LAKE_SHRINE          (0x2A, 5);
 constexpr Flag FLAG_SAW_DUKE_ENTERING_LAKE_SHRINE (0x2A, 0);
  
 constexpr Flag FLAG_SAW_DUKE_TAUNTING_IN_SHELL_BREAST_ROOM (0x2B, 7);
