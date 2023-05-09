@@ -899,12 +899,18 @@ static void write_custom_map_updates(const World& world, md::ROM& rom)
         func.bra("loop");
 
         func.label("found");
-        func.movew(0x4EF9, addr_(0xFF0012));            // Put a JMP opcode at FF0012
-        func.movel(addr_(reg_A0), addr_(0xFF0014));     // Put the address of the update handler where to jump
-        func.bra("ret");
+        {
+            func.movew(0x4EF9, addr_(0xFF0012));            // Put a JMP opcode at FF0012
+            func.movel(addr_(reg_A0), addr_(0xFF0014));     // Put the address of the update handler where to jump
+            // Run the update handler once to potentially alter map before initial display
+            func.jsr(addr_(0xFF0012));
+            func.bra("ret");
+        }
+        func.label("not_found");
+        {
+            func.movew(0x4E75, addr_(0xFF0012)); // Put a RET opcode at FF0012
+        }
     }
-    func.label("not_found");
-    func.movew(0x4E75, addr_(0xFF0012)); // Put a RET opcode at FF0012
     func.label("ret");
     func.movem_from_stack({ reg_D0, reg_D1 }, { reg_A0 });
     func.jmp(0x10388);  // Call the function that was erased by the injection
@@ -916,6 +922,17 @@ static void write_custom_map_updates(const World& world, md::ROM& rom)
 
     // On every frame, execute the map update function stored in FF0012
     rom.set_code(0x1758, md::Code().jsr(0xFF0012).nop(3));
+
+    // When leaving pause, execute the map update function once to potentially alter map before initial display
+    md::Code pause_hook_func;
+    {
+        pause_hook_func.jsr(0x2B4E);   // LoadRoomParams
+        pause_hook_func.jsr(0xFF0012); // Update handler
+        pause_hook_func.jsr(0xBA4);    // FlushDMACopyQueue
+    }
+    pause_hook_func.rts();
+    uint32_t pause_hook_addr = rom.inject_code(pause_hook_func);
+    rom.set_code(0x29CC, md::Code().jsr(pause_hook_addr).nop());
 }
 
 static void write_maps(const World& world, md::ROM& rom, const std::map<MapLayout*, uint32_t>& map_layout_adresses)
