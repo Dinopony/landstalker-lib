@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <map>
+#include <set>
 #include <string>
 #include <random>
 #include <algorithm>
@@ -24,6 +25,27 @@ namespace stringtools
 
             prev = pos + delim.length();
         } while (pos < str.length() && prev < str.length());
+
+        return tokens;
+    }
+
+    inline std::vector<std::string> split_with_delims(const std::string& str, const std::set<char>& delims)
+    {
+        std::vector<std::string> tokens;
+        size_t prev = 0;
+        for(size_t pos = 0 ; pos < str.length() ; ++pos)
+        {
+            if(!delims.contains(str[pos]))
+                continue;
+
+            if(pos-prev > 0)
+                tokens.emplace_back(str.substr(prev, pos-prev));
+            tokens.emplace_back(str.substr(pos, 1));
+            prev = pos + 1;
+        }
+
+        if(prev < str.length())
+            tokens.emplace_back(str.substr(prev, str.length()-prev));
 
         return tokens;
     }
