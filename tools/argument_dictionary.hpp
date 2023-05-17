@@ -86,4 +86,5 @@ public:
             return default_value;
         }
     }
+    void set_boolean(const std::string& key, bool value) { _args_map[key] = (value) ? "true" : "false"; }
 };
