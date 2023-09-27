@@ -29,8 +29,6 @@ static std::vector<uint8_t> string_to_symbols(const std::string& string)
         uint8_t symbol = char_to_symbol(c);
         if (symbol != 0xFF)
             string_as_symbols.emplace_back(symbol);
-        else
-            std::cerr << "Current character '" << c << "' is not recognized as the beginning of a known symbol, and will be ignored.\n";
     }
 
     string_as_symbols.emplace_back(0x55);

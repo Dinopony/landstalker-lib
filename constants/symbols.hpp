@@ -76,7 +76,11 @@ namespace Symbols
         std::vector<uint8_t> ret;
         ret.reserve(symbol_string.size());
         for(char c : symbol_string)
-            ret.emplace_back(byte_for_symbol(c));
+        {
+            uint8_t byte = byte_for_symbol(c);
+            if(byte != 0xFF)
+                ret.emplace_back(byte);
+        }
         return ret;
     }
 
