@@ -24,7 +24,9 @@ namespace io {
     std::vector<std::string> decode_textbanks(const md::ROM& rom, const std::vector<uint32_t>& addrs, const std::vector<HuffmanTree*>& huffman_trees);
     // textbanks_encoder.cpp
     std::vector<HuffmanTree*> build_trees_from_strings(const std::vector<std::string>& strings);
-    ByteArray encode_huffman_trees(const std::vector<HuffmanTree*>& huffman_trees);
+    void encode_huffman_trees(const std::vector<HuffmanTree*>& huffman_trees,
+                              ByteArray& tree_offsets,
+                              ByteArray& tree_data);
     std::vector<ByteArray> encode_textbanks(const std::vector<std::string>& strings, const std::vector<HuffmanTree*>& huffman_trees);
 
     // exports.cpp

@@ -77,11 +77,10 @@ std::vector<HuffmanTree*> io::build_trees_from_strings(const std::vector<std::st
 
 ///////////////////////////////////////////////////////////////////////////////
 
-ByteArray io::encode_huffman_trees(const std::vector<HuffmanTree*>& huffman_trees)
+void io::encode_huffman_trees(const std::vector<HuffmanTree*>& huffman_trees,
+                              ByteArray& tree_offsets,
+                              ByteArray& tree_data)
 {
-    ByteArray tree_offsets;
-    ByteArray tree_data_bytes;
-
     for (uint8_t i=0 ; i<SYMBOL_COUNT ; ++i)
     {
         HuffmanTree* tree_for_symbol = huffman_trees[i];
@@ -90,18 +89,15 @@ ByteArray io::encode_huffman_trees(const std::vector<HuffmanTree*>& huffman_tree
             std::vector<uint8_t> value_bytes, structure_bytes;
             tree_for_symbol->bytes(value_bytes, structure_bytes);
 
-            tree_data_bytes.add_bytes(value_bytes);
-            tree_offsets.add_word((uint16_t)tree_data_bytes.size());
-            tree_data_bytes.add_bytes(structure_bytes);
+            tree_data.add_bytes(value_bytes);
+            tree_offsets.add_word((uint16_t)tree_data.size());
+            tree_data.add_bytes(structure_bytes);
         }
         else
         {
             tree_offsets.add_word(0xFFFF);
         }
     }
-
-    tree_offsets.add_bytes(tree_data_bytes);
-    return tree_offsets;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -60,6 +60,7 @@ namespace offsets
     constexpr uint32_t TEXTBANKS_TABLE_POINTER = MAP_ENTITIES_TABLE_END;
 
     constexpr uint32_t HUFFMAN_TREE_OFFSETS = 0x023D60;
+    constexpr uint32_t HUFFMAN_TREES_END = 0x2469C;
 
     constexpr uint32_t DIALOGUE_TABLE = 0x0256D6;
     constexpr uint32_t DIALOGUE_TABLE_END = 0x025B0C;

@@ -292,13 +292,22 @@ static void write_game_strings(const World& world, md::ROM& rom)
 {
     // Write Huffman tree offsets & tree data consecutively in the ROM
     std::vector<HuffmanTree*> huffman_trees = io::build_trees_from_strings(world.game_strings());
-    ByteArray encodeded_trees = io::encode_huffman_trees(huffman_trees);
+    ByteArray huffman_offsets;
+    ByteArray huffman_data;
+    io::encode_huffman_trees(huffman_trees, huffman_offsets, huffman_data);
 
-    constexpr uint32_t ORIGINAL_SIZE = 0x2469C - offsets::HUFFMAN_TREE_OFFSETS;
-    if(encodeded_trees.size() > ORIGINAL_SIZE)
-        throw LandstalkerException("New Huffman trees data size is " + std::to_string(encodeded_trees.size() - ORIGINAL_SIZE) + " bytes bigger than the original size");
+    rom.mark_empty_chunk(offsets::HUFFMAN_TREE_OFFSETS, offsets::HUFFMAN_TREES_END);
+    uint32_t offsets_addr = rom.inject_bytes(huffman_offsets);
+    uint32_t data_addr = rom.inject_bytes(huffman_data);
 
-    rom.set_bytes(offsets::HUFFMAN_TREE_OFFSETS, encodeded_trees);
+    // Slightly edit the decode function to make it point on the new Huffman trees' address
+    md::Code proc;
+    proc.lea(offsets_addr, reg_A1);
+    proc.movew(addrw_(reg_A1, reg_D1), reg_D1);
+    proc.lea(data_addr, reg_A1);
+    proc.jmp(0x246D6);
+    uint32_t proc_addr = rom.inject_code(proc);
+    rom.set_code(0x246CA, md::Code().jmp(proc_addr));
 
     // Write textbanks to the ROM
     rom.mark_empty_chunk(offsets::FIRST_TEXTBANK, offsets::TEXTBANKS_TABLE_END);
